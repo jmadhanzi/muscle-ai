@@ -65,13 +65,14 @@ const FitnessLevel = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [{ data }, { data: profile }] = await Promise.all([
-        supabase.from("onboarding_data").select("fitness_level, nausea_level").eq("user_id", user.id).single(),
-        supabase.from("profiles").select("first_name").eq("user_id", user.id).single(),
-      ]);
+      const { data } = await supabase
+        .from("profiles")
+        .select("fitness_level, nausea_level, first_name")
+        .eq("user_id", user.id)
+        .single();
       if (data?.fitness_level) setLevel(data.fitness_level);
-      if ((data as Record<string, unknown>)?.nausea_level) setNausea((data as Record<string, unknown>).nausea_level as string);
-      if (profile?.first_name) setFirstName(profile.first_name);
+      if (data?.nausea_level) setNausea(data.nausea_level);
+      if (data?.first_name) setFirstName(data.first_name);
     };
     load();
   }, [user]);
