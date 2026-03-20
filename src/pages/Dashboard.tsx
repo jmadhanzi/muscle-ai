@@ -23,6 +23,7 @@ import ProteinRing from "@/components/dashboard/ProteinRing";
 import ProProtocol from "@/components/dashboard/ProProtocol";
 import WeeklyProgressSummary from "@/components/dashboard/WeeklyProgressSummary";
 import ReferralEarnings from "@/components/dashboard/ReferralEarnings";
+import TrialCountdown from "@/components/dashboard/TrialCountdown";
 import { useInAppNotifications } from "@/hooks/useInAppNotifications";
 
 export interface OnboardingData {
@@ -39,6 +40,7 @@ export interface OnboardingData {
   weeks_on_medication: number | null;
   injection_day: string | null;
   weight_kg?: number | null;
+  referred_by?: string | null;
 }
 
 export const calcMuscleScore = (data: OnboardingData) => {
@@ -77,7 +79,7 @@ const stagger = {
 };
 
 const Dashboard = () => {
-  const { user, isPro } = useAuth();
+  const { user, isPro, subscriptionEnd } = useAuth();
   const navigate = useNavigate();
   const paywall = usePaywall();
   const [data, setData] = useState<OnboardingData | null>(null);
@@ -174,6 +176,11 @@ const Dashboard = () => {
       <DashboardHeader firstName={data.first_name} dayNumber={dayNumber} />
 
       <motion.div className="px-5 space-y-5 mt-2" variants={stagger.container} initial="initial" animate="animate">
+        {/* Trial Countdown — referred users only */}
+        <motion.div variants={stagger.item}>
+          <TrialCountdown subscriptionEnd={subscriptionEnd} referredBy={data.referred_by} />
+        </motion.div>
+
         {/* Muscle Score Gauge — always shown */}
         <motion.div variants={stagger.item}>
           <MuscleScoreGauge score={muscleScore} atRiskLbs={atRiskLbs} preservePct={preservePct} />
