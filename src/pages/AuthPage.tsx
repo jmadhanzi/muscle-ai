@@ -59,6 +59,12 @@ const AuthPage = () => {
           </span>
         </div>
 
+        {referralCode && !isLogin && (
+          <div className="bg-primary/10 border border-primary/20 rounded-lg px-4 py-3 mb-4 text-center">
+            <p className="text-xs font-medium text-primary">🎁 You've been referred! Sign up to get <span className="font-bold">7 free days</span> of Pro</p>
+          </div>
+        )}
+
         <div className="bg-surface-container-low rounded-lg p-8">
           <h1 className="font-headline font-bold text-2xl text-on-surface text-center mb-2">
             {isLogin ? "Welcome back" : "Create your account"}
