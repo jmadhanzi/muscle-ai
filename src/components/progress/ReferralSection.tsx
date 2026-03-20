@@ -3,27 +3,27 @@ import { motion } from "framer-motion";
 import { Copy, Share2, Check, Gift } from "lucide-react";
 
 interface ReferralSectionProps {
-  userId: string;
+  referralCode: string;
+  referralCount: number;
+  monthsEarned: number;
+  onShareClick: () => void;
 }
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const ReferralSection = ({ userId }: ReferralSectionProps) => {
+const ReferralSection = ({ referralCode, referralCount, monthsEarned, onShareClick }: ReferralSectionProps) => {
   const [copied, setCopied] = useState(false);
-  const referralCode = userId.slice(0, 8).toUpperCase();
   const referralLink = `musclelock.app/ref/${referralCode}`;
-
-  // Simulated referral stats
-  const referralCount = 0;
-  const monthsEarned = 0;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(`https://${referralLink}`);
     setCopied(true);
+    onShareClick();
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleShare = () => {
+    onShareClick();
     if (navigator.share) {
       navigator.share({
         title: "Join MuscleLock",
@@ -42,7 +42,6 @@ const ReferralSection = ({ userId }: ReferralSectionProps) => {
       transition={{ duration: 0.55, ease }}
       className="rounded-lg border border-primary/20 bg-surface-container-lowest p-5 overflow-hidden relative"
     >
-      {/* Subtle gradient accent */}
       <div className="absolute inset-0 opacity-[0.04] gradient-hero pointer-events-none" />
 
       <div className="relative">
