@@ -14,6 +14,13 @@ import StatsRow from "@/components/dashboard/StatsRow";
 import TodaysMission from "@/components/dashboard/TodaysMission";
 import AICoachTeaser from "@/components/dashboard/AICoachTeaser";
 import SocialProofFeed from "@/components/dashboard/SocialProofFeed";
+// Pro-only widgets
+import MuscleScoreHistory from "@/components/dashboard/MuscleScoreHistory";
+import WeeklyStreakRing from "@/components/dashboard/WeeklyStreakRing";
+import InjectionCountdown from "@/components/dashboard/InjectionCountdown";
+import ProteinRing from "@/components/dashboard/ProteinRing";
+import ProProtocol from "@/components/dashboard/ProProtocol";
+import WeeklyProgressSummary from "@/components/dashboard/WeeklyProgressSummary";
 
 export interface OnboardingData {
   first_name?: string;
@@ -66,7 +73,7 @@ const stagger = {
 };
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
   const navigate = useNavigate();
   const paywall = usePaywall();
   const [data, setData] = useState<OnboardingData | null>(null);
@@ -87,9 +94,9 @@ const Dashboard = () => {
     load();
   }, [user]);
 
-  // ── Time-based paywall triggers ──
+  // ── Time-based paywall triggers (free users only) ──
   useEffect(() => {
-    if (!data || timeTriggersRan.current) return;
+    if (!data || timeTriggersRan.current || isPro) return;
     timeTriggersRan.current = true;
 
     const dayNumber = Math.max(1, Math.min(70, data.weeks_on_medication ? data.weeks_on_medication * 7 : 1));
@@ -109,7 +116,7 @@ const Dashboard = () => {
         }
       }
     }
-  }, [data, paywall]);
+  }, [data, paywall, isPro]);
 
   if (loading) {
     return (
@@ -124,8 +131,16 @@ const Dashboard = () => {
   const muscleScore = calcMuscleScore(data);
   const { atRiskLbs, preservePct } = calcAtRiskLbs(data, muscleScore);
   const proteinTarget = calcProteinTarget(data);
+  const dayNumber = Math.max(1, Math.min(70, data.weeks_on_medication ? data.weeks_on_medication * 7 : 1));
+  const scoreChange = Math.max(3, Math.round(muscleScore * 0.12));
 
-  const { isPro } = useAuth();
+  // Simulated weekly streak for Pro — Mon-Sun based on day of week
+  const todayDow = new Date().getDay(); // 0=Sun
+  const mondayIdx = todayDow === 0 ? 6 : todayDow - 1;
+  const completedDays = Array.from({ length: 7 }, (_, i) => i <= mondayIdx && i < mondayIdx);
+  // Mark today as completed if any checkedItems exist
+  if (checkedItems.size > 0) completedDays[mondayIdx] = true;
+  const streakDays = completedDays.filter(Boolean).length;
 
   const toggleCheck = (id: string, unlocked: boolean) => {
     if (!unlocked) {
@@ -144,17 +159,44 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-mesh pb-24">
-      <DashboardHeader firstName={data.first_name} dayNumber={Math.max(1, Math.min(70, data.weeks_on_medication ? data.weeks_on_medication * 7 : 1))} />
+      <DashboardHeader firstName={data.first_name} dayNumber={dayNumber} />
 
       <motion.div className="px-5 space-y-5 mt-2" variants={stagger.container} initial="initial" animate="animate">
+        {/* Muscle Score Gauge — always shown */}
         <motion.div variants={stagger.item}>
           <MuscleScoreGauge score={muscleScore} atRiskLbs={atRiskLbs} preservePct={preservePct} />
         </motion.div>
 
-        <motion.div variants={stagger.item}>
-          <StatsRow injectionDay={data.injection_day} proteinTarget={proteinTarget} />
-        </motion.div>
+        {/* Pro: Score History Chart */}
+        {isPro && (
+          <motion.div variants={stagger.item}>
+            <MuscleScoreHistory currentScore={muscleScore} />
+          </motion.div>
+        )}
 
+        {/* Pro: Streak Ring + Injection Countdown side by side */}
+        {isPro && (
+          <motion.div variants={stagger.item} className="grid grid-cols-2 gap-3">
+            <WeeklyStreakRing completedDays={completedDays} />
+            <ProteinRing target={proteinTarget} />
+          </motion.div>
+        )}
+
+        {/* Pro: Injection Countdown */}
+        {isPro && (
+          <motion.div variants={stagger.item}>
+            <InjectionCountdown injectionDay={data.injection_day} />
+          </motion.div>
+        )}
+
+        {/* Stats Row — free users see basic version */}
+        {!isPro && (
+          <motion.div variants={stagger.item}>
+            <StatsRow injectionDay={data.injection_day} proteinTarget={proteinTarget} />
+          </motion.div>
+        )}
+
+        {/* Today's Mission — always shown, unlocked for Pro */}
         <motion.div variants={stagger.item}>
           <TodaysMission
             checkedItems={checkedItems}
@@ -164,10 +206,32 @@ const Dashboard = () => {
           />
         </motion.div>
 
-        <motion.div variants={stagger.item}>
-          <AICoachTeaser />
-        </motion.div>
+        {/* Pro: Full Protocol (workout, meals, AI tip, hydration) */}
+        {isPro && (
+          <motion.div variants={stagger.item}>
+            <ProProtocol proteinTarget={proteinTarget} />
+          </motion.div>
+        )}
 
+        {/* Pro: Weekly Progress Summary */}
+        {isPro && (
+          <motion.div variants={stagger.item}>
+            <WeeklyProgressSummary
+              proteinTarget={proteinTarget}
+              muscleScoreChange={scoreChange}
+              streakDays={streakDays}
+            />
+          </motion.div>
+        )}
+
+        {/* AI Coach Teaser — only for free users */}
+        {!isPro && (
+          <motion.div variants={stagger.item}>
+            <AICoachTeaser />
+          </motion.div>
+        )}
+
+        {/* Social Proof Feed — always shown */}
         <motion.div variants={stagger.item}>
           <SocialProofFeed />
         </motion.div>
@@ -180,7 +244,7 @@ const Dashboard = () => {
         headline={paywall.copy.headline}
         body={paywall.copy.body}
         userName={data.first_name}
-        scoreChange={Math.max(3, Math.round(muscleScore * 0.12))}
+        scoreChange={scoreChange}
       />
       <BottomNav />
     </div>
