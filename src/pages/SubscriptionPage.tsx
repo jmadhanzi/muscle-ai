@@ -233,7 +233,7 @@ const SubscriptionPage = () => {
                   )}
                 </button>
                 <p className="text-center text-on-surface-variant text-[10px] mt-3 font-mono tracking-wide">
-                  Cancel anytime · 7-day money-back guarantee
+                  {STRIPE_CONFIG.trial.default_days}-day free trial · Cancel anytime · Money-back guarantee
                 </p>
               </div>
             </motion.div>
