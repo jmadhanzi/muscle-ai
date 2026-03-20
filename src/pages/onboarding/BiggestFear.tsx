@@ -92,12 +92,13 @@ const BiggestFear = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [{ data: ob }, { data: prof }] = await Promise.all([
-        supabase.from("onboarding_data").select("biggest_fear").eq("user_id", user.id).single(),
-        supabase.from("profiles").select("first_name").eq("user_id", user.id).single(),
-      ]);
-      if (ob?.biggest_fear) setFear(ob.biggest_fear);
-      if (prof?.first_name) setFirstName(prof.first_name);
+      const { data } = await supabase
+        .from("profiles")
+        .select("biggest_fear, first_name")
+        .eq("user_id", user.id)
+        .single();
+      if (data?.biggest_fear) setFear(data.biggest_fear);
+      if (data?.first_name) setFirstName(data.first_name);
     };
     load();
   }, [user]);
