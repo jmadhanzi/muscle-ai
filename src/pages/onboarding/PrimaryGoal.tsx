@@ -34,9 +34,8 @@ const PrimaryGoal = () => {
     try {
       await supabase.from("onboarding_data").update({
         primary_goal: selected,
-        biggest_fear: biggestFear.trim().slice(0, 100),
       }).eq("user_id", user.id);
-      navigate("/onboarding/summary");
+      navigate("/onboarding/fear");
     } catch {
       toast.error("Failed to save. Please try again.");
     }
