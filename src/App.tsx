@@ -16,6 +16,10 @@ import BodyConcerns from "./pages/onboarding/BodyConcerns.tsx";
 import OnboardingSummary from "./pages/onboarding/OnboardingSummary.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import SubscriptionPage from "./pages/SubscriptionPage.tsx";
+import AICoachPage from "./pages/AICoachPage.tsx";
+import WorkoutsPage from "./pages/WorkoutsPage.tsx";
+import NutritionPage from "./pages/NutritionPage.tsx";
+import ProgressPage from "./pages/ProgressPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -39,6 +43,10 @@ const App = () => (
             <Route path="/onboarding/summary" element={<ProtectedRoute><OnboardingSummary /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/subscribe" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
+            <Route path="/coach" element={<ProtectedRoute><AICoachPage /></ProtectedRoute>} />
+            <Route path="/workouts" element={<ProtectedRoute><WorkoutsPage /></ProtectedRoute>} />
+            <Route path="/nutrition" element={<ProtectedRoute><NutritionPage /></ProtectedRoute>} />
+            <Route path="/progress" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
