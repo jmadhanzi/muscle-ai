@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Lock, Share2, Download, Check, Loader2 } from "lucide-react";
-import { shareMilestoneCard, downloadMilestoneCard } from "./milestoneCardGenerator";
+import { useEffect, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Lock, Share2, Download, Check, Loader2, X, Eye } from "lucide-react";
+import { generateMilestoneCard, shareMilestoneCard, downloadMilestoneCard } from "./milestoneCardGenerator";
 
 interface MilestoneCardsProps {
   muscleScore: number;
@@ -50,8 +50,10 @@ const MilestoneCards = ({
 }: MilestoneCardsProps) => {
   const scoreChange = Math.max(3, Math.round(muscleScore * 0.12));
   const [generatingId, setGeneratingId] = useState<number | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewMilestone, setPreviewMilestone] = useState<Milestone | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
-  // Auto-unlock milestones when day threshold is met
   useEffect(() => {
     MILESTONES.forEach((m) => {
       if (m.unlocksAt <= dayNumber && !unlockedIds.has(m.id)) {
@@ -60,7 +62,7 @@ const MilestoneCards = ({
     });
   }, [dayNumber, unlockedIds, onUnlock]);
 
-  const fillTemplate = (tpl: string) =>
+  const fillTemplate = useCallback((tpl: string) =>
     tpl
       .replace("{drug}", medication || "GLP-1")
       .replace("{score}", String(muscleScore))
@@ -69,39 +71,56 @@ const MilestoneCards = ({
       .replace("{change}", String(scoreChange))
       .replace("{preserve}", String(preservePct))
       .replace("{weight}", String(Math.round(currentWeight * 0.08)))
-      .replace("{unit}", weightUnit === "kg" ? "kg" : "lbs");
+      .replace("{unit}", weightUnit === "kg" ? "kg" : "lbs"),
+    [medication, muscleScore, proteinTarget, scoreChange, preservePct, currentWeight, weightUnit]
+  );
 
-  const getCardData = (milestone: Milestone) => ({
+  const getCardData = useCallback((milestone: Milestone) => ({
     emoji: milestone.emoji,
     text: fillTemplate(milestone.template),
     hashtags: "#MuscleLock  #GLP1Muscle",
-  });
+  }), [fillTemplate]);
 
-  const handleShare = async (milestone: Milestone) => {
+  const openPreview = async (milestone: Milestone) => {
     if (!isPro && milestone.id > 2) {
       onPaywall();
       return;
     }
-    setGeneratingId(milestone.id);
+    setPreviewMilestone(milestone);
+    setPreviewLoading(true);
     try {
-      const cardData = getCardData(milestone);
-      const shareText = `${milestone.emoji} ${cardData.text}\n\n#MuscleLock #GLP1Muscle`;
-      onShare(milestone.id);
+      const url = await generateMilestoneCard(getCardData(milestone));
+      setPreviewUrl(url);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const closePreview = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setPreviewMilestone(null);
+  };
+
+  const handleShareFromPreview = async () => {
+    if (!previewMilestone) return;
+    setGeneratingId(previewMilestone.id);
+    try {
+      const cardData = getCardData(previewMilestone);
+      const shareText = `${previewMilestone.emoji} ${cardData.text}\n\n#MuscleLock #GLP1Muscle`;
+      onShare(previewMilestone.id);
       await shareMilestoneCard(cardData, shareText);
     } finally {
       setGeneratingId(null);
     }
   };
 
-  const handleDownload = async (milestone: Milestone) => {
-    if (!isPro && milestone.id > 2) {
-      onPaywall();
-      return;
-    }
-    setGeneratingId(milestone.id);
+  const handleDownloadFromPreview = async () => {
+    if (!previewMilestone) return;
+    setGeneratingId(previewMilestone.id);
     try {
-      const cardData = getCardData(milestone);
-      await downloadMilestoneCard(cardData, `musclelock-milestone-${milestone.id}.png`);
+      const cardData = getCardData(previewMilestone);
+      await downloadMilestoneCard(cardData, `musclelock-milestone-${previewMilestone.id}.png`);
     } finally {
       setGeneratingId(null);
     }
@@ -157,26 +176,97 @@ const MilestoneCards = ({
               {unlocked && !proLocked && (
                 <div className="flex gap-2 mt-3">
                   <button
-                    onClick={() => handleShare(m)}
-                    disabled={generatingId === m.id}
-                    className="flex items-center gap-1 text-[10px] font-mono text-primary active:scale-[0.96] transition-transform disabled:opacity-50"
+                    onClick={() => openPreview(m)}
+                    className="flex items-center gap-1 text-[10px] font-mono text-primary active:scale-[0.96] transition-transform"
                   >
-                    {generatingId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Share2 className="w-3 h-3" />}
-                    {shared ? "Shared" : "Share"}
+                    <Eye className="w-3 h-3" /> Preview
                   </button>
-                  <button
-                    onClick={() => handleDownload(m)}
-                    disabled={generatingId === m.id}
-                    className="flex items-center gap-1 text-[10px] font-mono text-on-surface-variant active:scale-[0.96] transition-transform disabled:opacity-50"
-                  >
-                    <Download className="w-3 h-3" /> Save
-                  </button>
+                  {shared && (
+                    <span className="flex items-center gap-1 text-[10px] font-mono text-primary/50">
+                      <Check className="w-3 h-3" /> Shared
+                    </span>
+                  )}
                 </div>
               )}
             </motion.div>
           );
         })}
       </div>
+
+      {/* Preview Modal */}
+      <AnimatePresence>
+        {(previewMilestone) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-5 bg-black/80 backdrop-blur-sm"
+            onClick={closePreview}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-full max-w-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                onClick={closePreview}
+                className="absolute -top-10 right-0 w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant active:scale-[0.95] transition-transform z-10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Image preview */}
+              <div className="rounded-xl overflow-hidden border border-border bg-surface-container-lowest">
+                {previewLoading ? (
+                  <div className="aspect-square flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                  </div>
+                ) : previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Milestone card preview"
+                    className="w-full aspect-square object-cover"
+                  />
+                ) : null}
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={handleShareFromPreview}
+                  disabled={generatingId === previewMilestone?.id || previewLoading}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg gradient-hero text-primary-foreground text-sm font-medium active:scale-[0.97] transition-all duration-200 disabled:opacity-50"
+                >
+                  {generatingId === previewMilestone?.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Share2 className="w-4 h-4" />
+                  )}
+                  Share
+                </button>
+                <button
+                  onClick={handleDownloadFromPreview}
+                  disabled={generatingId === previewMilestone?.id || previewLoading}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-surface-container-high text-on-surface text-sm font-medium border border-border active:scale-[0.97] transition-all duration-200 disabled:opacity-50"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </button>
+              </div>
+
+              {/* Share targets hint */}
+              <p className="text-center text-[10px] font-mono text-on-surface-variant mt-3">
+                1080 × 1080px · Instagram, Twitter/X, Facebook
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
