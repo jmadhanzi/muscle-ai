@@ -119,7 +119,7 @@ const Dashboard = () => {
     }
   }, [data, paywall, isPro]);
 
-  if (loading) {
+  if (loading || !trackingLoaded) {
     return (
       <div className="min-h-screen bg-mesh px-5 pt-16 pb-24 space-y-4">
         <SkeletonCard /><SkeletonCard /><SkeletonCard />
