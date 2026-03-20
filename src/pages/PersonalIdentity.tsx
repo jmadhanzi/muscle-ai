@@ -1,15 +1,56 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 
 const PersonalIdentity = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [firstName, setFirstName] = useState("");
   const [age, setAge] = useState(48);
   const [selectedSex, setSelectedSex] = useState<string>("Female");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    // Load existing data
+    const loadData = async () => {
+      const [{ data: profile }, { data: onboarding }] = await Promise.all([
+        supabase.from("profiles").select("first_name").eq("user_id", user.id).single(),
+        supabase.from("onboarding_data").select("age, biological_sex").eq("user_id", user.id).single(),
+      ]);
+      if (profile?.first_name) setFirstName(profile.first_name);
+      if (onboarding?.age) setAge(onboarding.age);
+      if (onboarding?.biological_sex) setSelectedSex(onboarding.biological_sex);
+    };
+    loadData();
+  }, [user]);
+
+  const handleNext = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      await supabase.from("profiles").update({ first_name: firstName }).eq("user_id", user.id);
+      
+      const { data: existing } = await supabase.from("onboarding_data").select("id").eq("user_id", user.id).single();
+      
+      if (existing) {
+        await supabase.from("onboarding_data").update({ age, biological_sex: selectedSex }).eq("user_id", user.id);
+      } else {
+        await supabase.from("onboarding_data").insert({ user_id: user.id, age, biological_sex: selectedSex });
+      }
+      
+      navigate("/medication-profile");
+    } catch (err) {
+      toast.error("Failed to save. Please try again.");
+    }
+    setSaving(false);
+  };
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden relative">
-      {/* Ambient glow */}
       <div className="fixed top-[20%] right-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full pointer-events-none -z-10" />
       <div className="fixed bottom-[10%] left-[-5%] w-[30%] h-[30%] bg-secondary/5 blur-[100px] rounded-full pointer-events-none -z-10" />
 
@@ -38,6 +79,8 @@ const PersonalIdentity = () => {
                 id="first_name"
                 placeholder="Enter name"
                 type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
               />
             </div>
           </div>
@@ -114,10 +157,11 @@ const PersonalIdentity = () => {
       <div className="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-background via-background/95 to-transparent z-40">
         <div className="max-w-2xl mx-auto">
           <button
-            onClick={() => navigate("/medication-profile")}
-            className="w-full py-5 rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold text-lg flex items-center justify-center gap-3 shadow-[0_8px_32px_hsla(155,100%,71%,0.25)] active:scale-95 transition-transform duration-200"
+            onClick={handleNext}
+            disabled={saving}
+            className="w-full py-5 rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold text-lg flex items-center justify-center gap-3 shadow-[0_8px_32px_hsla(155,100%,71%,0.25)] active:scale-95 transition-transform duration-200 disabled:opacity-50"
           >
-            Next step
+            {saving ? "Saving..." : "Next step"}
             <span className="material-symbols-outlined">arrow_forward</span>
           </button>
         </div>
