@@ -9,18 +9,17 @@ export function useDailyTracking(userId: string | undefined) {
   const [loaded, setLoaded] = useState(false);
   const saving = useRef(false);
 
-  // Load today's data
   useEffect(() => {
     if (!userId) return;
     const load = async () => {
       const { data } = await supabase
-        .from("daily_tracking")
-        .select("protein_intake, checked_items")
+        .from("daily_logs")
+        .select("protein_logged, checked_items")
         .eq("user_id", userId)
-        .eq("tracking_date", todayStr())
+        .eq("date", todayStr())
         .maybeSingle();
       if (data) {
-        setProteinIntake(data.protein_intake);
+        setProteinIntake(data.protein_logged);
         setCheckedItems(new Set(data.checked_items || []));
       }
       setLoaded(true);
@@ -28,7 +27,6 @@ export function useDailyTracking(userId: string | undefined) {
     load();
   }, [userId]);
 
-  // Persist helper
   const persist = useCallback(
     async (protein: number, items: Set<string>) => {
       if (!userId || saving.current) return;
@@ -36,13 +34,12 @@ export function useDailyTracking(userId: string | undefined) {
       const checked_items = Array.from(items);
       const row = {
         user_id: userId,
-        tracking_date: todayStr(),
-        protein_intake: protein,
+        date: todayStr(),
+        protein_logged: protein,
         checked_items,
       };
-      // Upsert by unique (user_id, tracking_date)
-      await supabase.from("daily_tracking").upsert(row, {
-        onConflict: "user_id,tracking_date",
+      await supabase.from("daily_logs").upsert(row, {
+        onConflict: "user_id,date",
       });
       saving.current = false;
     },

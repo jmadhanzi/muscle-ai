@@ -32,9 +32,8 @@ const AboutPage = () => {
       // Delete user data from all tables
       if (user) {
         await Promise.all([
-          supabase.from("daily_tracking").delete().eq("user_id", user.id),
-          supabase.from("onboarding_data").delete().eq("user_id", user.id),
-          supabase.from("user_milestones").delete().eq("user_id", user.id),
+          supabase.from("daily_logs").delete().eq("user_id", user.id),
+          supabase.from("milestones").delete().eq("user_id", user.id),
           supabase.from("push_subscriptions").delete().eq("user_id", user.id),
           supabase.from("referrals").delete().eq("referrer_id", user.id),
           supabase.from("profiles").delete().eq("user_id", user.id),

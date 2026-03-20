@@ -50,11 +50,11 @@ const SettingsPage = () => {
     if (!user) return;
     setSaving(true);
     try {
-      const [{ error: profErr }, { error: onbErr }] = await Promise.all([
-        supabase.from("profiles").update({ first_name: firstName }).eq("user_id", user.id),
-        supabase.from("onboarding_data").update({ injection_day: injectionDay }).eq("user_id", user.id),
-      ]);
-      if (profErr || onbErr) throw profErr || onbErr;
+      const { error } = await supabase
+        .from("profiles")
+        .update({ first_name: firstName, injection_day: injectionDay })
+        .eq("user_id", user.id);
+      if (error) throw error;
       toast.success("Settings saved");
     } catch (e: any) {
       toast.error(e.message || "Save failed");
