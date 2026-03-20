@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, Share2, Download, Check } from "lucide-react";
+import { Lock, Share2, Download, Check, Loader2 } from "lucide-react";
+import { shareMilestoneCard, downloadMilestoneCard } from "./milestoneCardGenerator";
 
 interface MilestoneCardsProps {
   muscleScore: number;
