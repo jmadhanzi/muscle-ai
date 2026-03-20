@@ -29,6 +29,7 @@ const SettingsPage = () => {
   const [saving, setSaving] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const push = usePushNotifications(user?.id);
 
   useEffect(() => {
     if (!user) return;
