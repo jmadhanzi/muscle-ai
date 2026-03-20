@@ -211,7 +211,7 @@ serve(async (req) => {
       const checkDate = new Date(now);
       for (let i = 0; i < 7; i++) {
         const dateStr = checkDate.toISOString().slice(0, 10);
-        if (rows.some((r: any) => r.tracking_date === dateStr)) {
+        if (rows.some((r: any) => r.date === dateStr)) {
           streak++;
           checkDate.setDate(checkDate.getDate() - 1);
         } else {
