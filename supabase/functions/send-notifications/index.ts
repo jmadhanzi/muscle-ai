@@ -20,10 +20,12 @@ interface UserContext {
   todayProtein: number;
   checkedItems: string[];
   streakDays: number;
-  lastOpenedAt: string | null; // ISO timestamp
+  lastOpenedAt: string | null;
   todayIdx: number;
   hour: number;
   weekNumber: number;
+  subscriptionEndDate: string | null;
+  referredBy: string | null;
 }
 
 interface Notification {
