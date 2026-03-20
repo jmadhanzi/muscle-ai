@@ -9,10 +9,11 @@ import Index from "./pages/Index.tsx";
 import AuthPage from "./pages/AuthPage.tsx";
 import PersonalIdentity from "./pages/PersonalIdentity.tsx";
 import MedicationProfile from "./pages/MedicationProfile.tsx";
-import BodyMetrics from "./pages/onboarding/BodyMetrics.tsx";
-import ActivityLevel from "./pages/onboarding/ActivityLevel.tsx";
-import FitnessGoals from "./pages/onboarding/FitnessGoals.tsx";
-import BodyConcerns from "./pages/onboarding/BodyConcerns.tsx";
+import WeightGoals from "./pages/onboarding/WeightGoals.tsx";
+import MuscleConcern from "./pages/onboarding/MuscleConcern.tsx";
+import FitnessLevel from "./pages/onboarding/FitnessLevel.tsx";
+import ProteinIntake from "./pages/onboarding/ProteinIntake.tsx";
+import PrimaryGoal from "./pages/onboarding/PrimaryGoal.tsx";
 import OnboardingSummary from "./pages/onboarding/OnboardingSummary.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import SubscriptionPage from "./pages/SubscriptionPage.tsx";
@@ -36,10 +37,11 @@ const App = () => (
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/personal-identity" element={<ProtectedRoute><PersonalIdentity /></ProtectedRoute>} />
             <Route path="/medication-profile" element={<ProtectedRoute><MedicationProfile /></ProtectedRoute>} />
-            <Route path="/onboarding/body-metrics" element={<ProtectedRoute><BodyMetrics /></ProtectedRoute>} />
-            <Route path="/onboarding/activity" element={<ProtectedRoute><ActivityLevel /></ProtectedRoute>} />
-            <Route path="/onboarding/goals" element={<ProtectedRoute><FitnessGoals /></ProtectedRoute>} />
-            <Route path="/onboarding/concerns" element={<ProtectedRoute><BodyConcerns /></ProtectedRoute>} />
+            <Route path="/onboarding/weight" element={<ProtectedRoute><WeightGoals /></ProtectedRoute>} />
+            <Route path="/onboarding/muscle-concern" element={<ProtectedRoute><MuscleConcern /></ProtectedRoute>} />
+            <Route path="/onboarding/fitness-level" element={<ProtectedRoute><FitnessLevel /></ProtectedRoute>} />
+            <Route path="/onboarding/protein" element={<ProtectedRoute><ProteinIntake /></ProtectedRoute>} />
+            <Route path="/onboarding/goals" element={<ProtectedRoute><PrimaryGoal /></ProtectedRoute>} />
             <Route path="/onboarding/summary" element={<ProtectedRoute><OnboardingSummary /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/subscribe" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
