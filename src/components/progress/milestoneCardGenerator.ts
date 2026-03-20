@@ -1,7 +1,10 @@
 /**
  * Renders a 1080×1080 milestone share card on a canvas and returns a blob URL.
- * Dark background, mint gradient accents, MuscleLock branding.
+ * Dark background, mint gradient accents, MuscleLock branding, QR code.
  */
+import qrcode from "qrcode-generator";
+
+const APP_URL = "https://musclelock.app/download";
 
 interface CardData {
   emoji: string;
