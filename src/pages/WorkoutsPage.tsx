@@ -1,8 +1,7 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import PaywallModal from "@/components/PaywallModal";
+import { usePaywall } from "@/hooks/usePaywall";
 import { Lock, Dumbbell } from "lucide-react";
 
 const WORKOUT_CATEGORIES = [
@@ -22,8 +21,7 @@ const TODAYS_WORKOUT = [
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const WorkoutsPage = () => {
-  const navigate = useNavigate();
-  const [paywallOpen, setPaywallOpen] = useState(false);
+  const paywall = usePaywall();
 
   return (
     <div className="min-h-screen bg-mesh pb-24">
@@ -84,7 +82,7 @@ const WorkoutsPage = () => {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + i * 0.05, duration: 0.4, ease }}
-                onClick={() => !cat.free && setPaywallOpen(true)}
+                onClick={() => !cat.free && paywall.fire("workout_day2")}
                 className={`w-full flex items-center gap-4 p-4 rounded-lg text-left active:scale-[0.97] transition-all duration-200 ${
                   cat.free ? "bg-surface-container-low hover:bg-surface-container" : "bg-surface-container-low/50 opacity-60"
                 }`}
@@ -109,7 +107,13 @@ const WorkoutsPage = () => {
         </motion.div>
       </div>
 
-      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} feature="Custom Workouts" />
+      <PaywallModal
+        open={paywall.open}
+        onClose={paywall.close}
+        feature={paywall.copy.feature}
+        headline={paywall.copy.headline}
+        body={paywall.copy.body}
+      />
       <BottomNav />
     </div>
   );

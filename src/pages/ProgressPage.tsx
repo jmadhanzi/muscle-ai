@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import PaywallModal from "@/components/PaywallModal";
+import { usePaywall } from "@/hooks/usePaywall";
 import { CountUp, AnimatedProgress } from "@/components/motion/Animated";
 import { Lock, TrendingUp, TrendingDown } from "lucide-react";
 
@@ -25,7 +25,7 @@ const WEEKLY_ADHERENCE = [
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const ProgressPage = () => {
-  const [paywallOpen, setPaywallOpen] = useState(false);
+  const paywall = usePaywall();
 
   return (
     <div className="min-h-screen bg-mesh pb-24">
@@ -48,7 +48,7 @@ const ProgressPage = () => {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 + i * 0.06, duration: 0.4, ease }}
-              onClick={() => !m.free && setPaywallOpen(true)}
+              onClick={() => !m.free && paywall.fire("analytics_tap")}
               className={`relative rounded-lg p-5 text-left active:scale-[0.97] transition-all duration-200 ${
                 m.free ? "bg-surface-container-lowest border border-border" : "bg-surface-container-low/50 opacity-60 border border-transparent"
               }`}
@@ -137,7 +137,13 @@ const ProgressPage = () => {
         </motion.div>
       </div>
 
-      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} feature="Progress Analytics" />
+      <PaywallModal
+        open={paywall.open}
+        onClose={paywall.close}
+        feature={paywall.copy.feature}
+        headline={paywall.copy.headline}
+        body={paywall.copy.body}
+      />
       <BottomNav />
     </div>
   );

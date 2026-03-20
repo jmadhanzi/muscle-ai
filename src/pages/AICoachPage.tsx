@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import PaywallModal from "@/components/PaywallModal";
+import { usePaywall } from "@/hooks/usePaywall";
 import { Brain, Send, Loader2, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AI_COACH_FREE_LIMIT } from "@/config/features";
@@ -78,14 +79,13 @@ async function streamChat({
 
 const AICoachPage = () => {
   const navigate = useNavigate();
+  const paywall = usePaywall();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [paywallOpen, setPaywallOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Count user messages sent
   const userMessageCount = messages.filter((m) => m.role === "user").length;
   const isLimitReached = userMessageCount >= AI_COACH_FREE_LIMIT;
   const remaining = Math.max(0, AI_COACH_FREE_LIMIT - userMessageCount);
@@ -103,7 +103,7 @@ const AICoachPage = () => {
     if (!trimmed || isLoading) return;
 
     if (isLimitReached) {
-      setPaywallOpen(true);
+      paywall.fire("ai_message_4");
       return;
     }
 
@@ -160,7 +160,6 @@ const AICoachPage = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Message counter pill */}
           <div className={`px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-widest ${
             isLimitReached ? "bg-accent-danger/10 text-accent-danger" : "bg-primary/10 text-primary"
           }`}>
@@ -256,7 +255,6 @@ const AICoachPage = () => {
               </motion.div>
             )}
 
-            {/* Limit reached banner */}
             {isLimitReached && !isLoading && (
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
@@ -298,7 +296,7 @@ const AICoachPage = () => {
             style={{ minHeight: "36px" }}
           />
           <button
-            onClick={() => isLimitReached ? setPaywallOpen(true) : send(input)}
+            onClick={() => isLimitReached ? paywall.fire("ai_message_4") : send(input)}
             disabled={(!input.trim() && !isLimitReached) || isLoading}
             className="shrink-0 w-9 h-9 rounded-xl gradient-hero flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
           >
@@ -311,7 +309,13 @@ const AICoachPage = () => {
         </div>
       </div>
 
-      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} feature="Unlimited AI Coach" />
+      <PaywallModal
+        open={paywall.open}
+        onClose={paywall.close}
+        feature={paywall.copy.feature}
+        headline={paywall.copy.headline}
+        body={paywall.copy.body}
+      />
       <BottomNav />
     </div>
   );

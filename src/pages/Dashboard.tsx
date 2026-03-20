@@ -7,6 +7,7 @@ import BottomNav from "@/components/BottomNav";
 import { SkeletonCard } from "@/components/motion/Skeleton";
 import PaywallModal from "@/components/PaywallModal";
 import { DAILY_PROTOCOL } from "@/config/features";
+import { usePaywall } from "@/hooks/usePaywall";
 import DashboardHeader from "@/components/dashboard/Header";
 import MuscleScoreGauge from "@/components/dashboard/MuscleScoreGauge";
 import StatsRow from "@/components/dashboard/StatsRow";
@@ -30,7 +31,7 @@ export interface OnboardingData {
 }
 
 export const calcMuscleScore = (data: OnboardingData) => {
-  let score = 45; // baseline
+  let score = 45;
   if (data.fitness_level === "athlete") score += 12;
   else if (data.fitness_level === "active") score += 8;
   else if (data.fitness_level === "beginner") score += 3;
@@ -67,11 +68,10 @@ const stagger = {
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const paywall = usePaywall();
   const [data, setData] = useState<OnboardingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
-  const [paywallOpen, setPaywallOpen] = useState(false);
-  const [paywallFeature, setPaywallFeature] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -102,9 +102,7 @@ const Dashboard = () => {
 
   const toggleCheck = (id: string, free: boolean) => {
     if (!free) {
-      const item = DAILY_PROTOCOL.find((p) => p.id === id);
-      setPaywallFeature(item?.label || "this feature");
-      setPaywallOpen(true);
+      paywall.fire("protocol_locked");
       return;
     }
     setCheckedItems((prev) => {
@@ -148,7 +146,13 @@ const Dashboard = () => {
         </motion.div>
       </motion.div>
 
-      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} feature={paywallFeature} />
+      <PaywallModal
+        open={paywall.open}
+        onClose={paywall.close}
+        feature={paywall.copy.feature}
+        headline={paywall.copy.headline}
+        body={paywall.copy.body}
+      />
       <BottomNav />
     </div>
   );
