@@ -7,6 +7,7 @@ import { CountUp, AnimatedProgress } from "@/components/motion/Animated";
 import BottomNav from "@/components/BottomNav";
 import { SkeletonCard } from "@/components/motion/Skeleton";
 import { Lock } from "lucide-react";
+import PaywallModal from "@/components/PaywallModal";
 
 interface OnboardingData {
   first_name?: string;
@@ -60,6 +61,8 @@ const Dashboard = () => {
   const [data, setData] = useState<OnboardingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [paywallFeature, setPaywallFeature] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -98,7 +101,12 @@ const Dashboard = () => {
   const greeting = data.first_name ? `Hey ${data.first_name}` : "Welcome back";
 
   const toggleCheck = (id: string, free: boolean) => {
-    if (!free) return;
+    if (!free) {
+      const item = DAILY_PROTOCOL.find((p) => p.id === id);
+      setPaywallFeature(item?.label || "this feature");
+      setPaywallOpen(true);
+      return;
+    }
     setCheckedItems((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
@@ -243,7 +251,10 @@ const Dashboard = () => {
 
         {/* Upgrade CTA */}
         <motion.div variants={stagger.item}>
-          <div className="relative overflow-hidden rounded-lg gradient-hero p-5">
+          <button
+            onClick={() => navigate("/subscribe")}
+            className="w-full relative overflow-hidden rounded-lg gradient-hero p-5 active:scale-[0.97] transition-transform duration-200 text-left"
+          >
             <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-xl" />
             <div className="relative flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center shrink-0">
@@ -257,7 +268,7 @@ const Dashboard = () => {
               </div>
               <span className="material-symbols-outlined text-on-primary">arrow_forward</span>
             </div>
-          </div>
+          </button>
         </motion.div>
 
         {/* Quick Stats Row */}
@@ -288,6 +299,7 @@ const Dashboard = () => {
         </motion.div>
       </motion.div>
 
+      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} feature={paywallFeature} />
       <BottomNav />
     </div>
   );
