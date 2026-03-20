@@ -1,7 +1,10 @@
 /**
  * Renders a 1080×1080 milestone share card on a canvas and returns a blob URL.
- * Dark background, mint gradient accents, MuscleLock branding.
+ * Dark background, mint gradient accents, MuscleLock branding, QR code.
  */
+import qrcode from "qrcode-generator";
+
+const APP_URL = "https://musclelock.app/download";
 
 interface CardData {
   emoji: string;
@@ -172,20 +175,54 @@ export async function generateMilestoneCard(data: CardData): Promise<string> {
   ctx.fillStyle = bottomGrad;
   ctx.fillRect(100, CARD_SIZE - 60, CARD_SIZE - 200, 3);
 
-  // ── Branding watermark bottom-right ──
+  // ── QR Code (bottom-right) ──
+  const qr = qrcode(0, "M");
+  qr.addData(APP_URL);
+  qr.make();
+  const qrModules = qr.getModuleCount();
+  const qrSize = 100;
+  const qrCellSize = qrSize / qrModules;
+  const qrX = CARD_SIZE - 80 - qrSize;
+  const qrY = CARD_SIZE - 80 - qrSize;
+
+  // QR background with rounded rect
+  drawRoundRect(ctx, qrX - 10, qrY - 10, qrSize + 20, qrSize + 20, 12);
+  ctx.fillStyle = BG_SECONDARY;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0, 229, 160, 0.15)";
+  ctx.lineWidth = 1;
+  drawRoundRect(ctx, qrX - 10, qrY - 10, qrSize + 20, qrSize + 20, 12);
+  ctx.stroke();
+
+  // Draw QR modules
+  for (let row = 0; row < qrModules; row++) {
+    for (let col = 0; col < qrModules; col++) {
+      if (qr.isDark(row, col)) {
+        ctx.fillStyle = MINT;
+        ctx.fillRect(
+          qrX + col * qrCellSize,
+          qrY + row * qrCellSize,
+          Math.ceil(qrCellSize),
+          Math.ceil(qrCellSize)
+        );
+      }
+    }
+  }
+
+  // ── Branding watermark (left of QR) ──
   ctx.font = "600 16px 'Space Grotesk', 'Inter', sans-serif";
   ctx.fillStyle = TEXT_MUTED;
-  ctx.textAlign = "right";
-  ctx.fillText("musclelock.app", CARD_SIZE - 80, CARD_SIZE - 90);
+  ctx.textAlign = "left";
+  ctx.fillText("musclelock.app", 80, CARD_SIZE - 90);
 
   // ── GLP-1 + Muscle badge ──
   ctx.font = "500 14px 'JetBrains Mono', 'Courier New', monospace";
   ctx.fillStyle = MINT_DIM;
-  drawRoundRect(ctx, 80, CARD_SIZE - 110, 180, 32, 16);
+  drawRoundRect(ctx, 80, CARD_SIZE - 140, 180, 32, 16);
   ctx.fill();
   ctx.fillStyle = MINT;
   ctx.textAlign = "center";
-  ctx.fillText("#GLP1Muscle", 170, CARD_SIZE - 88);
+  ctx.fillText("#GLP1Muscle", 170, CARD_SIZE - 118);
 
   // Convert to blob URL
   return new Promise((resolve) => {
