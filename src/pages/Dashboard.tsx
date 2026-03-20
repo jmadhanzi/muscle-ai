@@ -279,25 +279,25 @@ const Dashboard = () => {
         <motion.div variants={stagger.item}>
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-surface-container-low rounded-lg p-4 text-center">
-              <span className="material-symbols-outlined text-secondary text-xl">directions_run</span>
+              <span className="material-symbols-outlined text-secondary text-xl">fitness_center</span>
               <p className="font-headline font-bold text-on-surface text-lg mt-1 capitalize">
-                {data.activity_level?.replace("_", " ") || "—"}
+                {data.fitness_level?.replace("_", " ") || "—"}
               </p>
-              <p className="text-[9px] font-mono uppercase tracking-widest text-on-surface-variant">Activity</p>
+              <p className="text-[9px] font-mono uppercase tracking-widest text-on-surface-variant">Fitness</p>
             </div>
             <div className="bg-surface-container-low rounded-lg p-4 text-center">
-              <span className="material-symbols-outlined text-primary text-xl">flag</span>
-              <p className="font-headline font-bold text-on-surface text-lg mt-1">
-                {data.fitness_goals?.length || 0}
+              <span className="material-symbols-outlined text-primary text-xl">egg_alt</span>
+              <p className="font-headline font-bold text-on-surface text-sm mt-1">
+                {data.protein_intake?.replace(/_/g, " ") || "—"}
               </p>
-              <p className="text-[9px] font-mono uppercase tracking-widest text-on-surface-variant">Goals</p>
+              <p className="text-[9px] font-mono uppercase tracking-widest text-on-surface-variant">Protein</p>
             </div>
             <div className="bg-surface-container-low rounded-lg p-4 text-center">
-              <span className="material-symbols-outlined text-accent-danger text-xl">emergency</span>
-              <p className="font-headline font-bold text-accent-danger text-lg mt-1">
-                {data.body_concerns?.length || 0}
+              <span className="material-symbols-outlined text-accent-gold text-xl">flag</span>
+              <p className="font-headline font-bold text-on-surface text-sm mt-1 capitalize">
+                {data.primary_goal?.replace(/_/g, " ") || "—"}
               </p>
-              <p className="text-[9px] font-mono uppercase tracking-widest text-on-surface-variant">Concerns</p>
+              <p className="text-[9px] font-mono uppercase tracking-widest text-on-surface-variant">Goal</p>
             </div>
           </div>
         </motion.div>
