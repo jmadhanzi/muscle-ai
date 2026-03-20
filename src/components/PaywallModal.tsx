@@ -318,9 +318,9 @@ const PaywallModal = ({
                   {UNLOCK_LIST.map((item, i) => (
                     <motion.div
                       key={i}
-                      initial={{ opacity: 0, x: -8 }}
+                      initial={{ opacity: 0, x: 24 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.6 + i * 0.08, duration: 0.35, ease: "easeOut" }}
+                      transition={{ delay: 0.6 + i * 0.08, duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}
                       className="flex items-center gap-2.5 text-sm text-on-surface"
                     >
                       <span className="material-symbols-outlined text-primary text-base shrink-0">
@@ -401,7 +401,10 @@ const PaywallModal = ({
               <button
                 onClick={handleCheckout}
                 disabled={loading}
-                className="w-full py-4 rounded-full gradient-hero text-on-primary font-headline font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_32px_hsla(160,100%,45%,0.25)] active:scale-[0.97] transition-transform duration-200 animate-[pulse_3s_ease-in-out_infinite] disabled:opacity-60"
+                className="w-full py-4 rounded-full gradient-hero text-on-primary font-headline font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_hsla(160,100%,45%,0.25)] active:scale-[0.97] transition-transform duration-200 disabled:opacity-60 animate-[ctaGlow_2s_ease-in-out_infinite]"
+                style={{
+                  animation: "ctaGlow 2s ease-in-out infinite",
+                }}
               >
                 {loading ? (
                   "Opening checkout..."

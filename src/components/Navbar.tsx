@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+
 interface NavbarProps {
   showBack?: boolean;
   showSteps?: boolean;
@@ -6,6 +8,21 @@ interface NavbarProps {
   showNotification?: boolean;
   showProfile?: boolean;
 }
+
+const dotVariants = {
+  inactive: { scale: 1, backgroundColor: "hsl(var(--surface-variant))" },
+  active: {
+    scale: 1.4,
+    backgroundColor: "hsl(var(--primary))",
+    boxShadow: "0 0 8px hsla(155,100%,71%,0.6)",
+    transition: { type: "spring" as const, stiffness: 400, damping: 15 },
+  },
+  completed: {
+    scale: 1,
+    backgroundColor: "hsl(var(--primary))",
+    boxShadow: "0 0 8px hsla(155,100%,71%,0.6)",
+  },
+};
 
 const Navbar = ({ showBack, showSteps, activeStep = 1, totalSteps = 7, showNotification, showProfile }: NavbarProps) => (
   <nav className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl flex justify-between items-center px-6 py-4">
@@ -26,17 +43,20 @@ const Navbar = ({ showBack, showSteps, activeStep = 1, totalSteps = 7, showNotif
     </div>
     <div className="flex items-center gap-4">
       {showSteps && (
-        <div className="flex items-center gap-1">
-          {Array.from({ length: totalSteps }).map((_, i) => (
-            <div
-              key={i}
-              className={`w-2 h-2 rounded-full ${
-                i < activeStep
-                  ? "bg-primary shadow-[0_0_8px_hsla(155,100%,71%,0.6)]"
-                  : "bg-surface-variant"
-              }`}
-            />
-          ))}
+        <div className="flex items-center gap-1.5">
+          {Array.from({ length: totalSteps }).map((_, i) => {
+            const stepNum = i + 1;
+            const variant = stepNum === activeStep ? "active" : stepNum < activeStep ? "completed" : "inactive";
+            return (
+              <motion.div
+                key={i}
+                variants={dotVariants}
+                initial="inactive"
+                animate={variant}
+                className="w-2 h-2 rounded-full"
+              />
+            );
+          })}
         </div>
       )}
       {showProfile && (
