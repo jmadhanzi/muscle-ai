@@ -149,6 +149,9 @@ const Dashboard = () => {
     injectionDay: data.injection_day,
     streakDays,
     checkedItemsCount: checkedItems.size,
+    proteinIntake,
+    proteinTarget,
+    firstName: data.first_name,
     isPro,
   });
 
