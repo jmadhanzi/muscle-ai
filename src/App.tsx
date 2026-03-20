@@ -14,6 +14,7 @@ import ActivityLevel from "./pages/onboarding/ActivityLevel.tsx";
 import FitnessGoals from "./pages/onboarding/FitnessGoals.tsx";
 import BodyConcerns from "./pages/onboarding/BodyConcerns.tsx";
 import OnboardingSummary from "./pages/onboarding/OnboardingSummary.tsx";
+import Dashboard from "./pages/Dashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/onboarding/goals" element={<ProtectedRoute><FitnessGoals /></ProtectedRoute>} />
             <Route path="/onboarding/concerns" element={<ProtectedRoute><BodyConcerns /></ProtectedRoute>} />
             <Route path="/onboarding/summary" element={<ProtectedRoute><OnboardingSummary /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
