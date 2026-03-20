@@ -179,6 +179,60 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          converted_at: string | null
+          created_at: string
+          id: string
+          referral_code: string
+          referred_id: string | null
+          referrer_id: string
+          status: string
+        }
+        Insert: {
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_id?: string | null
+          referrer_id: string
+          status?: string
+        }
+        Update: {
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_id?: string | null
+          referrer_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      user_milestones: {
+        Row: {
+          id: string
+          milestone_id: number
+          shared_at: string | null
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          milestone_id: number
+          shared_at?: string | null
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          milestone_id?: number
+          shared_at?: string | null
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
