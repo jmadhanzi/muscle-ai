@@ -227,13 +227,13 @@ const SubscriptionPage = () => {
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
                     <>
-                      Start Protecting Muscle
+                      Start {STRIPE_CONFIG.trial.default_days}-Day Free Trial
                       <span className="material-symbols-outlined">arrow_forward</span>
                     </>
                   )}
                 </button>
                 <p className="text-center text-on-surface-variant text-[10px] mt-3 font-mono tracking-wide">
-                  Cancel anytime · 7-day money-back guarantee
+                  {STRIPE_CONFIG.trial.default_days}-day free trial · Cancel anytime · Money-back guarantee
                 </p>
               </div>
             </motion.div>
@@ -357,7 +357,7 @@ const SubscriptionPage = () => {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  Unlock MuscleLock Pro
+                  Start {STRIPE_CONFIG.trial.default_days}-Day Free Trial
                   <span className="material-symbols-outlined">lock_open</span>
                 </>
               )}
