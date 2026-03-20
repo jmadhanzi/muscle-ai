@@ -251,7 +251,10 @@ const Dashboard = () => {
 
         {/* Upgrade CTA */}
         <motion.div variants={stagger.item}>
-          <div className="relative overflow-hidden rounded-lg gradient-hero p-5">
+          <button
+            onClick={() => navigate("/subscribe")}
+            className="w-full relative overflow-hidden rounded-lg gradient-hero p-5 active:scale-[0.97] transition-transform duration-200 text-left"
+          >
             <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-xl" />
             <div className="relative flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center shrink-0">
@@ -265,7 +268,7 @@ const Dashboard = () => {
               </div>
               <span className="material-symbols-outlined text-on-primary">arrow_forward</span>
             </div>
-          </div>
+          </button>
         </motion.div>
 
         {/* Quick Stats Row */}
