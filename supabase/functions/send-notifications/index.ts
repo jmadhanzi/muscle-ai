@@ -268,10 +268,12 @@ serve(async (req) => {
         todayProtein: track?.protein_logged || 0,
         checkedItems: track?.checked_items || [],
         streakDays: streakMap.get(userId) || 0,
-        lastOpenedAt: null, // Would need a last_active tracking column
+        lastOpenedAt: null,
         todayIdx,
         hour,
         weekNumber,
+        subscriptionEndDate: prof?.subscription_end_date || null,
+        referredBy: prof?.referred_by || null,
       };
 
       const notifications = evaluateNudges(ctx);
