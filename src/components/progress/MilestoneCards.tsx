@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, Share2, Download, Check, Loader2, X, Eye, Instagram, Copy } from "lucide-react";
-import { generateMilestoneCard, shareMilestoneCard, downloadMilestoneCard } from "./milestoneCardGenerator";
+import { captureCardElement, shareFromElement, downloadFromElement } from "./milestoneCardGenerator";
+import MilestoneCardTemplate, { type MilestoneCardData } from "./MilestoneCardTemplate";
 import { toast } from "sonner";
 
 interface MilestoneCardsProps {
@@ -44,6 +45,8 @@ const MILESTONES: Milestone[] = [
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
+type CardFormat = "square" | "story";
+
 const MilestoneCards = ({
   muscleScore, proteinTarget, medication, preservePct,
   currentWeight, weightUnit, dayNumber, isPro, onPaywall,
@@ -54,6 +57,9 @@ const MilestoneCards = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewMilestone, setPreviewMilestone] = useState<Milestone | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewFormat, setPreviewFormat] = useState<CardFormat>("square");
+
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     MILESTONES.forEach((m) => {
@@ -76,25 +82,42 @@ const MilestoneCards = ({
     [medication, muscleScore, proteinTarget, scoreChange, preservePct, currentWeight, weightUnit]
   );
 
-  const getCardData = useCallback((milestone: Milestone) => ({
+  const getCardData = useCallback((milestone: Milestone): MilestoneCardData => ({
     emoji: milestone.emoji,
     text: fillTemplate(milestone.template),
-    hashtags: "#MuscleLock  #GLP1Muscle",
-  }), [fillTemplate]);
+    hashtags: `#MuscleLock  #GLP1Muscle  #${(medication || "GLP1").replace(/[\s-]/g, "")}Journey`,
+    muscleScore,
+    glp1Drug: medication,
+    week: Math.ceil(dayNumber / 7),
+  }), [fillTemplate, muscleScore, medication, dayNumber]);
 
-  const openPreview = async (milestone: Milestone) => {
+  // Capture after template renders
+  const capturePreview = useCallback(async () => {
+    // Small delay to let the template render
+    await new Promise((r) => setTimeout(r, 100));
+    if (cardRef.current) {
+      const url = await captureCardElement(cardRef.current);
+      setPreviewUrl(url);
+    }
+    setPreviewLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (previewMilestone && previewLoading) {
+      capturePreview();
+    }
+  }, [previewMilestone, previewLoading, previewFormat, capturePreview]);
+
+  const openPreview = (milestone: Milestone, format: CardFormat = "square") => {
     if (!isPro && milestone.id > 2) {
       onPaywall();
       return;
     }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setPreviewFormat(format);
     setPreviewMilestone(milestone);
     setPreviewLoading(true);
-    try {
-      const url = await generateMilestoneCard(getCardData(milestone));
-      setPreviewUrl(url);
-    } finally {
-      setPreviewLoading(false);
-    }
   };
 
   const closePreview = () => {
@@ -103,25 +126,33 @@ const MilestoneCards = ({
     setPreviewMilestone(null);
   };
 
+  const switchFormat = (format: CardFormat) => {
+    if (format === previewFormat) return;
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setPreviewFormat(format);
+    setPreviewLoading(true);
+  };
+
   const handleShareFromPreview = async () => {
-    if (!previewMilestone) return;
+    if (!previewMilestone || !cardRef.current) return;
     setGeneratingId(previewMilestone.id);
     try {
       const cardData = getCardData(previewMilestone);
-      const shareText = `${previewMilestone.emoji} ${cardData.text}\n\n#MuscleLock #GLP1Muscle`;
+      const shareText = `${previewMilestone.emoji} ${cardData.text}\n\n${cardData.hashtags}`;
       onShare(previewMilestone.id);
-      await shareMilestoneCard(cardData, shareText);
+      await shareFromElement(cardRef.current, shareText);
     } finally {
       setGeneratingId(null);
     }
   };
 
   const handleDownloadFromPreview = async () => {
-    if (!previewMilestone) return;
+    if (!previewMilestone || !cardRef.current) return;
     setGeneratingId(previewMilestone.id);
     try {
-      const cardData = getCardData(previewMilestone);
-      await downloadMilestoneCard(cardData, `musclelock-milestone-${previewMilestone.id}.png`);
+      const suffix = previewFormat === "story" ? "story" : "square";
+      await downloadFromElement(cardRef.current, `musclelock-milestone-${previewMilestone.id}-${suffix}.png`);
     } finally {
       setGeneratingId(null);
     }
@@ -129,8 +160,19 @@ const MilestoneCards = ({
 
   const unlockedCount = MILESTONES.filter((m) => m.unlocksAt <= dayNumber || unlockedIds.has(m.id)).length;
 
+  const currentCardData = previewMilestone ? getCardData(previewMilestone) : null;
+
   return (
     <div>
+      {/* Hidden card template for html2canvas capture */}
+      {previewMilestone && currentCardData && (
+        <MilestoneCardTemplate
+          ref={cardRef}
+          data={currentCardData}
+          format={previewFormat}
+        />
+      )}
+
       <div className="flex items-center justify-between mb-1">
         <h2 className="font-headline font-bold text-lg text-on-surface">🏆 Your Achievements</h2>
         <span className="text-[10px] font-mono text-on-surface-variant">
@@ -196,7 +238,7 @@ const MilestoneCards = ({
 
       {/* Preview Modal */}
       <AnimatePresence>
-        {(previewMilestone) && (
+        {previewMilestone && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -221,17 +263,41 @@ const MilestoneCards = ({
                 <X className="w-4 h-4" />
               </button>
 
+              {/* Format toggle */}
+              <div className="flex gap-1 mb-3 bg-surface-container-high rounded-lg p-1">
+                <button
+                  onClick={() => switchFormat("square")}
+                  className={`flex-1 text-[11px] font-mono py-1.5 rounded-md transition-colors ${
+                    previewFormat === "square"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-on-surface-variant"
+                  }`}
+                >
+                  1080×1080
+                </button>
+                <button
+                  onClick={() => switchFormat("story")}
+                  className={`flex-1 text-[11px] font-mono py-1.5 rounded-md transition-colors ${
+                    previewFormat === "story"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-on-surface-variant"
+                  }`}
+                >
+                  1080×1920 Story
+                </button>
+              </div>
+
               {/* Image preview */}
               <div className="rounded-xl overflow-hidden border border-border bg-surface-container-lowest">
                 {previewLoading ? (
-                  <div className="aspect-square flex items-center justify-center">
+                  <div className={`${previewFormat === "story" ? "aspect-[9/16]" : "aspect-square"} flex items-center justify-center`}>
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
                   </div>
                 ) : previewUrl ? (
                   <img
                     src={previewUrl}
                     alt="Milestone card preview"
-                    className="w-full aspect-square object-cover"
+                    className={`w-full ${previewFormat === "story" ? "aspect-[9/16]" : "aspect-square"} object-cover`}
                   />
                 ) : null}
               </div>
@@ -243,8 +309,11 @@ const MilestoneCards = ({
                   onClick={async () => {
                     if (!previewMilestone) return;
                     onShare(previewMilestone.id);
+                    // Switch to story format for Instagram
+                    if (previewFormat !== "story") switchFormat("story");
                     await handleDownloadFromPreview();
-                    const text = `${previewMilestone.emoji} ${getCardData(previewMilestone).text}\n\n#MuscleLock #GLP1Muscle`;
+                    const cardData = getCardData(previewMilestone);
+                    const text = `${previewMilestone.emoji} ${cardData.text}\n\n${cardData.hashtags}`;
                     await navigator.clipboard.writeText(text);
                     toast.success("Image downloaded & caption copied — paste into Instagram Stories");
                   }}
@@ -262,7 +331,7 @@ const MilestoneCards = ({
                     onShare(previewMilestone.id);
                     const cardData = getCardData(previewMilestone);
                     const tweetText = encodeURIComponent(
-                      `${previewMilestone.emoji} ${cardData.text}\n\n#MuscleLock #GLP1Muscle`
+                      `${previewMilestone.emoji} ${cardData.text}\n\n${cardData.hashtags}`
                     );
                     window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, "_blank");
                     await handleDownloadFromPreview();
@@ -282,7 +351,7 @@ const MilestoneCards = ({
                     onShare(previewMilestone.id);
                     const shareUrl = encodeURIComponent("https://musclelock.app");
                     const quote = encodeURIComponent(
-                      `${previewMilestone.emoji} ${getCardData(previewMilestone).text}\n\n#MuscleLock #GLP1Muscle`
+                      `${previewMilestone.emoji} ${getCardData(previewMilestone).text}\n\n${getCardData(previewMilestone).hashtags}`
                     );
                     window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${quote}`, "_blank");
                     await handleDownloadFromPreview();
@@ -325,7 +394,7 @@ const MilestoneCards = ({
                 onClick={async () => {
                   if (!previewMilestone) return;
                   const cardData = getCardData(previewMilestone);
-                  const text = `${previewMilestone.emoji} ${cardData.text}\n\n#MuscleLock #GLP1Muscle`;
+                  const text = `${previewMilestone.emoji} ${cardData.text}\n\n${cardData.hashtags}`;
                   await navigator.clipboard.writeText(text);
                   toast.success("Caption copied to clipboard");
                 }}
@@ -335,7 +404,7 @@ const MilestoneCards = ({
               </button>
 
               <p className="text-center text-[10px] font-mono text-on-surface-variant mt-1">
-                1080 × 1080px · optimized for social
+                {previewFormat === "story" ? "1080 × 1920px · Instagram Story" : "1080 × 1080px · Feed post"}
               </p>
             </motion.div>
           </motion.div>
