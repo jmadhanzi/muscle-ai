@@ -144,6 +144,14 @@ const Dashboard = () => {
   if (checkedItems.size > 0) completedDays[mondayIdx] = true;
   const streakDays = completedDays.filter(Boolean).length;
 
+  // In-app notification alerts
+  useInAppNotifications({
+    injectionDay: data.injection_day,
+    streakDays,
+    checkedItemsCount: checkedItems.size,
+    isPro,
+  });
+
   const toggleCheck = (id: string, unlocked: boolean) => {
     if (!unlocked) {
       paywall.fire("protocol_locked");
