@@ -14,6 +14,7 @@ const OnboardingSummary = () => {
   const [showAha, setShowAha] = useState(false);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const hasReferral = Boolean(data?.referred_by || localStorage.getItem("pending_referral_code"));
 
   useEffect(() => {
     if (!user) return;
