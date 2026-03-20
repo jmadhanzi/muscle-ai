@@ -1,10 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const AI_COACH_FREE_LIMIT = 3;
 
 interface UserProfile {
   firstName?: string;
@@ -71,6 +74,72 @@ serve(async (req) => {
         JSON.stringify({ error: "AI service not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // ── Auth + subscription check ──
+    const authHeader = req.headers.get("Authorization");
+    let isPro = false;
+    let messageCount = 0;
+
+    if (authHeader) {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+        { auth: { persistSession: false } }
+      );
+
+      const token = authHeader.replace("Bearer ", "");
+      const { data: userData } = await supabase.auth.getUser(token);
+      const userId = userData?.user?.id;
+
+      if (userId) {
+        // Check subscription status
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("subscription_status, subscription_end_date")
+          .eq("user_id", userId)
+          .single();
+
+        if (profile) {
+          const endDate = profile.subscription_end_date ? new Date(profile.subscription_end_date) : null;
+          isPro = profile.subscription_status === "pro" && (!endDate || endDate > new Date());
+        }
+
+        // Get or create conversation to track message count
+        const { data: convo } = await supabase
+          .from("ai_conversations")
+          .select("id, message_count")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (convo) {
+          messageCount = convo.message_count || 0;
+
+          // Increment message count
+          await supabase
+            .from("ai_conversations")
+            .update({
+              message_count: messageCount + 1,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", convo.id);
+        }
+
+        // Enforce free limit
+        if (!isPro && messageCount >= AI_COACH_FREE_LIMIT) {
+          return new Response(
+            JSON.stringify({
+              error: "free_limit_reached",
+              message: `You've used all ${AI_COACH_FREE_LIMIT} free AI coach messages. Upgrade to Pro for unlimited coaching.`,
+              limit: AI_COACH_FREE_LIMIT,
+              used: messageCount,
+            }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
     }
 
     const systemPrompt = buildSystemPrompt(userProfile);
