@@ -9,6 +9,11 @@ import Index from "./pages/Index.tsx";
 import AuthPage from "./pages/AuthPage.tsx";
 import PersonalIdentity from "./pages/PersonalIdentity.tsx";
 import MedicationProfile from "./pages/MedicationProfile.tsx";
+import BodyMetrics from "./pages/onboarding/BodyMetrics.tsx";
+import ActivityLevel from "./pages/onboarding/ActivityLevel.tsx";
+import FitnessGoals from "./pages/onboarding/FitnessGoals.tsx";
+import BodyConcerns from "./pages/onboarding/BodyConcerns.tsx";
+import OnboardingSummary from "./pages/onboarding/OnboardingSummary.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -25,6 +30,11 @@ const App = () => (
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/personal-identity" element={<ProtectedRoute><PersonalIdentity /></ProtectedRoute>} />
             <Route path="/medication-profile" element={<ProtectedRoute><MedicationProfile /></ProtectedRoute>} />
+            <Route path="/onboarding/body-metrics" element={<ProtectedRoute><BodyMetrics /></ProtectedRoute>} />
+            <Route path="/onboarding/activity" element={<ProtectedRoute><ActivityLevel /></ProtectedRoute>} />
+            <Route path="/onboarding/goals" element={<ProtectedRoute><FitnessGoals /></ProtectedRoute>} />
+            <Route path="/onboarding/concerns" element={<ProtectedRoute><BodyConcerns /></ProtectedRoute>} />
+            <Route path="/onboarding/summary" element={<ProtectedRoute><OnboardingSummary /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
