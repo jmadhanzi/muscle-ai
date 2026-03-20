@@ -78,7 +78,7 @@ const stagger = {
 };
 
 const Dashboard = () => {
-  const { user, isPro } = useAuth();
+  const { user, isPro, subscriptionEnd } = useAuth();
   const navigate = useNavigate();
   const paywall = usePaywall();
   const [data, setData] = useState<OnboardingData | null>(null);
