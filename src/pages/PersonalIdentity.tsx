@@ -23,13 +23,14 @@ const PersonalIdentity = () => {
   useEffect(() => {
     if (!user) return;
     const loadData = async () => {
-      const [{ data: profile }, { data: onboarding }] = await Promise.all([
-        supabase.from("profiles").select("first_name").eq("user_id", user.id).single(),
-        supabase.from("onboarding_data").select("age, biological_sex").eq("user_id", user.id).single(),
-      ]);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, age, biological_sex")
+        .eq("user_id", user.id)
+        .single();
       if (profile?.first_name) setFirstName(profile.first_name);
-      if (onboarding?.age) setAge(onboarding.age);
-      if (onboarding?.biological_sex) setSelectedSex(onboarding.biological_sex);
+      if (profile?.age) setAge(profile.age);
+      if (profile?.biological_sex) setSelectedSex(profile.biological_sex);
     };
     loadData();
   }, [user]);
@@ -38,14 +39,11 @@ const PersonalIdentity = () => {
     if (!user || !firstName.trim()) return;
     setSaving(true);
     try {
-      await supabase.from("profiles").update({ first_name: firstName.trim() }).eq("user_id", user.id);
-
-      const { data: existing } = await supabase.from("onboarding_data").select("id").eq("user_id", user.id).single();
-      if (existing) {
-        await supabase.from("onboarding_data").update({ age, biological_sex: selectedSex }).eq("user_id", user.id);
-      } else {
-        await supabase.from("onboarding_data").insert({ user_id: user.id, age, biological_sex: selectedSex });
-      }
+      await supabase.from("profiles").update({
+        first_name: firstName.trim(),
+        age,
+        biological_sex: selectedSex,
+      }).eq("user_id", user.id);
 
       navigate("/medication-profile");
     } catch {
