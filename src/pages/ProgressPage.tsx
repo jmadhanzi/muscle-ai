@@ -11,6 +11,8 @@ import BodyCompositionChart from "@/components/progress/BodyCompositionChart";
 import ScoreHistoryChart from "@/components/progress/ScoreHistoryChart";
 import MilestoneCards from "@/components/progress/MilestoneCards";
 import ReferralSection from "@/components/progress/ReferralSection";
+import { useMilestones } from "@/hooks/useMilestones";
+import { useReferrals } from "@/hooks/useReferrals";
 import { calcMuscleScore, calcAtRiskLbs, calcProteinTarget, type OnboardingData } from "@/pages/Dashboard";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -30,6 +32,9 @@ const ProgressPage = () => {
   const [data, setData] = useState<OnboardingData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const { unlockedIds, sharedIds, loaded: milestonesLoaded, unlock, markShared } = useMilestones(user?.id);
+  const { referralCode, referralCount, monthsEarned, loaded: referralsLoaded, ensureReferralExists } = useReferrals(user?.id);
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
@@ -43,7 +48,7 @@ const ProgressPage = () => {
     load();
   }, [user]);
 
-  if (loading) {
+  if (loading || !milestonesLoaded || !referralsLoaded) {
     return (
       <div className="min-h-screen bg-mesh px-5 pt-16 pb-24 space-y-4">
         <SkeletonCard /><SkeletonCard /><SkeletonCard />
@@ -57,10 +62,11 @@ const ProgressPage = () => {
   }
 
   const muscleScore = calcMuscleScore(data);
-  const { atRiskLbs, preservePct } = calcAtRiskLbs(data, muscleScore);
+  const { preservePct } = calcAtRiskLbs(data, muscleScore);
   const proteinTarget = calcProteinTarget(data);
   const currentWeight = data.weight_unit === "kg" ? (data.weight_kg || 70) : (data.weight_kg || 70) * 2.205;
   const weeksOnMed = data.weeks_on_medication || 4;
+  const dayNumber = Math.max(1, Math.min(70, weeksOnMed * 7));
 
   return (
     <div className="min-h-screen bg-mesh pb-24">
@@ -77,7 +83,6 @@ const ProgressPage = () => {
       </motion.header>
 
       <motion.div className="px-5 space-y-5 mt-2" variants={stagger.container} initial="initial" animate="animate">
-        {/* Body Composition Chart */}
         <motion.div variants={stagger.item}>
           <BodyCompositionChart
             currentWeight={currentWeight}
@@ -88,7 +93,6 @@ const ProgressPage = () => {
           />
         </motion.div>
 
-        {/* Muscle Score History — Pro or teaser */}
         <motion.div variants={stagger.item}>
           {isPro ? (
             <ScoreHistoryChart currentScore={muscleScore} />
@@ -108,7 +112,6 @@ const ProgressPage = () => {
           )}
         </motion.div>
 
-        {/* Milestone Cards */}
         <motion.div variants={stagger.item}>
           <MilestoneCards
             muscleScore={muscleScore}
@@ -117,15 +120,24 @@ const ProgressPage = () => {
             preservePct={preservePct}
             currentWeight={currentWeight}
             weightUnit={data.weight_unit || "lbs"}
+            dayNumber={dayNumber}
             isPro={isPro}
             onPaywall={() => paywall.fire("milestone_share")}
+            unlockedIds={unlockedIds}
+            sharedIds={sharedIds}
+            onUnlock={unlock}
+            onShare={markShared}
           />
         </motion.div>
 
-        {/* Referral Section */}
         {user && (
           <motion.div variants={stagger.item}>
-            <ReferralSection userId={user.id} />
+            <ReferralSection
+              referralCode={referralCode}
+              referralCount={referralCount}
+              monthsEarned={monthsEarned}
+              onShareClick={ensureReferralExists}
+            />
           </motion.div>
         )}
       </motion.div>

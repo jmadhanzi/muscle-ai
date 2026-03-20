@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { Lock, Share2, Download } from "lucide-react";
+import { Lock, Share2, Download, Check } from "lucide-react";
 
 interface MilestoneCardsProps {
   muscleScore: number;
@@ -8,15 +9,20 @@ interface MilestoneCardsProps {
   preservePct: number;
   currentWeight: number;
   weightUnit: string;
+  dayNumber: number;
   isPro: boolean;
   onPaywall: () => void;
+  unlockedIds: Set<number>;
+  sharedIds: Set<number>;
+  onUnlock: (id: number) => void;
+  onShare: (id: number) => void;
 }
 
 interface Milestone {
   id: number;
   emoji: string;
   template: string;
-  unlocksAt: number; // day threshold
+  unlocksAt: number;
 }
 
 const MILESTONES: Milestone[] = [
@@ -38,10 +44,19 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const MilestoneCards = ({
   muscleScore, proteinTarget, medication, preservePct,
-  currentWeight, weightUnit, isPro, onPaywall,
+  currentWeight, weightUnit, dayNumber, isPro, onPaywall,
+  unlockedIds, sharedIds, onUnlock, onShare,
 }: MilestoneCardsProps) => {
-  const dayNumber = 14; // simulated
   const scoreChange = Math.max(3, Math.round(muscleScore * 0.12));
+
+  // Auto-unlock milestones when day threshold is met
+  useEffect(() => {
+    MILESTONES.forEach((m) => {
+      if (m.unlocksAt <= dayNumber && !unlockedIds.has(m.id)) {
+        onUnlock(m.id);
+      }
+    });
+  }, [dayNumber, unlockedIds, onUnlock]);
 
   const fillTemplate = (tpl: string) =>
     tpl
@@ -60,6 +75,7 @@ const MilestoneCards = ({
       return;
     }
     const text = fillTemplate(milestone.template);
+    onShare(milestone.id);
     if (navigator.share) {
       navigator.share({ text: `${milestone.emoji} ${text}\n\n#MuscleLock #GLP1Muscle` });
     } else {
@@ -67,20 +83,23 @@ const MilestoneCards = ({
     }
   };
 
+  const unlockedCount = MILESTONES.filter((m) => m.unlocksAt <= dayNumber || unlockedIds.has(m.id)).length;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
         <h2 className="font-headline font-bold text-lg text-on-surface">🏆 Your Achievements</h2>
         <span className="text-[10px] font-mono text-on-surface-variant">
-          {MILESTONES.filter((m) => m.unlocksAt <= dayNumber).length}/{MILESTONES.length} unlocked
+          {unlockedCount}/{MILESTONES.length} unlocked
         </span>
       </div>
       <p className="text-xs text-on-surface-variant mb-4">Share your wins. Inspire others on GLP-1s.</p>
 
       <div className="grid grid-cols-2 gap-3">
         {MILESTONES.map((m, i) => {
-          const unlocked = m.unlocksAt <= dayNumber;
+          const unlocked = m.unlocksAt <= dayNumber || unlockedIds.has(m.id);
           const proLocked = !isPro && m.id > 2;
+          const shared = sharedIds.has(m.id);
 
           return (
             <motion.div
@@ -100,6 +119,12 @@ const MilestoneCards = ({
                 </div>
               )}
 
+              {shared && !proLocked && (
+                <div className="absolute top-2.5 right-2.5">
+                  <Check className="w-3 h-3 text-primary" />
+                </div>
+              )}
+
               <span className="text-2xl block mb-2">{m.emoji}</span>
               <p className="text-xs text-on-surface leading-relaxed line-clamp-3">
                 {fillTemplate(m.template)}
@@ -111,7 +136,7 @@ const MilestoneCards = ({
                     onClick={() => handleShare(m)}
                     className="flex items-center gap-1 text-[10px] font-mono text-primary active:scale-[0.96] transition-transform"
                   >
-                    <Share2 className="w-3 h-3" /> Share
+                    <Share2 className="w-3 h-3" /> {shared ? "Shared" : "Share"}
                   </button>
                   <button className="flex items-center gap-1 text-[10px] font-mono text-on-surface-variant active:scale-[0.96] transition-transform">
                     <Download className="w-3 h-3" /> Save
