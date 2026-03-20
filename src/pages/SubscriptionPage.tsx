@@ -1,0 +1,338 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { CountUp } from "@/components/motion/Animated";
+import { Check, X, Zap, Shield, Brain, Dumbbell, Utensils, TrendingUp } from "lucide-react";
+
+const MONTHLY_PRICE = 14.99;
+const YEARLY_PRICE = 99.99;
+const YEARLY_MONTHLY = +(YEARLY_PRICE / 12).toFixed(2);
+const SAVE_PCT = Math.round((1 - YEARLY_MONTHLY / MONTHLY_PRICE) * 100);
+
+const PRO_FEATURES = [
+  { icon: Brain, label: "AI muscle preservation coach", detail: "Personalized daily guidance" },
+  { icon: Utensils, label: "Meal timing protocol", detail: "Synced to your injection schedule" },
+  { icon: Dumbbell, label: "Custom workout plans", detail: "Optimized for muscle retention" },
+  { icon: TrendingUp, label: "Progress tracking & analytics", detail: "Body composition trends" },
+  { icon: Shield, label: "Recovery optimization", detail: "Sleep & stress protocols" },
+  { icon: Zap, label: "Priority support", detail: "Direct access to experts" },
+];
+
+const FREE_VS_PRO = [
+  { feature: "Muscle risk score", free: true, pro: true },
+  { feature: "Basic daily checklist", free: true, pro: true },
+  { feature: "3 protocol items", free: true, pro: true },
+  { feature: "AI coaching", free: false, pro: true },
+  { feature: "Custom workouts", free: false, pro: true },
+  { feature: "Meal timing protocol", free: false, pro: true },
+  { feature: "Progress analytics", free: false, pro: true },
+  { feature: "Recovery plans", free: false, pro: true },
+  { feature: "Full protocol (6 items)", free: false, pro: true },
+];
+
+const TESTIMONIALS = [
+  { name: "Sarah M.", weeks: 12, quote: "I lost 34 lbs and kept every ounce of muscle. My trainer couldn't believe my DEXA results.", metric: "34 lbs lost, 0 muscle lost" },
+  { name: "Marcus T.", weeks: 8, quote: "The meal timing alone was a game-changer. I actually feel stronger on Ozempic now.", metric: "12% strength increase" },
+  { name: "Rachel K.", weeks: 16, quote: "Worth 10x the price. I was losing muscle before MuscleLock and didn't even know it.", metric: "Lean mass preserved" },
+];
+
+const ease = [0.16, 1, 0.3, 1] as const;
+
+const SubscriptionPage = () => {
+  const navigate = useNavigate();
+  const [yearly, setYearly] = useState(true);
+  const [selectedTestimonial, setSelectedTestimonial] = useState(0);
+
+  const price = yearly ? YEARLY_MONTHLY : MONTHLY_PRICE;
+  const billedAs = yearly ? `$${YEARLY_PRICE}/year` : `$${MONTHLY_PRICE}/month`;
+
+  const handleSubscribe = () => {
+    // Future: Stripe integration
+    navigate("/dashboard");
+  };
+
+  return (
+    <div className="min-h-screen bg-mesh overflow-x-hidden">
+      {/* Close button */}
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5 }}
+        onClick={() => navigate(-1)}
+        className="fixed top-5 right-5 z-50 w-9 h-9 rounded-full bg-surface-container-high/80 backdrop-blur-xl flex items-center justify-center active:scale-90 transition-transform"
+      >
+        <X className="w-4 h-4 text-on-surface-variant" />
+      </motion.button>
+
+      <div className="max-w-lg mx-auto px-5 pt-14 pb-12">
+        {/* Hero */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease }}
+          className="text-center mb-10"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
+            <span className="material-symbols-outlined material-filled text-primary text-sm">bolt</span>
+            <span className="text-primary font-label text-xs font-bold tracking-widest uppercase">Limited Offer</span>
+          </div>
+
+          <h1 className="font-headline font-bold text-4xl md:text-5xl text-on-surface leading-[1.1] tracking-tight mb-4">
+            Stop losing muscle.
+            <br />
+            <span className="text-primary">Start today.</span>
+          </h1>
+
+          <p className="text-on-surface-variant text-lg max-w-sm mx-auto leading-relaxed">
+            Your personalized protocol is ready. Unlock the full system built for GLP-1 patients.
+          </p>
+        </motion.section>
+
+        {/* Pricing Toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15, ease }}
+          className="flex items-center justify-center gap-3 mb-8"
+        >
+          <span className={`text-sm font-medium transition-colors ${!yearly ? "text-on-surface" : "text-on-surface-variant"}`}>Monthly</span>
+          <button
+            onClick={() => setYearly(!yearly)}
+            className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${yearly ? "bg-primary" : "bg-surface-container-highest"}`}
+          >
+            <motion.div
+              className="absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md"
+              animate={{ left: yearly ? "calc(100% - 1.625rem)" : "0.125rem" }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          </button>
+          <span className={`text-sm font-medium transition-colors ${yearly ? "text-on-surface" : "text-on-surface-variant"}`}>
+            Yearly
+          </span>
+          {yearly && (
+            <motion.span
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-[10px] font-mono font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full"
+            >
+              Save {SAVE_PCT}%
+            </motion.span>
+          )}
+        </motion.div>
+
+        {/* Price Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.25, ease }}
+          className="relative overflow-hidden rounded-lg border-2 border-primary/30 bg-surface-container-lowest p-7 mb-8"
+        >
+          <div className="absolute top-0 left-0 w-full h-1 gradient-hero" />
+          <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+
+          <div className="relative">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="font-headline font-bold text-xl text-on-surface">MuscleLock Pro</h2>
+                <p className="text-on-surface-variant text-xs mt-0.5">Full muscle preservation system</p>
+              </div>
+              <div className="text-right">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={yearly ? "yearly" : "monthly"}
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    <span className="font-headline font-black text-4xl text-on-surface">
+                      ${price.toFixed(2)}
+                    </span>
+                    <span className="text-on-surface-variant text-sm">/mo</span>
+                  </motion.div>
+                </AnimatePresence>
+                <p className="text-on-surface-variant text-[10px] font-mono tracking-wide">Billed {billedAs}</p>
+              </div>
+            </div>
+
+            {/* Feature list */}
+            <div className="space-y-3 mb-6">
+              {PRO_FEATURES.map((feat, i) => (
+                <motion.div
+                  key={feat.label}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.35 + i * 0.06, duration: 0.4, ease }}
+                  className="flex items-center gap-3"
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <feat.icon className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-on-surface">{feat.label}</p>
+                    <p className="text-[11px] text-on-surface-variant">{feat.detail}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <button
+              onClick={handleSubscribe}
+              className="w-full py-4 rounded-full gradient-hero text-on-primary font-headline font-bold text-lg flex items-center justify-center gap-2 shadow-[0_8px_32px_hsla(160,100%,45%,0.25)] active:scale-[0.97] transition-transform duration-200"
+            >
+              Start Protecting Muscle
+              <span className="material-symbols-outlined">arrow_forward</span>
+            </button>
+            <p className="text-center text-on-surface-variant text-[10px] mt-3 font-mono tracking-wide">
+              Cancel anytime · 7-day money-back guarantee
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Comparison Table */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4, ease }}
+          className="mb-10"
+        >
+          <h3 className="font-headline font-bold text-lg text-on-surface text-center mb-4">Free vs Pro</h3>
+          <div className="bg-surface-container-lowest rounded-lg overflow-hidden border border-border">
+            <div className="grid grid-cols-[1fr_60px_60px] gap-0 text-center">
+              <div className="p-3 text-left text-[10px] font-mono uppercase tracking-widest text-on-surface-variant border-b border-border">Feature</div>
+              <div className="p-3 text-[10px] font-mono uppercase tracking-widest text-on-surface-variant border-b border-l border-border">Free</div>
+              <div className="p-3 text-[10px] font-mono uppercase tracking-widest text-primary border-b border-l border-border font-bold">Pro</div>
+
+              {FREE_VS_PRO.map((row, i) => (
+                <motion.div
+                  key={row.feature}
+                  className="contents"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 + i * 0.04 }}
+                >
+                  <div className={`p-3 text-left text-sm text-on-surface ${i < FREE_VS_PRO.length - 1 ? "border-b border-border" : ""}`}>
+                    {row.feature}
+                  </div>
+                  <div className={`p-3 flex items-center justify-center border-l ${i < FREE_VS_PRO.length - 1 ? "border-b" : ""} border-border`}>
+                    {row.free ? <Check className="w-4 h-4 text-primary" /> : <X className="w-4 h-4 text-on-surface-variant/30" />}
+                  </div>
+                  <div className={`p-3 flex items-center justify-center border-l ${i < FREE_VS_PRO.length - 1 ? "border-b" : ""} border-border bg-primary/[0.03]`}>
+                    <Check className="w-4 h-4 text-primary" />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Testimonials */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5, ease }}
+          className="mb-10"
+        >
+          <h3 className="font-headline font-bold text-lg text-on-surface text-center mb-4">Real Results</h3>
+          <div className="relative">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={selectedTestimonial}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="bg-surface-container-low rounded-lg p-6"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-headline font-bold text-primary text-sm">
+                    {TESTIMONIALS[selectedTestimonial].name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-on-surface font-medium text-sm">{TESTIMONIALS[selectedTestimonial].name}</p>
+                    <p className="text-on-surface-variant text-xs">{TESTIMONIALS[selectedTestimonial].weeks} weeks on protocol</p>
+                  </div>
+                </div>
+                <p className="text-on-surface text-sm leading-relaxed italic mb-3">
+                  "{TESTIMONIALS[selectedTestimonial].quote}"
+                </p>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-mono font-bold">
+                  <TrendingUp className="w-3 h-3" />
+                  {TESTIMONIALS[selectedTestimonial].metric}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+            <div className="flex justify-center gap-2 mt-4">
+              {TESTIMONIALS.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedTestimonial(i)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${i === selectedTestimonial ? "bg-primary w-6" : "bg-surface-container-highest"}`}
+                />
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Risk urgency */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6, ease }}
+          className="bg-accent-danger/5 border border-accent-danger/15 rounded-lg p-5 text-center mb-8"
+        >
+          <span className="material-symbols-outlined text-accent-danger text-3xl mb-2">timer</span>
+          <p className="text-on-surface font-headline font-bold text-lg mb-1">Every week matters</p>
+          <p className="text-on-surface-variant text-sm max-w-xs mx-auto">
+            Research shows muscle loss on GLP-1s accelerates after the first 8 weeks. The sooner you start, the more you preserve.
+          </p>
+        </motion.div>
+
+        {/* Bottom CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.7, ease }}
+        >
+          <button
+            onClick={handleSubscribe}
+            className="w-full py-5 rounded-full gradient-hero text-on-primary font-headline font-bold text-lg flex items-center justify-center gap-2 shadow-[0_8px_32px_hsla(160,100%,45%,0.25)] active:scale-[0.97] transition-transform duration-200 mb-3"
+          >
+            Unlock MuscleLock Pro
+            <span className="material-symbols-outlined">lock_open</span>
+          </button>
+          <button
+            onClick={() => navigate(-1)}
+            className="w-full py-3 text-on-surface-variant text-sm active:scale-[0.97] transition-transform"
+          >
+            Maybe later
+          </button>
+        </motion.div>
+
+        {/* Trust footer */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="mt-8 flex items-center justify-center gap-6 text-on-surface-variant/40"
+        >
+          <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest">
+            <span className="material-symbols-outlined text-sm">lock</span>
+            Secure
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest">
+            <span className="material-symbols-outlined text-sm">verified_user</span>
+            HIPAA
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest">
+            <span className="material-symbols-outlined text-sm">undo</span>
+            7-day refund
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+export default SubscriptionPage;
