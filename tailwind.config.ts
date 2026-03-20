@@ -76,6 +76,9 @@ export default {
         "error-container": "hsl(var(--error-container))",
         "outline-variant": "hsl(var(--outline-variant))",
         "on-secondary-container": "hsl(var(--on-secondary-container))",
+        "accent-gold": "hsl(var(--accent-gold))",
+        "accent-purple": "hsl(var(--accent-purple))",
+        "accent-danger": "hsl(var(--accent-danger))",
         error: "hsl(var(--error))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
