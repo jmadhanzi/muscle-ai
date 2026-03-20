@@ -7,13 +7,24 @@ interface PaywallModalProps {
   open: boolean;
   onClose: () => void;
   feature?: string;
+  headline?: string;
+  body?: string;
 }
 
-const PaywallModal = ({ open, onClose, feature = "this feature" }: PaywallModalProps) => {
+const PaywallModal = ({
+  open,
+  onClose,
+  feature = "this feature",
+  headline,
+  body,
+}: PaywallModalProps) => {
   const navigate = useNavigate();
-
-  // Pick 4 relevant pro features to show
   const highlights = PRO_FEATURES.slice(0, 4);
+
+  const displayHeadline = headline || `Unlock ${feature}`;
+  const displayBody =
+    body ||
+    "This is a Pro feature. Upgrade to access your full muscle preservation protocol.";
 
   return (
     <AnimatePresence>
@@ -42,10 +53,10 @@ const PaywallModal = ({ open, onClose, feature = "this feature" }: PaywallModalP
               </div>
               <div>
                 <h3 className="font-headline font-bold text-lg text-on-surface mb-1">
-                  Unlock {feature}
+                  {displayHeadline}
                 </h3>
                 <p className="text-on-surface-variant text-sm leading-relaxed">
-                  This is a Pro feature. Upgrade to access your full muscle preservation protocol.
+                  {displayBody}
                 </p>
               </div>
             </div>

@@ -1,9 +1,8 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import PaywallModal from "@/components/PaywallModal";
-import { Lock, Utensils, Droplets, Egg } from "lucide-react";
+import { usePaywall } from "@/hooks/usePaywall";
+import { Lock, Egg, Droplets } from "lucide-react";
 import { AnimatedProgress } from "@/components/motion/Animated";
 
 const MACROS = [
@@ -21,8 +20,7 @@ const MEAL_PLAN = [
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const NutritionPage = () => {
-  const navigate = useNavigate();
-  const [paywallOpen, setPaywallOpen] = useState(false);
+  const paywall = usePaywall();
 
   return (
     <div className="min-h-screen bg-mesh pb-24">
@@ -74,7 +72,7 @@ const NutritionPage = () => {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 + i * 0.06, duration: 0.4, ease }}
-                onClick={() => !item.free && setPaywallOpen(true)}
+                onClick={() => !item.free && paywall.fire("meal_locked")}
                 className={`w-full flex items-center gap-4 p-4 rounded-lg text-left active:scale-[0.97] transition-all duration-200 ${
                   item.free ? "bg-surface-container-low" : "bg-surface-container-low/50 opacity-60"
                 }`}
@@ -120,7 +118,13 @@ const NutritionPage = () => {
         </motion.div>
       </div>
 
-      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} feature="Meal Timing Protocol" />
+      <PaywallModal
+        open={paywall.open}
+        onClose={paywall.close}
+        feature={paywall.copy.feature}
+        headline={paywall.copy.headline}
+        body={paywall.copy.body}
+      />
       <BottomNav />
     </div>
   );
