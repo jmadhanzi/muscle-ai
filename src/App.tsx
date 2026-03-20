@@ -15,6 +15,7 @@ import FitnessLevel from "./pages/onboarding/FitnessLevel.tsx";
 import ProteinIntake from "./pages/onboarding/ProteinIntake.tsx";
 import PrimaryGoal from "./pages/onboarding/PrimaryGoal.tsx";
 import OnboardingSummary from "./pages/onboarding/OnboardingSummary.tsx";
+import BiggestFear from "./pages/onboarding/BiggestFear.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import SubscriptionPage from "./pages/SubscriptionPage.tsx";
 import AICoachPage from "./pages/AICoachPage.tsx";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/onboarding/fitness-level" element={<ProtectedRoute><FitnessLevel /></ProtectedRoute>} />
             <Route path="/onboarding/protein" element={<ProtectedRoute><ProteinIntake /></ProtectedRoute>} />
             <Route path="/onboarding/goals" element={<ProtectedRoute><PrimaryGoal /></ProtectedRoute>} />
+            <Route path="/onboarding/fear" element={<ProtectedRoute><BiggestFear /></ProtectedRoute>} />
             <Route path="/onboarding/summary" element={<ProtectedRoute><OnboardingSummary /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/subscribe" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />

@@ -17,15 +17,13 @@ const PrimaryGoal = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [selected, setSelected] = useState<string | null>(null);
-  const [biggestFear, setBiggestFear] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data } = await supabase.from("onboarding_data").select("primary_goal, biggest_fear").eq("user_id", user.id).single();
+      const { data } = await supabase.from("onboarding_data").select("primary_goal").eq("user_id", user.id).single();
       if (data?.primary_goal) setSelected(data.primary_goal);
-      if (data?.biggest_fear) setBiggestFear(data.biggest_fear);
     };
     load();
   }, [user]);
@@ -36,9 +34,8 @@ const PrimaryGoal = () => {
     try {
       await supabase.from("onboarding_data").update({
         primary_goal: selected,
-        biggest_fear: biggestFear.trim().slice(0, 100),
       }).eq("user_id", user.id);
-      navigate("/onboarding/summary");
+      navigate("/onboarding/fear");
     } catch {
       toast.error("Failed to save. Please try again.");
     }
@@ -102,26 +99,6 @@ const PrimaryGoal = () => {
         ))}
       </div>
 
-      {/* Biggest Fear */}
-      <div className="space-y-4">
-        <span className="font-mono text-primary text-sm tracking-widest uppercase">One More Thing</span>
-        <div>
-          <label className="block text-sm font-medium text-on-surface-variant mb-3 px-1">
-            What's your biggest fear about losing muscle on GLP-1s?
-          </label>
-          <textarea
-            className="w-full bg-surface-container-lowest border-none rounded-xl px-6 py-5 text-base font-body text-on-surface focus:ring-1 focus:ring-primary/40 placeholder:text-surface-variant transition-all outline-none resize-none"
-            rows={3}
-            maxLength={100}
-            placeholder="e.g. Looking skinny-fat, losing my strength, saggy skin..."
-            value={biggestFear}
-            onChange={(e) => setBiggestFear(e.target.value)}
-          />
-          <p className="text-right text-xs text-on-surface-variant mt-1 font-mono">
-            {biggestFear.length}/100
-          </p>
-        </div>
-      </div>
     </OnboardingLayout>
   );
 };

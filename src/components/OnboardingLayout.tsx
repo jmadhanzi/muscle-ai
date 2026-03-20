@@ -9,7 +9,7 @@ interface OnboardingLayoutProps {
   footer?: ReactNode;
 }
 
-const OnboardingLayout = ({ step, totalSteps = 7, children, footer }: OnboardingLayoutProps) => (
+const OnboardingLayout = ({ step, totalSteps = 8, children, footer }: OnboardingLayoutProps) => (
   <div className="min-h-screen bg-background overflow-x-hidden relative">
     {/* Ambient glow */}
     <div className="fixed top-[20%] right-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full pointer-events-none -z-10" />
