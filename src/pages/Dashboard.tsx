@@ -148,11 +148,7 @@ const Dashboard = () => {
       paywall.fire("protocol_locked");
       return;
     }
-    setCheckedItems((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    toggleItem(id);
   };
 
   const completedFree = DAILY_PROTOCOL.filter((p) => p.free && checkedItems.has(p.id)).length;
