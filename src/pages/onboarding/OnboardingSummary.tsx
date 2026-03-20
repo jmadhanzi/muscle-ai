@@ -14,6 +14,7 @@ const OnboardingSummary = () => {
   const [showAha, setShowAha] = useState(false);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const hasReferral = Boolean(data?.referred_by || localStorage.getItem("pending_referral_code"));
 
   useEffect(() => {
     if (!user) return;
@@ -103,6 +104,23 @@ const OnboardingSummary = () => {
         </button>
       }
     >
+      {hasReferral && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-primary/10 border border-primary/20 rounded-xl px-5 py-4 mb-6 flex items-start gap-3"
+        >
+          <span className="material-symbols-outlined text-primary text-2xl mt-0.5">card_giftcard</span>
+          <div>
+            <p className="font-headline font-bold text-sm text-primary">7-Day Pro Trial Activated!</p>
+            <p className="text-xs text-on-surface-variant mt-1">
+              Your friend hooked you up. Full workouts, unlimited AI coach, and advanced tracking — free for 7 days.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       <section className="mb-10">
         <h1 className="font-headline font-bold text-4xl md:text-5xl text-on-surface leading-tight tracking-tight mb-4">
           {data.firstName ? `${data.firstName}, here's` : "Here's"} your risk profile.
