@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, LogOut, Crown } from "lucide-react";
+import { ArrowLeft, LogOut, Crown, Bell, BellOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 const DAYS_OF_WEEK = [
   { value: "monday", label: "Monday" },
@@ -28,6 +29,7 @@ const SettingsPage = () => {
   const [saving, setSaving] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const push = usePushNotifications(user?.id);
 
   useEffect(() => {
     if (!user) return;
@@ -154,11 +156,55 @@ const SettingsPage = () => {
           </div>
         </motion.div>
 
-        {/* Save Button */}
+        {/* Notifications */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.24, ease }}
+          className="bg-surface-container-lowest rounded-lg border border-border p-5 space-y-4"
+        >
+          <span className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">Notifications</span>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${push.isSubscribed ? "gradient-hero" : "bg-surface-container-high"}`}>
+                {push.isSubscribed ? (
+                  <Bell className="w-4 h-4 text-on-primary" />
+                ) : (
+                  <BellOff className="w-4 h-4 text-on-surface-variant" />
+                )}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-on-surface">
+                  {push.isSubscribed ? "Push notifications on" : "Push notifications off"}
+                </p>
+                <p className="text-xs text-on-surface-variant">
+                  {push.isSupported
+                    ? "Injection day & streak reminders"
+                    : "Not supported in this browser"}
+                </p>
+              </div>
+            </div>
+            {push.isSupported && (
+              <button
+                onClick={() => push.isSubscribed ? push.unsubscribe() : push.subscribe()}
+                className={`px-4 py-2 rounded-lg text-xs font-medium transition-all active:scale-95 ${
+                  push.isSubscribed
+                    ? "bg-surface-container-high text-on-surface-variant"
+                    : "gradient-hero text-on-primary"
+                }`}
+              >
+                {push.isSubscribed ? "Disable" : "Enable"}
+              </button>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Save Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3, ease }}
         >
           <button
             onClick={handleSave}

@@ -22,6 +22,7 @@ import InjectionCountdown from "@/components/dashboard/InjectionCountdown";
 import ProteinRing from "@/components/dashboard/ProteinRing";
 import ProProtocol from "@/components/dashboard/ProProtocol";
 import WeeklyProgressSummary from "@/components/dashboard/WeeklyProgressSummary";
+import { useInAppNotifications } from "@/hooks/useInAppNotifications";
 
 export interface OnboardingData {
   first_name?: string;
@@ -142,6 +143,14 @@ const Dashboard = () => {
   // Mark today as completed if any checkedItems exist
   if (checkedItems.size > 0) completedDays[mondayIdx] = true;
   const streakDays = completedDays.filter(Boolean).length;
+
+  // In-app notification alerts
+  useInAppNotifications({
+    injectionDay: data.injection_day,
+    streakDays,
+    checkedItemsCount: checkedItems.size,
+    isPro,
+  });
 
   const toggleCheck = (id: string, unlocked: boolean) => {
     if (!unlocked) {
