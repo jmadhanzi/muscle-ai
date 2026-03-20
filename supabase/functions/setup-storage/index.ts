@@ -14,29 +14,30 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-    // Use the Storage REST API directly
-    const res = await fetch(`${supabaseUrl}/storage/v1/bucket`, {
+    // First check existing buckets
+    const listRes = await fetch(`${supabaseUrl}/storage/v1/bucket`, {
+      headers: {
+        "Authorization": `Bearer ${serviceKey}`,
+        "apikey": serviceKey,
+      },
+    });
+    const buckets = await listRes.json();
+    console.log("Existing buckets:", JSON.stringify(buckets));
+
+    // Try to get the columns of the buckets table
+    const pgRes = await fetch(`${supabaseUrl}/rest/v1/rpc`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${serviceKey}`,
         "apikey": serviceKey,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        id: "avatars",
-        name: "avatars",
-        public: true,
-      }),
     });
 
-    const body = await res.json();
-    console.log("Storage API response:", res.status, JSON.stringify(body));
-
-    if (!res.ok && !body?.message?.includes("already exists")) {
-      throw new Error(body?.message || `HTTP ${res.status}`);
-    }
-
-    return new Response(JSON.stringify({ success: true, result: body }), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      buckets,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
