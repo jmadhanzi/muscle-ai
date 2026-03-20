@@ -23,6 +23,7 @@ import WorkoutsPage from "./pages/WorkoutsPage.tsx";
 import NutritionPage from "./pages/NutritionPage.tsx";
 import ProgressPage from "./pages/ProgressPage.tsx";
 import SettingsPage from "./pages/SettingsPage.tsx";
+import AboutPage from "./pages/AboutPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
