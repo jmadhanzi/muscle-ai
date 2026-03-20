@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, LogOut, Crown, Bell, BellOff } from "lucide-react";
+import { ArrowLeft, LogOut, Crown, Bell, BellOff, Shield, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -262,11 +262,27 @@ const SettingsPage = () => {
           )}
         </motion.div>
 
+        {/* About & Trust */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.34, ease }}
+        >
+          <button
+            onClick={() => navigate("/about")}
+            className="w-full py-3.5 rounded-lg bg-surface-container-lowest border border-border text-on-surface text-sm font-medium flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
+          >
+            <Shield className="w-4 h-4 text-primary" />
+            About, Trust & Privacy
+            <ChevronRight className="w-4 h-4 text-on-surface-variant ml-auto" />
+          </button>
+        </motion.div>
+
         {/* Sign Out */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.36, ease }}
+          transition={{ duration: 0.5, delay: 0.4, ease }}
         >
           <button
             onClick={handleSignOut}

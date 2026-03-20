@@ -13,6 +13,7 @@ import TypingIndicator from "@/components/coach/TypingIndicator";
 import StarterPrompts from "@/components/coach/StarterPrompts";
 import ChatInputBar from "@/components/coach/ChatInputBar";
 import PaywallBanner from "@/components/coach/PaywallBanner";
+import { ChatDisclaimerBanner, OnboardingDisclaimer, useDisclaimer } from "@/components/DisclaimerBanner";
 
 type Msg = { role: "user" | "assistant"; content: string; time: string };
 
@@ -84,6 +85,7 @@ async function streamChat({
 const AICoachPage = () => {
   const paywall = usePaywall();
   const { isPro, user } = useAuth();
+  const disclaimer = useDisclaimer();
   const userProfile = useCoachProfile(user?.id);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -154,6 +156,8 @@ const AICoachPage = () => {
         medication={userProfile?.medication ?? undefined}
         onClear={() => setMessages([])}
       />
+
+      <ChatDisclaimerBanner />
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-4 scroll-smooth">
         {isEmpty ? (
