@@ -10,9 +10,13 @@ export const STRIPE_CONFIG = {
   yearly: {
     product_id: "prod_UBOIYNHNqFNp7n",
     price_id: "price_1TD1W1BwmEF0HoQN8itn7LYE",
-    price: 99.99,
-    monthly_equivalent: 8.33,
+    price: 99,
+    monthly_equivalent: 8.25,
     label: "Yearly",
+  },
+  trial: {
+    default_days: 3,
+    referral_days: 7,
   },
 } as const;
 
