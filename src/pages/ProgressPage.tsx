@@ -11,6 +11,7 @@ import BodyCompositionChart from "@/components/progress/BodyCompositionChart";
 import ScoreHistoryChart from "@/components/progress/ScoreHistoryChart";
 import MilestoneCards from "@/components/progress/MilestoneCards";
 import ReferralSection from "@/components/progress/ReferralSection";
+import ReferralLeaderboard from "@/components/progress/ReferralLeaderboard";
 import { useMilestones } from "@/hooks/useMilestones";
 import { useReferrals } from "@/hooks/useReferrals";
 import { calcMuscleScore, calcAtRiskLbs, calcProteinTarget, type OnboardingData } from "@/pages/Dashboard";
