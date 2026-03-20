@@ -233,16 +233,14 @@ serve(async (req) => {
     }
 
     for (const [userId, userSubs] of subsByUser) {
-      const onb = onbMap.get(userId);
       const prof = profMap.get(userId);
       const track = trackMap.get(userId);
 
-      // Calculate protein target
-      const goalLbs = onb?.weight_unit === "kg"
-        ? (onb?.goal_weight || 70) * 2.205
-        : (onb?.goal_weight || 154);
+      const goalLbs = prof?.weight_unit === "kg"
+        ? (prof?.goal_weight || 70) * 2.205
+        : (prof?.goal_weight || 154);
       const proteinTarget = Math.round(goalLbs * 0.7);
-      const weekNumber = Math.max(1, Math.ceil((onb?.weeks_on_medication || 1) * 7 / 7));
+      const weekNumber = Math.max(1, Math.ceil((prof?.weeks_on_medication || 1) * 7 / 7));
 
       const ctx: UserContext = {
         userId,
