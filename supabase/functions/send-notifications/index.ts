@@ -177,23 +177,18 @@ serve(async (req) => {
 
     // Batch fetch all user data
     const [
-      { data: onboardingRows },
       { data: profileRows },
       { data: trackingRows },
     ] = await Promise.all([
-      supabase.from("onboarding_data")
-        .select("user_id, injection_day, weeks_on_medication, weight_kg, weight_unit, goal_weight")
-        .in("user_id", userIds),
       supabase.from("profiles")
-        .select("user_id, first_name")
+        .select("user_id, first_name, injection_day, weeks_on_medication, current_weight, weight_unit, goal_weight")
         .in("user_id", userIds),
-      supabase.from("daily_tracking")
-        .select("user_id, protein_intake, checked_items")
-        .eq("tracking_date", todayStr)
+      supabase.from("daily_logs")
+        .select("user_id, protein_logged, checked_items")
+        .eq("date", todayStr)
         .in("user_id", userIds),
     ]);
 
-    const onbMap = new Map((onboardingRows || []).map((r: any) => [r.user_id, r]));
     const profMap = new Map((profileRows || []).map((r: any) => [r.user_id, r]));
     const trackMap = new Map((trackingRows || []).map((r: any) => [r.user_id, r]));
 
