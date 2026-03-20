@@ -125,8 +125,10 @@ const Dashboard = () => {
   const { atRiskLbs, preservePct } = calcAtRiskLbs(data, muscleScore);
   const proteinTarget = calcProteinTarget(data);
 
-  const toggleCheck = (id: string, free: boolean) => {
-    if (!free) {
+  const { isPro } = useAuth();
+
+  const toggleCheck = (id: string, unlocked: boolean) => {
+    if (!unlocked) {
       paywall.fire("protocol_locked");
       return;
     }
