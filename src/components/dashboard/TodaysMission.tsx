@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { DAILY_PROTOCOL } from "@/config/features";
 
 const WEEK1_EXERCISES = [
@@ -23,7 +24,13 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const TodaysMission = ({ checkedItems, completedFree, totalFree, onToggle }: TodaysMissionProps) => {
   const navigate = useNavigate();
+  const { isPro } = useAuth();
   const dayOfWeek = new Date().toLocaleDateString("en-US", { weekday: "long" });
+
+  const totalItems = isPro ? DAILY_PROTOCOL.length : totalFree;
+  const completedItems = isPro
+    ? DAILY_PROTOCOL.filter((p) => checkedItems.has(p.id)).length
+    : completedFree;
 
   return (
     <div className="bg-surface-container-lowest rounded-lg border border-border overflow-hidden">
@@ -34,7 +41,7 @@ const TodaysMission = ({ checkedItems, completedFree, totalFree, onToggle }: Tod
             <span className="material-symbols-outlined text-primary text-xl">calendar_today</span>
             <h2 className="font-headline font-bold text-lg text-on-surface">Today's Mission</h2>
           </div>
-          <span className="text-xs font-mono text-primary">{completedFree}/{totalFree}</span>
+          <span className="text-xs font-mono text-primary">{completedItems}/{totalItems}</span>
         </div>
         <p className="text-on-surface-variant text-xs">{dayOfWeek} — Resistance Training</p>
       </div>
@@ -43,20 +50,20 @@ const TodaysMission = ({ checkedItems, completedFree, totalFree, onToggle }: Tod
       <div className="px-3 pb-2">
         {DAILY_PROTOCOL.map((item) => {
           const checked = checkedItems.has(item.id);
-          const locked = !item.free;
+          const unlocked = isPro || item.free;
           return (
             <motion.button
               key={item.id}
-              onClick={() => onToggle(item.id, item.free)}
+              onClick={() => onToggle(item.id, unlocked)}
               className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 active:scale-[0.97] text-left ${
-                locked ? "opacity-50" : checked ? "bg-primary/8" : "hover:bg-surface-container"
+                !unlocked ? "opacity-50" : checked ? "bg-primary/8" : "hover:bg-surface-container"
               }`}
-              whileTap={locked ? {} : { scale: 0.97 }}
+              whileTap={!unlocked ? {} : { scale: 0.97 }}
             >
               <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${
-                locked ? "border-surface-variant" : checked ? "border-primary bg-primary" : "border-on-surface-variant/30"
+                !unlocked ? "border-surface-variant" : checked ? "border-primary bg-primary" : "border-on-surface-variant/30"
               }`}>
-                {locked ? (
+                {!unlocked ? (
                   <Lock className="w-3 h-3 text-on-surface-variant" />
                 ) : checked ? (
                   <span className="material-symbols-outlined text-on-primary text-sm">check</span>
@@ -65,7 +72,7 @@ const TodaysMission = ({ checkedItems, completedFree, totalFree, onToggle }: Tod
               <div className="flex-1 min-w-0">
                 <p className={`text-sm ${checked ? "text-primary line-through" : "text-on-surface"}`}>{item.label}</p>
               </div>
-              {locked && (
+              {!unlocked && (
                 <span className="text-[8px] font-mono uppercase tracking-widest text-accent-gold bg-accent-gold/10 px-1.5 py-0.5 rounded-full">Pro</span>
               )}
             </motion.button>
@@ -80,29 +87,34 @@ const TodaysMission = ({ checkedItems, completedFree, totalFree, onToggle }: Tod
           <span className="text-sm font-medium text-on-surface">Week 1 Workout Preview</span>
         </div>
         <div className="space-y-1.5">
-          {WEEK1_EXERCISES.map((ex, i) => (
-            <motion.div
-              key={ex.name}
-              initial={{ opacity: 0, x: -6 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 + i * 0.04, duration: 0.35, ease }}
-              className={`flex items-center justify-between text-sm py-1 ${!ex.free ? "opacity-40" : ""}`}
-            >
-              <div className="flex items-center gap-2">
-                {!ex.free && <Lock className="w-3 h-3 text-on-surface-variant" />}
-                <span className={ex.free ? "text-on-surface" : "text-on-surface-variant"}>{ex.name}</span>
-              </div>
-              <span className="font-mono text-xs text-on-surface-variant">{ex.free ? ex.sets : "—"}</span>
-            </motion.div>
-          ))}
+          {WEEK1_EXERCISES.map((ex, i) => {
+            const unlocked = isPro || ex.free;
+            return (
+              <motion.div
+                key={ex.name}
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + i * 0.04, duration: 0.35, ease }}
+                className={`flex items-center justify-between text-sm py-1 ${!unlocked ? "opacity-40" : ""}`}
+              >
+                <div className="flex items-center gap-2">
+                  {!unlocked && <Lock className="w-3 h-3 text-on-surface-variant" />}
+                  <span className={unlocked ? "text-on-surface" : "text-on-surface-variant"}>{ex.name}</span>
+                </div>
+                <span className="font-mono text-xs text-on-surface-variant">{unlocked ? ex.sets : "—"}</span>
+              </motion.div>
+            );
+          })}
         </div>
-        <button
-          onClick={() => navigate("/subscribe")}
-          className="w-full mt-4 py-3 rounded-lg bg-surface-container-high text-on-surface text-sm font-medium flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
-        >
-          <Lock className="w-3.5 h-3.5 text-accent-gold" />
-          Unlock Full Workout — Go Premium
-        </button>
+        {!isPro && (
+          <button
+            onClick={() => navigate("/subscribe")}
+            className="w-full mt-4 py-3 rounded-lg bg-surface-container-high text-on-surface text-sm font-medium flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
+          >
+            <Lock className="w-3.5 h-3.5 text-accent-gold" />
+            Unlock Full Workout — Go Premium
+          </button>
+        )}
       </div>
     </div>
   );

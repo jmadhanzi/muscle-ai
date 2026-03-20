@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import PaywallModal from "@/components/PaywallModal";
 import { usePaywall } from "@/hooks/usePaywall";
+import { useAuth } from "@/contexts/AuthContext";
 import { Lock, Dumbbell } from "lucide-react";
 
 const WORKOUT_CATEGORIES = [
@@ -22,6 +23,7 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const WorkoutsPage = () => {
   const paywall = usePaywall();
+  const { isPro } = useAuth();
 
   return (
     <div className="min-h-screen bg-mesh pb-24">
@@ -36,7 +38,7 @@ const WorkoutsPage = () => {
       </motion.header>
 
       <div className="px-5 space-y-6">
-        {/* Today's Quick Workout (Free) */}
+        {/* Today's Quick Workout */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -44,7 +46,7 @@ const WorkoutsPage = () => {
         >
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-headline font-bold text-lg text-on-surface">Today's Workout</h2>
-            <span className="text-[10px] font-mono uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded-full">Free</span>
+            {!isPro && <span className="text-[10px] font-mono uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded-full">Free</span>}
           </div>
           <div className="bg-surface-container-lowest rounded-lg border border-primary/10 overflow-hidden">
             {TODAYS_WORKOUT.map((ex, i) => (
@@ -76,33 +78,36 @@ const WorkoutsPage = () => {
         >
           <h2 className="font-headline font-bold text-lg text-on-surface mb-3">Programs</h2>
           <div className="space-y-2">
-            {WORKOUT_CATEGORIES.map((cat, i) => (
-              <motion.button
-                key={cat.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + i * 0.05, duration: 0.4, ease }}
-                onClick={() => !cat.free && paywall.fire("workout_day2")}
-                className={`w-full flex items-center gap-4 p-4 rounded-lg text-left active:scale-[0.97] transition-all duration-200 ${
-                  cat.free ? "bg-surface-container-low hover:bg-surface-container" : "bg-surface-container-low/50 opacity-60"
-                }`}
-              >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${cat.free ? "bg-surface-container-high" : "bg-surface-variant"}`}>
-                  {cat.free ? (
-                    <span className="material-symbols-outlined text-on-surface-variant text-lg">{cat.icon}</span>
-                  ) : (
-                    <Lock className="w-4 h-4 text-on-surface-variant" />
+            {WORKOUT_CATEGORIES.map((cat, i) => {
+              const unlocked = isPro || cat.free;
+              return (
+                <motion.button
+                  key={cat.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.05, duration: 0.4, ease }}
+                  onClick={() => !unlocked && paywall.fire("workout_day2")}
+                  className={`w-full flex items-center gap-4 p-4 rounded-lg text-left active:scale-[0.97] transition-all duration-200 ${
+                    unlocked ? "bg-surface-container-low hover:bg-surface-container" : "bg-surface-container-low/50 opacity-60"
+                  }`}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${unlocked ? "bg-surface-container-high" : "bg-surface-variant"}`}>
+                    {unlocked ? (
+                      <span className="material-symbols-outlined text-on-surface-variant text-lg">{cat.icon}</span>
+                    ) : (
+                      <Lock className="w-4 h-4 text-on-surface-variant" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-on-surface">{cat.label}</p>
+                    <p className="text-xs text-on-surface-variant">{cat.exercises} exercises · {cat.duration}</p>
+                  </div>
+                  {!unlocked && (
+                    <span className="text-[9px] font-mono uppercase tracking-widest text-accent-gold bg-accent-gold/10 px-2 py-0.5 rounded-full">Pro</span>
                   )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-on-surface">{cat.label}</p>
-                  <p className="text-xs text-on-surface-variant">{cat.exercises} exercises · {cat.duration}</p>
-                </div>
-                {!cat.free && (
-                  <span className="text-[9px] font-mono uppercase tracking-widest text-accent-gold bg-accent-gold/10 px-2 py-0.5 rounded-full">Pro</span>
-                )}
-              </motion.button>
-            ))}
+                </motion.button>
+              );
+            })}
           </div>
         </motion.div>
       </div>

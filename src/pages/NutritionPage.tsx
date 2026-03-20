@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import PaywallModal from "@/components/PaywallModal";
 import { usePaywall } from "@/hooks/usePaywall";
+import { useAuth } from "@/contexts/AuthContext";
 import { Lock, Egg, Droplets } from "lucide-react";
 import { AnimatedProgress } from "@/components/motion/Animated";
 
@@ -21,6 +22,7 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const NutritionPage = () => {
   const paywall = usePaywall();
+  const { isPro } = useAuth();
 
   return (
     <div className="min-h-screen bg-mesh pb-24">
@@ -66,36 +68,39 @@ const NutritionPage = () => {
             <h2 className="font-headline font-bold text-lg text-on-surface">Today's Meals</h2>
           </div>
           <div className="space-y-2">
-            {MEAL_PLAN.map((item, i) => (
-              <motion.button
-                key={item.meal}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 + i * 0.06, duration: 0.4, ease }}
-                onClick={() => !item.free && paywall.fire("meal_locked")}
-                className={`w-full flex items-center gap-4 p-4 rounded-lg text-left active:scale-[0.97] transition-all duration-200 ${
-                  item.free ? "bg-surface-container-low" : "bg-surface-container-low/50 opacity-60"
-                }`}
-              >
-                <div className="text-center shrink-0 w-12">
-                  <p className="text-[10px] font-mono text-on-surface-variant">{item.time}</p>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-on-surface">{item.meal}</p>
-                    {!item.free && <Lock className="w-3 h-3 text-on-surface-variant" />}
+            {MEAL_PLAN.map((item, i) => {
+              const unlocked = isPro || item.free;
+              return (
+                <motion.button
+                  key={item.meal}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 + i * 0.06, duration: 0.4, ease }}
+                  onClick={() => !unlocked && paywall.fire("meal_locked")}
+                  className={`w-full flex items-center gap-4 p-4 rounded-lg text-left active:scale-[0.97] transition-all duration-200 ${
+                    unlocked ? "bg-surface-container-low" : "bg-surface-container-low/50 opacity-60"
+                  }`}
+                >
+                  <div className="text-center shrink-0 w-12">
+                    <p className="text-[10px] font-mono text-on-surface-variant">{item.time}</p>
                   </div>
-                  <p className="text-xs text-on-surface-variant truncate">{item.desc}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-xs font-mono text-primary font-bold">{item.cal}</span>
-                  <span className="text-[10px] text-on-surface-variant"> cal</span>
-                </div>
-                {!item.free && (
-                  <span className="text-[9px] font-mono uppercase tracking-widest text-accent-gold bg-accent-gold/10 px-2 py-0.5 rounded-full shrink-0">Pro</span>
-                )}
-              </motion.button>
-            ))}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-on-surface">{item.meal}</p>
+                      {!unlocked && <Lock className="w-3 h-3 text-on-surface-variant" />}
+                    </div>
+                    <p className="text-xs text-on-surface-variant truncate">{item.desc}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="text-xs font-mono text-primary font-bold">{item.cal}</span>
+                    <span className="text-[10px] text-on-surface-variant"> cal</span>
+                  </div>
+                  {!unlocked && (
+                    <span className="text-[9px] font-mono uppercase tracking-widest text-accent-gold bg-accent-gold/10 px-2 py-0.5 rounded-full shrink-0">Pro</span>
+                  )}
+                </motion.button>
+              );
+            })}
           </div>
         </motion.div>
 
