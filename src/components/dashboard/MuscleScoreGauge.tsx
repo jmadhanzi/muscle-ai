@@ -7,23 +7,39 @@ interface MuscleScoreGaugeProps {
   preservePct: number;
 }
 
+// Dramatic easing: slow start, pause in middle, rush to final number
+const dramaticEase = (t: number): number => {
+  if (t < 0.3) return t * 0.5; // slow crawl
+  if (t < 0.55) return 0.15 + (t - 0.3) * 0.2; // pause zone
+  // rush to end
+  const remaining = (t - 0.55) / 0.45;
+  return 0.2 + 0.8 * (1 - Math.pow(1 - remaining, 3));
+};
+
+const scoreToColor = (s: number): string => {
+  if (s <= 30) return "hsl(0, 100%, 63%)";
+  if (s <= 50) return `hsl(${Math.round(0 + ((s - 30) / 20) * 38)}, 92%, ${50 + ((s - 30) / 20) * 3}%)`;
+  if (s <= 70) return `hsl(${Math.round(38 + ((s - 50) / 20) * 80)}, ${Math.round(92 + ((s - 50) / 20) * 8)}%, ${Math.round(50 - ((s - 50) / 20) * 5)}%)`;
+  return "hsl(160, 100%, 45%)";
+};
+
 const MuscleScoreGauge = ({ score, atRiskLbs, preservePct }: MuscleScoreGaugeProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true });
   const [showTooltip, setShowTooltip] = useState(false);
   const [animatedScore, setAnimatedScore] = useState(0);
 
-  const scoreColor = score >= 60 ? "hsl(160,100%,45%)" : score >= 40 ? "hsl(38,92%,50%)" : "hsl(0,100%,63%)";
-  const scoreBg = score >= 60 ? "text-primary" : score >= 40 ? "text-accent-gold" : "text-accent-danger";
+  const currentColor = scoreToColor(animatedScore);
+  const scoreBg = animatedScore >= 60 ? "text-primary" : animatedScore >= 40 ? "text-accent-gold" : "text-accent-danger";
 
-  // Animate score count
+  // Dramatic count-up
   useEffect(() => {
     if (!inView) return;
     const start = Date.now();
-    const dur = 1800;
+    const dur = 1500;
     const tick = () => {
       const p = Math.min((Date.now() - start) / dur, 1);
-      const eased = 1 - Math.pow(1 - p, 3);
+      const eased = dramaticEase(p);
       setAnimatedScore(Math.round(eased * score));
       if (p < 1) requestAnimationFrame(tick);
     };
@@ -52,10 +68,22 @@ const MuscleScoreGauge = ({ score, atRiskLbs, preservePct }: MuscleScoreGaugePro
     return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 1 ${e.x} ${e.y}`;
   };
 
+  // Gradient arc using multiple segments
+  const arcSegments = [];
+  const segCount = Math.max(1, Math.round(animatedScore / 2));
+  for (let i = 0; i < segCount; i++) {
+    const segStart = startAngle + (totalArc * (i / 100) * (score / segCount * (i + 1) / score));
+    // simplified: just use one gradient path
+  }
+
   return (
     <div ref={ref} className="relative overflow-hidden rounded-lg bg-surface-container-lowest border border-border p-6">
-      {/* Background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full blur-3xl" style={{ background: `${scoreColor}10` }} />
+      {/* Background glow that shifts color */}
+      <motion.div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full blur-3xl"
+        animate={{ background: `${currentColor}10` }}
+        transition={{ duration: 0.1 }}
+      />
 
       <div className="flex items-center justify-between mb-2">
         <span className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">Your Muscle Score</span>
@@ -81,6 +109,15 @@ const MuscleScoreGauge = ({ score, atRiskLbs, preservePct }: MuscleScoreGaugePro
       {/* Gauge SVG */}
       <div className="flex justify-center my-2">
         <svg width="180" height="130" viewBox="0 0 180 130">
+          {/* Gradient definition */}
+          <defs>
+            <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="hsl(0, 100%, 63%)" />
+              <stop offset="40%" stopColor="hsl(38, 92%, 50%)" />
+              <stop offset="100%" stopColor="hsl(160, 100%, 45%)" />
+            </linearGradient>
+          </defs>
+
           {/* Background arc */}
           <path
             d={arcPath(startAngle, endAngle, radius)}
@@ -89,29 +126,28 @@ const MuscleScoreGauge = ({ score, atRiskLbs, preservePct }: MuscleScoreGaugePro
             strokeWidth={stroke}
             strokeLinecap="round"
           />
-          {/* Score arc */}
-          <motion.path
-            d={arcPath(startAngle, Math.min(scoreAngle, endAngle), radius)}
-            fill="none"
-            stroke={scoreColor}
-            strokeWidth={stroke}
-            strokeLinecap="round"
-            initial={{ pathLength: 0 }}
-            animate={inView ? { pathLength: 1 } : {}}
-            transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
-            style={{ filter: `drop-shadow(0 0 8px ${scoreColor}40)` }}
-          />
+          {/* Score arc with gradient */}
+          {inView && animatedScore > 0 && (
+            <path
+              d={arcPath(startAngle, Math.min(scoreAngle, endAngle), radius)}
+              fill="none"
+              stroke="url(#scoreGradient)"
+              strokeWidth={stroke}
+              strokeLinecap="round"
+              style={{ filter: `drop-shadow(0 0 8px ${currentColor}40)` }}
+            />
+          )}
           {/* Needle dot */}
-          {inView && (
+          {inView && animatedScore > 0 && (
             <motion.circle
               cx={polarToCart(scoreAngle, radius).x}
               cy={polarToCart(scoreAngle, radius).y}
               r={5}
-              fill={scoreColor}
+              fill={currentColor}
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.2, duration: 0.3 }}
-              style={{ filter: `drop-shadow(0 0 6px ${scoreColor}80)` }}
+              transition={{ delay: 1.2, type: "spring", stiffness: 300, damping: 20 }}
+              style={{ filter: `drop-shadow(0 0 6px ${currentColor}80)` }}
             />
           )}
           {/* Labels */}
@@ -122,23 +158,33 @@ const MuscleScoreGauge = ({ score, atRiskLbs, preservePct }: MuscleScoreGaugePro
 
       {/* Score number */}
       <div className="text-center -mt-4 mb-4">
-        <span className={`font-headline font-black text-5xl ${scoreBg}`}>{animatedScore}</span>
+        <span className={`font-mono font-black text-5xl tabular-nums ${scoreBg}`}>{animatedScore}</span>
         <span className="text-on-surface-variant text-lg font-headline">/100</span>
       </div>
 
       {/* Risk / preserve stats */}
       <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 1.6, duration: 0.4 }}
+          className="flex items-center gap-2 text-sm"
+        >
           <span className="text-accent-danger text-base">📉</span>
           <span className="text-on-surface-variant">At risk of losing </span>
           <span className="font-mono font-bold text-accent-danger">{atRiskLbs} lbs</span>
           <span className="text-on-surface-variant"> muscle</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm">
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 1.8, duration: 0.4 }}
+          className="flex items-center gap-2 text-sm"
+        >
           <span className="text-primary text-base">💪</span>
           <span className="text-on-surface-variant">Follow protocol to preserve </span>
           <span className="font-mono font-bold text-primary">{preservePct}%</span>
-        </div>
+        </motion.div>
       </div>
 
       <p className="text-[10px] text-on-surface-variant/50 font-mono mt-3 text-center">

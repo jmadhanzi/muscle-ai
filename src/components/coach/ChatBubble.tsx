@@ -1,8 +1,6 @@
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 
-const ease = [0.16, 1, 0.3, 1] as const;
-
 interface ChatBubbleProps {
   role: "user" | "assistant";
   content: string;
@@ -14,9 +12,18 @@ const ChatBubble = ({ role, content, timestamp }: ChatBubbleProps) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease }}
+      initial={
+        isUser
+          ? { opacity: 0, y: 10, scale: 0.97 }
+          : { opacity: 0, y: 14, scale: 0.95, x: -8 }
+      }
+      animate={{ opacity: 1, y: 0, scale: 1, x: 0 }}
+      transition={{
+        type: "spring",
+        stiffness: 320,
+        damping: 22,
+      }}
+      style={{ transformOrigin: isUser ? "bottom right" : "bottom left" }}
       className={`flex ${isUser ? "justify-end" : "justify-start"}`}
     >
       {!isUser && (

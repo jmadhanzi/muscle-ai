@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 
 interface OnboardingLayoutProps {
@@ -9,6 +9,22 @@ interface OnboardingLayoutProps {
   footer?: ReactNode;
 }
 
+const slideVariants = {
+  enter: { opacity: 0, x: 60, filter: "blur(4px)" },
+  center: {
+    opacity: 1,
+    x: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+  },
+  exit: {
+    opacity: 0,
+    x: -60,
+    filter: "blur(4px)",
+    transition: { duration: 0.25, ease: [0.4, 0, 1, 1] },
+  },
+};
+
 const OnboardingLayout = ({ step, totalSteps = 8, children, footer }: OnboardingLayoutProps) => (
   <div className="min-h-screen bg-background overflow-x-hidden relative">
     {/* Ambient glow */}
@@ -17,16 +33,18 @@ const OnboardingLayout = ({ step, totalSteps = 8, children, footer }: Onboarding
 
     <Navbar showBack showSteps activeStep={step} totalSteps={totalSteps} />
 
-    <motion.main
-      key={step}
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3, ease: [0, 0, 0.2, 1] }}
-      className="pt-28 pb-32 px-6 max-w-2xl mx-auto"
-    >
-      {children}
-    </motion.main>
+    <AnimatePresence mode="wait">
+      <motion.main
+        key={step}
+        variants={slideVariants}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        className="pt-28 pb-32 px-6 max-w-2xl mx-auto"
+      >
+        {children}
+      </motion.main>
+    </AnimatePresence>
 
     {footer && (
       <div className="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-background via-background/95 to-transparent z-40">
