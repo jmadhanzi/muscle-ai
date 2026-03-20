@@ -22,9 +22,8 @@ const PrimaryGoal = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data } = await supabase.from("onboarding_data").select("primary_goal, biggest_fear").eq("user_id", user.id).single();
+      const { data } = await supabase.from("onboarding_data").select("primary_goal").eq("user_id", user.id).single();
       if (data?.primary_goal) setSelected(data.primary_goal);
-      if (data?.biggest_fear) setBiggestFear(data.biggest_fear);
     };
     load();
   }, [user]);
