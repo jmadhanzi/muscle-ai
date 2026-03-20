@@ -142,7 +142,7 @@ const BiggestFear = () => {
   const handleAchievement = useCallback(async () => {
     if (!user) return;
     // Mark onboarding complete
-    await supabase.from("onboarding_data").update({ onboarding_completed: true }).eq("user_id", user.id);
+    await supabase.from("profiles").update({ onboarding_completed: true }).eq("user_id", user.id);
     setPhase("achievement");
   }, [user]);
 

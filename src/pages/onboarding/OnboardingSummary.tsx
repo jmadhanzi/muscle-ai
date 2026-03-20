@@ -52,7 +52,7 @@ const OnboardingSummary = () => {
     if (!user) return;
     setSaving(true);
     try {
-      await supabase.from("onboarding_data").update({
+      await supabase.from("profiles").update({
         onboarding_completed: true,
       }).eq("user_id", user.id);
 
