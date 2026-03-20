@@ -205,7 +205,7 @@ serve(async (req) => {
     for (const uid of userIds) {
       const rows = (weekTracking || [])
         .filter((r: any) => r.user_id === uid && r.checked_items?.length > 0)
-        .sort((a: any, b: any) => b.tracking_date.localeCompare(a.tracking_date));
+        .sort((a: any, b: any) => b.date.localeCompare(a.date));
       
       let streak = 0;
       const checkDate = new Date(now);
