@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,6 +72,7 @@ const Dashboard = () => {
   const [data, setData] = useState<OnboardingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  const timeTriggersRan = useRef(false);
 
   useEffect(() => {
     if (!user) return;
@@ -85,6 +86,30 @@ const Dashboard = () => {
     };
     load();
   }, [user]);
+
+  // ── Time-based paywall triggers ──
+  useEffect(() => {
+    if (!data || timeTriggersRan.current) return;
+    timeTriggersRan.current = true;
+
+    const dayNumber = Math.max(1, Math.min(70, data.weeks_on_medication ? data.weeks_on_medication * 7 : 1));
+    if (dayNumber >= 3) {
+      setTimeout(() => paywall.fire("day3_return"), 1500);
+      return;
+    }
+
+    if (data.injection_day) {
+      const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+      const injectionIdx = days.indexOf(data.injection_day.toLowerCase());
+      if (injectionIdx !== -1) {
+        const today = new Date().getDay();
+        const dayBefore = (injectionIdx - 1 + 7) % 7;
+        if (today === dayBefore) {
+          setTimeout(() => paywall.fire("injection_day"), 1500);
+        }
+      }
+    }
+  }, [data, paywall]);
 
   if (loading) {
     return (
