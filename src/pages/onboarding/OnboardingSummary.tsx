@@ -44,8 +44,8 @@ const OnboardingSummary = () => {
   const weightLoss = data.current_weight && data.goal_weight ? Math.max(0, Number(data.current_weight) - Number(data.goal_weight)) : 0;
   const muscleLossRisk = Math.round(weightLoss * 0.4 * 10) / 10;
   const unit = data.weight_unit || "lbs";
-  const displayWeight = unit === "lbs" ? Math.round(Number(data.weight_kg) * 2.205) : Number(data.weight_kg);
-  const displayGoal = unit === "lbs" ? Math.round(Number(data.goal_weight) * 2.205) : Number(data.goal_weight);
+  const displayWeight = unit === "lbs" ? Math.round(Number(data.current_weight || 0) * 2.205) : Number(data.current_weight || 0);
+  const displayGoal = unit === "lbs" ? Math.round(Number(data.goal_weight || 0) * 2.205) : Number(data.goal_weight || 0);
   const displayMuscleRisk = unit === "lbs" ? Math.round(muscleLossRisk * 2.205) : muscleLossRisk;
 
   const handleComplete = async () => {
