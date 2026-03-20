@@ -58,7 +58,7 @@ const ProteinRing = ({ target, current, onAdd }: ProteinRingProps) => {
             {QUICK_ADD.map((amt) => (
               <motion.button
                 key={amt}
-                onClick={() => addProtein(amt)}
+                onClick={() => onAdd(amt)}
                 whileTap={{ scale: 0.92 }}
                 className="flex-1 py-2.5 rounded-lg bg-surface-container-high text-on-surface font-mono text-sm font-bold hover:bg-surface-container-highest transition-colors active:scale-[0.95]"
               >

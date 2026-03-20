@@ -8,6 +8,7 @@ import { SkeletonCard } from "@/components/motion/Skeleton";
 import PaywallModal from "@/components/PaywallModal";
 import { DAILY_PROTOCOL } from "@/config/features";
 import { usePaywall } from "@/hooks/usePaywall";
+import { useDailyTracking } from "@/hooks/useDailyTracking";
 import DashboardHeader from "@/components/dashboard/Header";
 import MuscleScoreGauge from "@/components/dashboard/MuscleScoreGauge";
 import StatsRow from "@/components/dashboard/StatsRow";
