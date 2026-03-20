@@ -357,7 +357,7 @@ const SubscriptionPage = () => {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  Unlock MuscleLock Pro
+                  Start {STRIPE_CONFIG.trial.default_days}-Day Free Trial
                   <span className="material-symbols-outlined">lock_open</span>
                 </>
               )}
