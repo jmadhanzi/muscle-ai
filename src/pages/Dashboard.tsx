@@ -11,23 +11,27 @@ import PaywallModal from "@/components/PaywallModal";
 
 interface OnboardingData {
   first_name?: string;
-  height_cm: number | null;
   weight_kg: number | null;
-  activity_level: string | null;
-  fitness_goals: string[] | null;
-  body_concerns: string[] | null;
+  goal_weight: number | null;
+  weight_unit: string | null;
+  muscle_concern: string | null;
+  fitness_level: string | null;
+  workouts_per_week: number | null;
+  protein_intake: string | null;
+  primary_goal: string | null;
   medication: string | null;
   weeks_on_medication: number | null;
 }
 
 const calcRiskScore = (data: OnboardingData) => {
   const factors = [
-    data.activity_level === "sedentary" ? 25 : data.activity_level === "light" ? 15 : 5,
-    (data.body_concerns?.length || 0) * 5,
-    (data.fitness_goals?.length || 0) > 3 ? 10 : 0,
-    (data.weeks_on_medication || 0) < 4 ? 5 : 0,
+    data.muscle_concern === "very_concerned" ? 20 : data.muscle_concern === "somewhat" ? 12 : data.muscle_concern === "not_sure" ? 8 : 3,
+    data.fitness_level === "never_exercised" ? 25 : data.fitness_level === "beginner" ? 15 : data.fitness_level === "intermediate" ? 5 : 0,
+    (data.workouts_per_week || 0) === 0 ? 15 : (data.workouts_per_week || 0) <= 2 ? 8 : 0,
+    data.protein_intake === "less_than_50" ? 20 : data.protein_intake === "50_to_100" ? 12 : data.protein_intake === "100_to_150" ? 5 : 0,
+    (data.weeks_on_medication || 0) > 8 ? 10 : (data.weeks_on_medication || 0) > 4 ? 5 : 0,
   ];
-  return Math.min(95, 40 + factors.reduce((a, b) => a + b, 0));
+  return Math.min(95, 20 + factors.reduce((a, b) => a + b, 0));
 };
 
 const calcLeanMass = (weight: number | null, riskScore: number) => {
