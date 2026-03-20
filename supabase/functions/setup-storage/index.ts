@@ -18,22 +18,30 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Create the avatars bucket (public)
-    const { data, error } = await supabase.storage.createBucket("avatars", {
-      public: true,
-      allowedMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"],
-      fileSizeLimit: 5 * 1024 * 1024, // 5MB
-    });
-
-    if (error && !error.message.includes("already exists")) {
-      throw error;
+    // Check if bucket exists first
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const exists = buckets?.some(b => b.id === "avatars");
+    
+    if (exists) {
+      return new Response(JSON.stringify({ success: true, message: "Bucket already exists" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    return new Response(JSON.stringify({ success: true, message: data ? "Bucket created" : "Bucket already exists" }), {
+    const { data, error } = await supabase.storage.createBucket("avatars", {
+      public: true,
+    });
+
+    console.log("Create result:", JSON.stringify({ data, error }));
+
+    if (error) throw error;
+
+    return new Response(JSON.stringify({ success: true, message: "Bucket created" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Error:", error);
+    return new Response(JSON.stringify({ error: error.message, details: JSON.stringify(error) }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
