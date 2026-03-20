@@ -40,6 +40,7 @@ export interface OnboardingData {
   weeks_on_medication: number | null;
   injection_day: string | null;
   weight_kg?: number | null;
+  referred_by?: string | null;
 }
 
 export const calcMuscleScore = (data: OnboardingData) => {
