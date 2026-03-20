@@ -38,6 +38,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/ref/:code" element={<ReferralLanding />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/personal-identity" element={<ProtectedRoute><PersonalIdentity /></ProtectedRoute>} />
             <Route path="/medication-profile" element={<ProtectedRoute><MedicationProfile /></ProtectedRoute>} />
