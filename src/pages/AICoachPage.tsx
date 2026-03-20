@@ -5,6 +5,7 @@ import BottomNav from "@/components/BottomNav";
 import PaywallModal from "@/components/PaywallModal";
 import { usePaywall } from "@/hooks/usePaywall";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCoachProfile, CoachUserProfile } from "@/hooks/useCoachProfile";
 import { Brain, Send, Loader2, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AI_COACH_FREE_LIMIT } from "@/config/features";
@@ -23,9 +24,10 @@ const STARTER_PROMPTS = [
 const ease = [0.16, 1, 0.3, 1] as const;
 
 async function streamChat({
-  messages, onDelta, onDone, onError,
+  messages, userProfile, onDelta, onDone, onError,
 }: {
   messages: Msg[];
+  userProfile?: CoachUserProfile | null;
   onDelta: (text: string) => void;
   onDone: () => void;
   onError: (msg: string) => void;
@@ -36,7 +38,7 @@ async function streamChat({
       "Content-Type": "application/json",
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({ messages, userProfile }),
   });
 
   if (!resp.ok) {
@@ -81,7 +83,8 @@ async function streamChat({
 const AICoachPage = () => {
   const navigate = useNavigate();
   const paywall = usePaywall();
-  const { isPro } = useAuth();
+  const { isPro, user } = useAuth();
+  const userProfile = useCoachProfile(user?.id);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -129,6 +132,7 @@ const AICoachPage = () => {
 
     await streamChat({
       messages: newMessages,
+      userProfile,
       onDelta: upsert,
       onDone: () => setIsLoading(false),
       onError: (msg) => {
