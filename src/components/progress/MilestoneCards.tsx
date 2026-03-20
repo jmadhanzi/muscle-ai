@@ -158,11 +158,17 @@ const MilestoneCards = ({
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={() => handleShare(m)}
-                    className="flex items-center gap-1 text-[10px] font-mono text-primary active:scale-[0.96] transition-transform"
+                    disabled={generatingId === m.id}
+                    className="flex items-center gap-1 text-[10px] font-mono text-primary active:scale-[0.96] transition-transform disabled:opacity-50"
                   >
-                    <Share2 className="w-3 h-3" /> {shared ? "Shared" : "Share"}
+                    {generatingId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Share2 className="w-3 h-3" />}
+                    {shared ? "Shared" : "Share"}
                   </button>
-                  <button className="flex items-center gap-1 text-[10px] font-mono text-on-surface-variant active:scale-[0.96] transition-transform">
+                  <button
+                    onClick={() => handleDownload(m)}
+                    disabled={generatingId === m.id}
+                    className="flex items-center gap-1 text-[10px] font-mono text-on-surface-variant active:scale-[0.96] transition-transform disabled:opacity-50"
+                  >
                     <Download className="w-3 h-3" /> Save
                   </button>
                 </div>
