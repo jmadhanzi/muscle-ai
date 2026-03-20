@@ -16,6 +16,10 @@ import BodyConcerns from "./pages/onboarding/BodyConcerns.tsx";
 import OnboardingSummary from "./pages/onboarding/OnboardingSummary.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import SubscriptionPage from "./pages/SubscriptionPage.tsx";
+import AICoachPage from "./pages/AICoachPage.tsx";
+import WorkoutsPage from "./pages/WorkoutsPage.tsx";
+import NutritionPage from "./pages/NutritionPage.tsx";
+import ProgressPage from "./pages/ProgressPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
