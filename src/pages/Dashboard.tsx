@@ -72,6 +72,7 @@ const Dashboard = () => {
   const [data, setData] = useState<OnboardingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  const timeTriggersRan = useRef(false);
 
   useEffect(() => {
     if (!user) return;
