@@ -125,20 +125,11 @@ const Dashboard = () => {
     }
   }, [data, paywall, isPro]);
 
-  if (loading || !trackingLoaded) {
-    return (
-      <div className="min-h-screen bg-mesh px-5 pt-16 pb-24 space-y-4">
-        <SkeletonCard /><SkeletonCard /><SkeletonCard />
-      </div>
-    );
-  }
-
-  if (!data) { navigate("/personal-identity"); return null; }
-
-  const muscleScore = calcMuscleScore(data);
-  const { atRiskLbs, preservePct } = calcAtRiskLbs(data, muscleScore);
-  const proteinTarget = calcProteinTarget(data);
-  const dayNumber = Math.max(1, Math.min(70, data.weeks_on_medication ? data.weeks_on_medication * 7 : 1));
+  // Compute derived values (safe to call before conditional returns since these are just computations)
+  const muscleScore = data ? calcMuscleScore(data) : 0;
+  const { atRiskLbs, preservePct } = data ? calcAtRiskLbs(data, muscleScore) : { atRiskLbs: 0, preservePct: 0 };
+  const proteinTarget = data ? calcProteinTarget(data) : 100;
+  const dayNumber = data ? Math.max(1, Math.min(70, data.weeks_on_medication ? data.weeks_on_medication * 7 : 1)) : 1;
   const scoreChange = Math.max(3, Math.round(muscleScore * 0.12));
 
   // Simulated weekly streak for Pro — Mon-Sun based on day of week
@@ -149,16 +140,26 @@ const Dashboard = () => {
   if (checkedItems.size > 0) completedDays[mondayIdx] = true;
   const streakDays = completedDays.filter(Boolean).length;
 
-  // In-app notification alerts
+  // In-app notification alerts — must be called before any conditional returns (Rules of Hooks)
   useInAppNotifications({
-    injectionDay: data.injection_day,
+    injectionDay: data?.injection_day ?? null,
     streakDays,
     checkedItemsCount: checkedItems.size,
     proteinIntake,
     proteinTarget,
-    firstName: data.first_name,
+    firstName: data?.first_name,
     isPro,
   });
+
+  if (loading || !trackingLoaded) {
+    return (
+      <div className="min-h-screen bg-mesh px-5 pt-16 pb-24 space-y-4">
+        <SkeletonCard /><SkeletonCard /><SkeletonCard />
+      </div>
+    );
+  }
+
+  if (!data) { navigate("/personal-identity"); return null; }
 
   const toggleCheck = (id: string, unlocked: boolean) => {
     if (!unlocked) {
