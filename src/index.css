@@ -7,65 +7,78 @@
 
 @layer base {
   :root {
-    --background: 216 24% 8%;
-    --foreground: 222 14% 89%;
+    --background: 216 30% 5%;
+    --foreground: 210 40% 96%;
 
-    --card: 216 16% 10%;
-    --card-foreground: 222 14% 89%;
+    --card: 215 28% 7%;
+    --card-foreground: 210 40% 96%;
 
-    --popover: 216 16% 10%;
-    --popover-foreground: 222 14% 89%;
+    --popover: 215 28% 7%;
+    --popover-foreground: 210 40% 96%;
 
-    --primary: 155 100% 71%;
+    --primary: 160 100% 45%;
     --primary-foreground: 160 100% 11%;
 
-    --secondary: 204 100% 76%;
-    --secondary-foreground: 202 100% 15%;
+    --secondary: 199 89% 48%;
+    --secondary-foreground: 199 100% 10%;
 
-    --muted: 216 10% 16%;
-    --muted-foreground: 160 14% 75%;
+    --muted: 215 14% 15%;
+    --muted-foreground: 214 10% 53%;
 
-    --accent: 216 10% 16%;
-    --accent-foreground: 222 14% 89%;
+    --accent: 215 14% 15%;
+    --accent-foreground: 210 40% 96%;
 
-    --destructive: 0 100% 38%;
-    --destructive-foreground: 222 14% 89%;
+    --destructive: 0 100% 63%;
+    --destructive-foreground: 210 40% 96%;
 
-    --border: 160 14% 26%;
-    --input: 216 24% 5%;
-    --ring: 155 100% 71%;
+    --border: 0 0% 100% / 0.06;
+    --input: 216 30% 5%;
+    --ring: 160 100% 45%;
 
     --radius: 1rem;
 
-    /* Clinical Kineticist tokens */
-    --surface: 216 24% 8%;
-    --surface-dim: 216 24% 8%;
-    --surface-container-lowest: 216 24% 5%;
-    --surface-container-low: 216 14% 11%;
-    --surface-container: 216 12% 13%;
-    --surface-container-high: 216 10% 17%;
-    --surface-container-highest: 216 8% 21%;
-    --surface-variant: 216 8% 21%;
-    --surface-bright: 216 8% 23%;
-    --on-surface: 222 14% 89%;
-    --on-surface-variant: 160 14% 75%;
-    --on-tertiary-container: 0 100% 34%;
+    /* Extended palette */
+    --surface: 216 30% 5%;
+    --surface-dim: 216 30% 5%;
+    --surface-container-lowest: 216 32% 3%;
+    --surface-container-low: 215 28% 7%;
+    --surface-container: 215 22% 9%;
+    --surface-container-high: 215 18% 11%;
+    --surface-container-highest: 215 14% 15%;
+    --surface-variant: 215 14% 15%;
+    --surface-bright: 215 14% 18%;
+    --on-surface: 210 40% 96%;
+    --on-surface-variant: 214 10% 57%;
+    --on-tertiary-container: 0 100% 63%;
     --error-container: 0 100% 29%;
     --outline-variant: 160 14% 26%;
     --primary-container: 160 100% 45%;
     --on-primary: 160 100% 11%;
-    --secondary-container: 197 100% 45%;
-    --on-secondary-container: 202 100% 15%;
+    --secondary-container: 199 89% 48%;
+    --on-secondary-container: 199 100% 10%;
     --error: 0 100% 84%;
 
-    --sidebar-background: 216 24% 8%;
-    --sidebar-foreground: 222 14% 89%;
-    --sidebar-primary: 155 100% 71%;
+    /* Accent extras */
+    --accent-gold: 38 92% 50%;
+    --accent-purple: 258 90% 66%;
+    --accent-danger: 0 100% 63%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(160 100% 45%) 0%, hsl(199 89% 48%) 100%);
+    --gradient-danger: linear-gradient(135deg, hsl(0 100% 63%) 0%, hsl(30 100% 50%) 100%);
+    --gradient-muscle: linear-gradient(180deg, hsl(160 100% 45%) 0%, hsl(160 100% 20%) 100%);
+
+    /* Glass */
+    --bg-glass: 215 22% 9%;
+
+    --sidebar-background: 216 30% 5%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 160 100% 45%;
     --sidebar-primary-foreground: 160 100% 11%;
-    --sidebar-accent: 216 10% 16%;
-    --sidebar-accent-foreground: 222 14% 89%;
-    --sidebar-border: 160 14% 26%;
-    --sidebar-ring: 155 100% 71%;
+    --sidebar-accent: 215 14% 15%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 0 0% 100% / 0.06;
+    --sidebar-ring: 160 100% 45%;
   }
 }
 
@@ -83,8 +96,25 @@
   .bg-mesh {
     background-color: hsl(var(--surface));
     background-image: 
-      radial-gradient(at 0% 0%, hsla(160, 100%, 45%, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(200, 100%, 45%, 0.05) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, hsla(160, 100%, 45%, 0.06) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(199, 89%, 48%, 0.05) 0px, transparent 50%);
+  }
+
+  .bg-glass {
+    background: hsla(var(--bg-glass) / 0.8);
+    backdrop-filter: blur(24px);
+  }
+
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .gradient-danger {
+    background: var(--gradient-danger);
+  }
+
+  .gradient-muscle {
+    background: var(--gradient-muscle);
   }
 
   .material-symbols-outlined {
@@ -93,6 +123,10 @@
 
   .material-filled {
     font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+
+  .border-accent-glow {
+    border-color: hsla(160, 100%, 45%, 0.3);
   }
 }
 
@@ -110,5 +144,5 @@ input[type='range']::-webkit-slider-thumb {
   height: 16px;
   width: 16px;
   border-radius: 50%;
-  box-shadow: 0 0 10px hsla(155, 100%, 71%, 0.5);
+  box-shadow: 0 0 10px hsla(160, 100%, 45%, 0.5);
 }
