@@ -227,7 +227,7 @@ const SubscriptionPage = () => {
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
                     <>
-                      Start Protecting Muscle
+                      Start {STRIPE_CONFIG.trial.default_days}-Day Free Trial
                       <span className="material-symbols-outlined">arrow_forward</span>
                     </>
                   )}
