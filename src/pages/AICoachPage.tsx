@@ -13,6 +13,7 @@ import TypingIndicator from "@/components/coach/TypingIndicator";
 import StarterPrompts from "@/components/coach/StarterPrompts";
 import ChatInputBar from "@/components/coach/ChatInputBar";
 import PaywallBanner from "@/components/coach/PaywallBanner";
+import { ChatDisclaimerBanner, OnboardingDisclaimer, useDisclaimer } from "@/components/DisclaimerBanner";
 
 type Msg = { role: "user" | "assistant"; content: string; time: string };
 
