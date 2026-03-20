@@ -38,6 +38,7 @@ const App = () => (
             <Route path="/onboarding/concerns" element={<ProtectedRoute><BodyConcerns /></ProtectedRoute>} />
             <Route path="/onboarding/summary" element={<ProtectedRoute><OnboardingSummary /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/subscribe" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
