@@ -17,7 +17,6 @@ const PrimaryGoal = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [selected, setSelected] = useState<string | null>(null);
-  const [biggestFear, setBiggestFear] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
