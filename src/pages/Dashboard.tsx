@@ -26,7 +26,7 @@ import { useInAppNotifications } from "@/hooks/useInAppNotifications";
 
 export interface OnboardingData {
   first_name?: string;
-  weight_kg: number | null;
+  current_weight: number | null;
   goal_weight: number | null;
   weight_unit: string | null;
   muscle_concern: string | null;
@@ -37,6 +37,7 @@ export interface OnboardingData {
   medication: string | null;
   weeks_on_medication: number | null;
   injection_day: string | null;
+  weight_kg?: number | null;
 }
 
 export const calcMuscleScore = (data: OnboardingData) => {
