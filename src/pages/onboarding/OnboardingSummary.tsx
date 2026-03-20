@@ -18,11 +18,12 @@ const OnboardingSummary = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [{ data: onb }, { data: prof }] = await Promise.all([
-        supabase.from("onboarding_data").select("*").eq("user_id", user.id).single(),
-        supabase.from("profiles").select("first_name").eq("user_id", user.id).single(),
-      ]);
-      setData({ ...onb, firstName: prof?.first_name });
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+      if (profile) setData({ ...profile, firstName: profile.first_name });
       setLoading(false);
     };
     load();
