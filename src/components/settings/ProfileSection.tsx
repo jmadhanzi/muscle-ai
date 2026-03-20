@@ -32,6 +32,31 @@ const DAYS_OF_WEEK = [
   { value: "sunday", label: "Sun" },
 ];
 
+/** Resize image to max 200x200 and return a data URL */
+const resizeImage = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 200;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d")!;
+        const min = Math.min(img.width, img.height);
+        const sx = (img.width - min) / 2;
+        const sy = (img.height - min) / 2;
+        ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+        resolve(canvas.toDataURL("image/jpeg", 0.8));
+      };
+      img.onerror = reject;
+      img.src = reader.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
 const ProfileSection = ({
   userId, firstName, setFirstName, email, currentWeight, setCurrentWeight,
   weightUnit, proteinTarget, setProteinTarget, injectionDay, setInjectionDay,
@@ -43,16 +68,16 @@ const ProfileSection = ({
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB");
+      return;
+    }
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop();
-      const path = `${userId}/avatar.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
-      const url = `${publicUrl}?t=${Date.now()}`;
-      await supabase.from("profiles").update({ avatar_url: url }).eq("user_id", userId);
-      setAvatarUrl(url);
+      const dataUrl = await resizeImage(file);
+      const { error } = await supabase.from("profiles").update({ avatar_url: dataUrl }).eq("user_id", userId);
+      if (error) throw error;
+      setAvatarUrl(dataUrl);
       toast.success("Avatar updated");
     } catch (err: any) {
       toast.error(err.message || "Upload failed");
