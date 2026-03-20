@@ -9,7 +9,7 @@ const dotVariants = {
       duration: 1.2,
       repeat: Infinity,
       delay: i * 0.15,
-      ease: "easeInOut",
+      ease: "easeInOut" as const,
     },
   }),
 };

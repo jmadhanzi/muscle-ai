@@ -15,7 +15,7 @@ const dotVariants = {
     scale: 1.4,
     backgroundColor: "hsl(var(--primary))",
     boxShadow: "0 0 8px hsla(155,100%,71%,0.6)",
-    transition: { type: "spring", stiffness: 400, damping: 15 },
+    transition: { type: "spring" as const, stiffness: 400, damping: 15 },
   },
   completed: {
     scale: 1,

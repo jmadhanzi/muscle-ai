@@ -15,13 +15,13 @@ const slideVariants = {
     opacity: 1,
     x: 0,
     filter: "blur(0px)",
-    transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] as const },
   },
   exit: {
     opacity: 0,
     x: -60,
     filter: "blur(4px)",
-    transition: { duration: 0.25, ease: [0.4, 0, 1, 1] },
+    transition: { duration: 0.25, ease: [0.4, 0, 1, 1] as const },
   },
 };
 
