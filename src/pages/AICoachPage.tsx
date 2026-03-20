@@ -27,7 +27,7 @@ async function streamChat({
   messages, userProfile, onDelta, onDone, onError,
 }: {
   messages: Msg[];
-  userProfile?: Record<string, unknown> | null;
+  userProfile?: CoachUserProfile | null;
   onDelta: (text: string) => void;
   onDone: () => void;
   onError: (msg: string) => void;
