@@ -3,32 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { CountUp } from "@/components/motion/Animated";
 import { Check, X, Zap, Shield, Brain, Dumbbell, Utensils, TrendingUp } from "lucide-react";
+import { FEATURE_COMPARISON, PRO_FEATURES } from "@/config/features";
 
 const MONTHLY_PRICE = 14.99;
 const YEARLY_PRICE = 99.99;
 const YEARLY_MONTHLY = +(YEARLY_PRICE / 12).toFixed(2);
 const SAVE_PCT = Math.round((1 - YEARLY_MONTHLY / MONTHLY_PRICE) * 100);
 
-const PRO_FEATURES = [
-  { icon: Brain, label: "AI muscle preservation coach", detail: "Personalized daily guidance" },
-  { icon: Utensils, label: "Meal timing protocol", detail: "Synced to your injection schedule" },
-  { icon: Dumbbell, label: "Custom workout plans", detail: "Optimized for muscle retention" },
-  { icon: TrendingUp, label: "Progress tracking & analytics", detail: "Body composition trends" },
-  { icon: Shield, label: "Recovery optimization", detail: "Sleep & stress protocols" },
-  { icon: Zap, label: "Priority support", detail: "Direct access to experts" },
-];
-
-const FREE_VS_PRO = [
-  { feature: "Muscle risk score", free: true, pro: true },
-  { feature: "Basic daily checklist", free: true, pro: true },
-  { feature: "3 protocol items", free: true, pro: true },
-  { feature: "AI coaching", free: false, pro: true },
-  { feature: "Custom workouts", free: false, pro: true },
-  { feature: "Meal timing protocol", free: false, pro: true },
-  { feature: "Progress analytics", free: false, pro: true },
-  { feature: "Recovery plans", free: false, pro: true },
-  { feature: "Full protocol (6 items)", free: false, pro: true },
-];
+const PRO_ICONS = [Brain, Utensils, Dumbbell, TrendingUp, Shield, Zap];
 
 const TESTIMONIALS = [
   { name: "Sarah M.", weeks: 12, quote: "I lost 34 lbs and kept every ounce of muscle. My trainer couldn't believe my DEXA results.", metric: "34 lbs lost, 0 muscle lost" },
@@ -53,7 +35,6 @@ const SubscriptionPage = () => {
 
   return (
     <div className="min-h-screen bg-mesh overflow-x-hidden">
-      {/* Close button */}
       <motion.button
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -76,13 +57,9 @@ const SubscriptionPage = () => {
             <span className="material-symbols-outlined material-filled text-primary text-sm">bolt</span>
             <span className="text-primary font-label text-xs font-bold tracking-widest uppercase">Limited Offer</span>
           </div>
-
           <h1 className="font-headline font-bold text-4xl md:text-5xl text-on-surface leading-[1.1] tracking-tight mb-4">
-            Stop losing muscle.
-            <br />
-            <span className="text-primary">Start today.</span>
+            Stop losing muscle.<br /><span className="text-primary">Start today.</span>
           </h1>
-
           <p className="text-on-surface-variant text-lg max-w-sm mx-auto leading-relaxed">
             Your personalized protocol is ready. Unlock the full system built for GLP-1 patients.
           </p>
@@ -106,15 +83,9 @@ const SubscriptionPage = () => {
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
           </button>
-          <span className={`text-sm font-medium transition-colors ${yearly ? "text-on-surface" : "text-on-surface-variant"}`}>
-            Yearly
-          </span>
+          <span className={`text-sm font-medium transition-colors ${yearly ? "text-on-surface" : "text-on-surface-variant"}`}>Yearly</span>
           {yearly && (
-            <motion.span
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-[10px] font-mono font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full"
-            >
+            <motion.span initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-[10px] font-mono font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
               Save {SAVE_PCT}%
             </motion.span>
           )}
@@ -145,9 +116,7 @@ const SubscriptionPage = () => {
                     exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.25 }}
                   >
-                    <span className="font-headline font-black text-4xl text-on-surface">
-                      ${price.toFixed(2)}
-                    </span>
+                    <span className="font-headline font-black text-4xl text-on-surface">${price.toFixed(2)}</span>
                     <span className="text-on-surface-variant text-sm">/mo</span>
                   </motion.div>
                 </AnimatePresence>
@@ -155,28 +124,29 @@ const SubscriptionPage = () => {
               </div>
             </div>
 
-            {/* Feature list */}
             <div className="space-y-3 mb-6">
-              {PRO_FEATURES.map((feat, i) => (
-                <motion.div
-                  key={feat.label}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.35 + i * 0.06, duration: 0.4, ease }}
-                  className="flex items-center gap-3"
-                >
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <feat.icon className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-on-surface">{feat.label}</p>
-                    <p className="text-[11px] text-on-surface-variant">{feat.detail}</p>
-                  </div>
-                </motion.div>
-              ))}
+              {PRO_FEATURES.slice(0, 6).map((feat, i) => {
+                const Icon = PRO_ICONS[i] || Zap;
+                return (
+                  <motion.div
+                    key={feat.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.35 + i * 0.06, duration: 0.4, ease }}
+                    className="flex items-center gap-3"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-on-surface">{feat.label}</p>
+                      <p className="text-[11px] text-on-surface-variant">{feat.description}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
 
-            {/* CTA */}
             <button
               onClick={handleSubscribe}
               className="w-full py-4 rounded-full gradient-hero text-on-primary font-headline font-bold text-lg flex items-center justify-center gap-2 shadow-[0_8px_32px_hsla(160,100%,45%,0.25)] active:scale-[0.97] transition-transform duration-200"
@@ -190,7 +160,7 @@ const SubscriptionPage = () => {
           </div>
         </motion.div>
 
-        {/* Comparison Table */}
+        {/* Full Comparison Table */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -204,21 +174,21 @@ const SubscriptionPage = () => {
               <div className="p-3 text-[10px] font-mono uppercase tracking-widest text-on-surface-variant border-b border-l border-border">Free</div>
               <div className="p-3 text-[10px] font-mono uppercase tracking-widest text-primary border-b border-l border-border font-bold">Pro</div>
 
-              {FREE_VS_PRO.map((row, i) => (
+              {FEATURE_COMPARISON.map((row, i) => (
                 <motion.div
                   key={row.feature}
                   className="contents"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 + i * 0.04 }}
+                  transition={{ delay: 0.5 + i * 0.03 }}
                 >
-                  <div className={`p-3 text-left text-sm text-on-surface ${i < FREE_VS_PRO.length - 1 ? "border-b border-border" : ""}`}>
+                  <div className={`p-3 text-left text-sm text-on-surface ${i < FEATURE_COMPARISON.length - 1 ? "border-b border-border" : ""}`}>
                     {row.feature}
                   </div>
-                  <div className={`p-3 flex items-center justify-center border-l ${i < FREE_VS_PRO.length - 1 ? "border-b" : ""} border-border`}>
+                  <div className={`p-3 flex items-center justify-center border-l ${i < FEATURE_COMPARISON.length - 1 ? "border-b" : ""} border-border`}>
                     {row.free ? <Check className="w-4 h-4 text-primary" /> : <X className="w-4 h-4 text-on-surface-variant/30" />}
                   </div>
-                  <div className={`p-3 flex items-center justify-center border-l ${i < FREE_VS_PRO.length - 1 ? "border-b" : ""} border-border bg-primary/[0.03]`}>
+                  <div className={`p-3 flex items-center justify-center border-l ${i < FEATURE_COMPARISON.length - 1 ? "border-b" : ""} border-border bg-primary/[0.03]`}>
                     <Check className="w-4 h-4 text-primary" />
                   </div>
                 </motion.div>
@@ -318,16 +288,13 @@ const SubscriptionPage = () => {
           className="mt-8 flex items-center justify-center gap-6 text-on-surface-variant/40"
         >
           <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest">
-            <span className="material-symbols-outlined text-sm">lock</span>
-            Secure
+            <span className="material-symbols-outlined text-sm">lock</span>Secure
           </div>
           <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest">
-            <span className="material-symbols-outlined text-sm">verified_user</span>
-            HIPAA
+            <span className="material-symbols-outlined text-sm">verified_user</span>HIPAA
           </div>
           <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest">
-            <span className="material-symbols-outlined text-sm">undo</span>
-            7-day refund
+            <span className="material-symbols-outlined text-sm">undo</span>7-day refund
           </div>
         </motion.div>
       </div>

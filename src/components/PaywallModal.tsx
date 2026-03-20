@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock } from "lucide-react";
+import { PRO_FEATURES } from "@/config/features";
 
 interface PaywallModalProps {
   open: boolean;
@@ -10,6 +11,9 @@ interface PaywallModalProps {
 
 const PaywallModal = ({ open, onClose, feature = "this feature" }: PaywallModalProps) => {
   const navigate = useNavigate();
+
+  // Pick 4 relevant pro features to show
+  const highlights = PRO_FEATURES.slice(0, 4);
 
   return (
     <AnimatePresence>
@@ -47,10 +51,10 @@ const PaywallModal = ({ open, onClose, feature = "this feature" }: PaywallModalP
             </div>
 
             <div className="space-y-2 mb-5">
-              {["AI coaching", "Custom workouts", "Meal timing", "Full protocol"].map((f) => (
-                <div key={f} className="flex items-center gap-2 text-sm text-on-surface">
+              {highlights.map((f) => (
+                <div key={f.id} className="flex items-center gap-2 text-sm text-on-surface">
                   <span className="material-symbols-outlined text-primary text-base">check_circle</span>
-                  {f}
+                  {f.label}
                 </div>
               ))}
             </div>

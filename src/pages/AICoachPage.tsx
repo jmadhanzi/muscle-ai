@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
+import PaywallModal from "@/components/PaywallModal";
 import { Brain, Send, Loader2, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { AI_COACH_FREE_LIMIT } from "@/config/features";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -18,10 +21,7 @@ const STARTER_PROMPTS = [
 const ease = [0.16, 1, 0.3, 1] as const;
 
 async function streamChat({
-  messages,
-  onDelta,
-  onDone,
-  onError,
+  messages, onDelta, onDone, onError,
 }: {
   messages: Msg[];
   onDelta: (text: string) => void;
@@ -43,10 +43,7 @@ async function streamChat({
     return;
   }
 
-  if (!resp.body) {
-    onError("No response stream");
-    return;
-  }
+  if (!resp.body) { onError("No response stream"); return; }
 
   const reader = resp.body.getReader();
   const decoder = new TextDecoder();
@@ -80,11 +77,18 @@ async function streamChat({
 }
 
 const AICoachPage = () => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [paywallOpen, setPaywallOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Count user messages sent
+  const userMessageCount = messages.filter((m) => m.role === "user").length;
+  const isLimitReached = userMessageCount >= AI_COACH_FREE_LIMIT;
+  const remaining = Math.max(0, AI_COACH_FREE_LIMIT - userMessageCount);
 
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
@@ -97,6 +101,11 @@ const AICoachPage = () => {
   const send = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || isLoading) return;
+
+    if (isLimitReached) {
+      setPaywallOpen(true);
+      return;
+    }
 
     const userMsg: Msg = { role: "user", content: trimmed };
     const newMessages = [...messages, userMsg];
@@ -138,7 +147,6 @@ const AICoachPage = () => {
 
   return (
     <div className="flex flex-col h-[100dvh] bg-mesh">
-      {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -147,20 +155,29 @@ const AICoachPage = () => {
       >
         <div>
           <h1 className="font-headline font-bold text-xl text-on-surface">AI Coach</h1>
-          <p className="text-on-surface-variant text-xs mt-0.5">Muscle preservation expert</p>
+          <p className="text-on-surface-variant text-xs mt-0.5">
+            {isLimitReached ? "Free messages used" : `${remaining} free message${remaining === 1 ? "" : "s"} left`}
+          </p>
         </div>
-        {!isEmpty && (
-          <button
-            onClick={() => setMessages([])}
-            className="p-2 rounded-lg hover:bg-surface-container transition-colors active:scale-95"
-            aria-label="Clear chat"
-          >
-            <Trash2 className="w-4 h-4 text-on-surface-variant" />
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Message counter pill */}
+          <div className={`px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-widest ${
+            isLimitReached ? "bg-accent-danger/10 text-accent-danger" : "bg-primary/10 text-primary"
+          }`}>
+            {userMessageCount}/{AI_COACH_FREE_LIMIT}
+          </div>
+          {!isEmpty && (
+            <button
+              onClick={() => setMessages([])}
+              className="p-2 rounded-lg hover:bg-surface-container transition-colors active:scale-95"
+              aria-label="Clear chat"
+            >
+              <Trash2 className="w-4 h-4 text-on-surface-variant" />
+            </button>
+          )}
+        </div>
       </motion.header>
 
-      {/* Messages area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-4 scroll-smooth">
         {isEmpty ? (
           <motion.div
@@ -172,11 +189,12 @@ const AICoachPage = () => {
             <div className="w-16 h-16 rounded-full gradient-hero flex items-center justify-center mb-5 shadow-[0_0_40px_hsla(160,100%,45%,0.12)]">
               <Brain className="w-8 h-8 text-on-primary" />
             </div>
-            <h2 className="font-headline font-bold text-lg text-on-surface mb-1.5">
-              Ask me anything
-            </h2>
-            <p className="text-on-surface-variant text-sm max-w-[260px] leading-relaxed mb-8">
+            <h2 className="font-headline font-bold text-lg text-on-surface mb-1.5">Ask me anything</h2>
+            <p className="text-on-surface-variant text-sm max-w-[260px] leading-relaxed mb-2">
               Trained on clinical research for GLP-1 muscle preservation protocols.
+            </p>
+            <p className="text-xs font-mono text-primary mb-8">
+              {AI_COACH_FREE_LIMIT} free messages · Unlimited with Pro
             </p>
 
             <div className="w-full max-w-sm space-y-2">
@@ -210,31 +228,23 @@ const AICoachPage = () => {
                       <Brain className="w-3.5 h-3.5 text-on-primary" />
                     </div>
                   )}
-                  <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-md"
-                        : "bg-surface-container-low text-on-surface rounded-bl-md"
-                    }`}
-                  >
+                  <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground rounded-br-md"
+                      : "bg-surface-container-low text-on-surface rounded-bl-md"
+                  }`}>
                     {msg.role === "assistant" ? (
                       <div className="prose prose-sm prose-invert max-w-none [&_p]:mb-2 [&_p:last-child]:mb-0 [&_ul]:mb-2 [&_li]:mb-0.5 [&_strong]:text-primary">
                         <ReactMarkdown>{msg.content}</ReactMarkdown>
                       </div>
-                    ) : (
-                      msg.content
-                    )}
+                    ) : msg.content}
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
 
             {isLoading && messages[messages.length - 1]?.role === "user" && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center gap-2"
-              >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full gradient-hero flex items-center justify-center shrink-0">
                   <Brain className="w-3.5 h-3.5 text-on-primary" />
                 </div>
@@ -245,26 +255,51 @@ const AICoachPage = () => {
                 </div>
               </motion.div>
             )}
+
+            {/* Limit reached banner */}
+            {isLimitReached && !isLoading && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease }}
+                className="bg-accent-gold/10 border border-accent-gold/20 rounded-lg p-5 text-center"
+              >
+                <span className="material-symbols-outlined text-accent-gold text-2xl mb-2 block">lock</span>
+                <p className="font-headline font-bold text-on-surface mb-1">Free messages used</p>
+                <p className="text-on-surface-variant text-xs mb-4">
+                  Upgrade to Pro for unlimited AI coaching, custom workouts, and more.
+                </p>
+                <button
+                  onClick={() => navigate("/subscribe")}
+                  className="px-6 py-3 rounded-full gradient-hero text-on-primary font-headline font-bold text-sm active:scale-[0.97] transition-transform duration-200"
+                >
+                  Unlock Unlimited Coach
+                </button>
+              </motion.div>
+            )}
           </div>
         )}
       </div>
 
       {/* Input bar */}
       <div className="shrink-0 px-4 pb-24 pt-2">
-        <div className="flex items-end gap-2 bg-surface-container-low rounded-2xl border border-white/[0.06] p-2 focus-within:border-primary/30 transition-colors">
+        <div className={`flex items-end gap-2 bg-surface-container-low rounded-2xl border p-2 transition-colors ${
+          isLimitReached ? "border-accent-danger/20 opacity-60" : "border-white/[0.06] focus-within:border-primary/30"
+        }`}>
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about muscle preservation..."
+            placeholder={isLimitReached ? "Upgrade to continue chatting..." : "Ask about muscle preservation..."}
             rows={1}
-            className="flex-1 bg-transparent text-sm text-on-surface placeholder:text-on-surface-variant/50 resize-none outline-none px-2 py-1.5 max-h-28 overflow-y-auto"
+            disabled={isLimitReached}
+            className="flex-1 bg-transparent text-sm text-on-surface placeholder:text-on-surface-variant/50 resize-none outline-none px-2 py-1.5 max-h-28 overflow-y-auto disabled:cursor-not-allowed"
             style={{ minHeight: "36px" }}
           />
           <button
-            onClick={() => send(input)}
-            disabled={!input.trim() || isLoading}
+            onClick={() => isLimitReached ? setPaywallOpen(true) : send(input)}
+            disabled={(!input.trim() && !isLimitReached) || isLoading}
             className="shrink-0 w-9 h-9 rounded-xl gradient-hero flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
           >
             {isLoading ? (
@@ -276,6 +311,7 @@ const AICoachPage = () => {
         </div>
       </div>
 
+      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} feature="Unlimited AI Coach" />
       <BottomNav />
     </div>
   );
