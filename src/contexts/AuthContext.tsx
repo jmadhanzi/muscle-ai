@@ -46,6 +46,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const processReferral = useCallback(async (userId: string) => {
+    const code = localStorage.getItem("pending_referral_code");
+    if (!code) return;
+    localStorage.removeItem("pending_referral_code");
+    try {
+      const { data, error } = await supabase.functions.invoke("process-referral", {
+        body: { referralCode: code, referredUserId: userId },
+      });
+      if (!error && data?.success) {
+        console.log("[REFERRAL] Processed successfully:", data);
+      }
+    } catch (e) {
+      console.error("[REFERRAL] Processing failed:", e);
+    }
+  }, []);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -53,6 +69,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
       if (session?.user) {
         setTimeout(() => checkSubscription(), 0);
+        // Process pending referral on first sign-in
+        processReferral(session.user.id);
       } else {
         setIsPro(false);
         setSubscriptionEnd(null);
@@ -69,7 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, [checkSubscription]);
+  }, [checkSubscription, processReferral]);
 
   // Auto-refresh subscription every 60s
   useEffect(() => {

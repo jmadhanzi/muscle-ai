@@ -1,15 +1,21 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const hasRef = searchParams.get("ref") === "1";
+  const [isLogin, setIsLogin] = useState(!hasRef);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+
+  // Referral code from sessionStorage (set by /ref/:code route)
+  const referralCode = sessionStorage.getItem("referral_code");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +33,11 @@ const AuthPage = () => {
       if (error) {
         toast.error(error.message);
       } else {
+        // If there's a referral code, store it so it can be processed after email confirmation
+        if (referralCode) {
+          localStorage.setItem("pending_referral_code", referralCode);
+          sessionStorage.removeItem("referral_code");
+        }
         toast.success("Check your email to confirm your account!");
       }
     }
@@ -47,6 +58,12 @@ const AuthPage = () => {
             MuscleLock AI
           </span>
         </div>
+
+        {referralCode && !isLogin && (
+          <div className="bg-primary/10 border border-primary/20 rounded-lg px-4 py-3 mb-4 text-center">
+            <p className="text-xs font-medium text-primary">🎁 You've been referred! Sign up to get <span className="font-bold">7 free days</span> of Pro</p>
+          </div>
+        )}
 
         <div className="bg-surface-container-low rounded-lg p-8">
           <h1 className="font-headline font-bold text-2xl text-on-surface text-center mb-2">
