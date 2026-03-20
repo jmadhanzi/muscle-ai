@@ -236,8 +236,51 @@ const MilestoneCards = ({
                 ) : null}
               </div>
 
-              {/* Action buttons */}
-              <div className="flex gap-3 mt-4">
+              {/* Platform share buttons */}
+              <div className="grid grid-cols-2 gap-2 mt-4">
+                {/* Instagram Story */}
+                <button
+                  onClick={async () => {
+                    if (!previewMilestone) return;
+                    // Instagram Stories can only be shared via native share on mobile
+                    // Download image + copy text so user can paste into IG Stories
+                    onShare(previewMilestone.id);
+                    await handleDownloadFromPreview();
+                    const text = `${previewMilestone.emoji} ${getCardData(previewMilestone).text}\n\n#MuscleLock #GLP1Muscle`;
+                    await navigator.clipboard.writeText(text);
+                    toast.success("Image downloaded & caption copied — paste into Instagram Stories");
+                  }}
+                  disabled={generatingId === previewMilestone?.id || previewLoading}
+                  className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium active:scale-[0.97] transition-all duration-200 disabled:opacity-50 border border-border bg-surface-container-high text-on-surface"
+                >
+                  <Instagram className="w-4 h-4 text-[hsl(var(--accent-purple))]" />
+                  IG Story
+                </button>
+
+                {/* Twitter/X */}
+                <button
+                  onClick={async () => {
+                    if (!previewMilestone) return;
+                    onShare(previewMilestone.id);
+                    const cardData = getCardData(previewMilestone);
+                    const tweetText = encodeURIComponent(
+                      `${previewMilestone.emoji} ${cardData.text}\n\n#MuscleLock #GLP1Muscle`
+                    );
+                    window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, "_blank");
+                    // Also download the image so they can attach it
+                    await handleDownloadFromPreview();
+                    toast.success("Image downloaded — attach it to your post on X");
+                  }}
+                  disabled={generatingId === previewMilestone?.id || previewLoading}
+                  className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium active:scale-[0.97] transition-all duration-200 disabled:opacity-50 border border-border bg-surface-container-high text-on-surface"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  Post on X
+                </button>
+              </div>
+
+              {/* General share + download */}
+              <div className="flex gap-2 mt-2">
                 <button
                   onClick={handleShareFromPreview}
                   disabled={generatingId === previewMilestone?.id || previewLoading}
@@ -260,9 +303,22 @@ const MilestoneCards = ({
                 </button>
               </div>
 
-              {/* Share targets hint */}
-              <p className="text-center text-[10px] font-mono text-on-surface-variant mt-3">
-                1080 × 1080px · Instagram, Twitter/X, Facebook
+              {/* Copy caption */}
+              <button
+                onClick={async () => {
+                  if (!previewMilestone) return;
+                  const cardData = getCardData(previewMilestone);
+                  const text = `${previewMilestone.emoji} ${cardData.text}\n\n#MuscleLock #GLP1Muscle`;
+                  await navigator.clipboard.writeText(text);
+                  toast.success("Caption copied to clipboard");
+                }}
+                className="w-full flex items-center justify-center gap-1.5 py-2 mt-2 text-[11px] font-mono text-on-surface-variant active:scale-[0.97] transition-transform"
+              >
+                <Copy className="w-3 h-3" /> Copy caption
+              </button>
+
+              <p className="text-center text-[10px] font-mono text-on-surface-variant mt-1">
+                1080 × 1080px · optimized for social
               </p>
             </motion.div>
           </motion.div>
