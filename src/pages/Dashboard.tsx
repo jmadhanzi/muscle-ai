@@ -22,6 +22,7 @@ import InjectionCountdown from "@/components/dashboard/InjectionCountdown";
 import ProteinRing from "@/components/dashboard/ProteinRing";
 import ProProtocol from "@/components/dashboard/ProProtocol";
 import WeeklyProgressSummary from "@/components/dashboard/WeeklyProgressSummary";
+import ReferralEarnings from "@/components/dashboard/ReferralEarnings";
 import { useInAppNotifications } from "@/hooks/useInAppNotifications";
 
 export interface OnboardingData {
@@ -241,6 +242,11 @@ const Dashboard = () => {
             <AICoachTeaser />
           </motion.div>
         )}
+
+        {/* Referral Earnings — always shown */}
+        <motion.div variants={stagger.item}>
+          <ReferralEarnings userId={user?.id} firstName={data.first_name} />
+        </motion.div>
 
         {/* Social Proof Feed — always shown */}
         <motion.div variants={stagger.item}>

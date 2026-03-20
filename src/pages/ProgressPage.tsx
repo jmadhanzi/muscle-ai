@@ -11,6 +11,7 @@ import BodyCompositionChart from "@/components/progress/BodyCompositionChart";
 import ScoreHistoryChart from "@/components/progress/ScoreHistoryChart";
 import MilestoneCards from "@/components/progress/MilestoneCards";
 import ReferralSection from "@/components/progress/ReferralSection";
+import ReferralLeaderboard from "@/components/progress/ReferralLeaderboard";
 import { useMilestones } from "@/hooks/useMilestones";
 import { useReferrals } from "@/hooks/useReferrals";
 import { calcMuscleScore, calcAtRiskLbs, calcProteinTarget, type OnboardingData } from "@/pages/Dashboard";
@@ -33,7 +34,7 @@ const ProgressPage = () => {
   const [loading, setLoading] = useState(true);
 
   const { unlockedIds, sharedIds, loaded: milestonesLoaded, unlock, markShared } = useMilestones(user?.id);
-  const { referralCode, referralCount, monthsEarned, loaded: referralsLoaded, ensureReferralExists } = useReferrals(user?.id);
+  const { referralCode, referralCount, monthsEarned, loaded: referralsLoaded, ensureReferralExists } = useReferrals(user?.id, data?.first_name);
 
   useEffect(() => {
     if (!user) return;
@@ -138,6 +139,15 @@ const ProgressPage = () => {
               referralCount={referralCount}
               monthsEarned={monthsEarned}
               onShareClick={ensureReferralExists}
+            />
+          </motion.div>
+        )}
+
+        {user && (
+          <motion.div variants={stagger.item}>
+            <ReferralLeaderboard
+              userReferrals={referralCount}
+              userName={data?.first_name || undefined}
             />
           </motion.div>
         )}

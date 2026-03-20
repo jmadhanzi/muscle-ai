@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export function useReferrals(userId: string | undefined) {
+/** Generate a friendly referral code like "sarah47" from name + random digits */
+const generateFriendlyCode = (firstName?: string | null): string => {
+  const base = (firstName || "user").toLowerCase().replace(/[^a-z]/g, "").slice(0, 8);
+  const suffix = Math.floor(10 + Math.random() * 90); // 2-digit number
+  return `${base}${suffix}`;
+};
+
+export function useReferrals(userId: string | undefined, firstName?: string | null) {
   const [referralCode, setReferralCode] = useState("");
   const [referralCount, setReferralCount] = useState(0);
   const [monthsEarned, setMonthsEarned] = useState(0);
@@ -9,25 +16,45 @@ export function useReferrals(userId: string | undefined) {
 
   useEffect(() => {
     if (!userId) return;
-    setReferralCode(userId.slice(0, 8).toUpperCase());
 
     const load = async () => {
-      const { data } = await supabase
+      // 1. Check if user already has a referral_code in profiles
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("referral_code, first_name")
+        .eq("user_id", userId)
+        .single();
+
+      let code = profile?.referral_code;
+
+      // 2. If no code yet, generate and persist one
+      if (!code) {
+        code = generateFriendlyCode(firstName || profile?.first_name);
+        await supabase
+          .from("profiles")
+          .update({ referral_code: code })
+          .eq("user_id", userId);
+      }
+
+      setReferralCode(code);
+
+      // 3. Load referral stats
+      const { data: refs } = await supabase
         .from("referrals")
         .select("id, status")
         .eq("referrer_id", userId);
-      if (data) {
-        setReferralCount(data.length);
-        setMonthsEarned(data.filter((r) => r.status === "converted").length);
+
+      if (refs) {
+        setReferralCount(refs.length);
+        setMonthsEarned(refs.filter((r) => r.status === "converted").length);
       }
       setLoaded(true);
     };
     load();
-  }, [userId]);
+  }, [userId, firstName]);
 
   const ensureReferralExists = useCallback(async () => {
-    if (!userId) return;
-    // Check if a referral entry exists for sharing tracking
+    if (!userId || !referralCode) return;
     const { data } = await supabase
       .from("referrals")
       .select("id")
