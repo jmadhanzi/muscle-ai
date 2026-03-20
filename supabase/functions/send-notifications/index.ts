@@ -20,10 +20,12 @@ interface UserContext {
   todayProtein: number;
   checkedItems: string[];
   streakDays: number;
-  lastOpenedAt: string | null; // ISO timestamp
+  lastOpenedAt: string | null;
   todayIdx: number;
   hour: number;
   weekNumber: number;
+  subscriptionEndDate: string | null;
+  referredBy: string | null;
 }
 
 interface Notification {
@@ -144,6 +146,21 @@ function evaluateNudges(ctx: UserContext): Notification[] {
     }
   }
 
+  // ── 6. Trial Expiry Warning (24h before) ──
+  if (ctx.referredBy && ctx.subscriptionEndDate) {
+    const endDate = new Date(ctx.subscriptionEndDate);
+    const hoursUntilExpiry = (endDate.getTime() - Date.now()) / (1000 * 60 * 60);
+    if (hoursUntilExpiry > 0 && hoursUntilExpiry <= 24 && ctx.hour >= 9 && ctx.hour < 10) {
+      notifs.push({
+        title: "⏰ Your free trial ends tomorrow",
+        body: `${name}, your 7-day Pro trial expires in ${Math.round(hoursUntilExpiry)} hours. Subscribe to keep your full protocol.`,
+        tag: "trial-expiry",
+        url: "/subscribe",
+        priority: "critical",
+      });
+    }
+  }
+
   return notifs;
 }
 
@@ -181,7 +198,7 @@ serve(async (req) => {
       { data: trackingRows },
     ] = await Promise.all([
       supabase.from("profiles")
-        .select("user_id, first_name, injection_day, weeks_on_medication, current_weight, weight_unit, goal_weight")
+        .select("user_id, first_name, injection_day, weeks_on_medication, current_weight, weight_unit, goal_weight, subscription_end_date, referred_by")
         .in("user_id", userIds),
       supabase.from("daily_logs")
         .select("user_id, protein_logged, checked_items")
@@ -251,10 +268,12 @@ serve(async (req) => {
         todayProtein: track?.protein_logged || 0,
         checkedItems: track?.checked_items || [],
         streakDays: streakMap.get(userId) || 0,
-        lastOpenedAt: null, // Would need a last_active tracking column
+        lastOpenedAt: null,
         todayIdx,
         hour,
         weekNumber,
+        subscriptionEndDate: prof?.subscription_end_date || null,
+        referredBy: prof?.referred_by || null,
       };
 
       const notifications = evaluateNudges(ctx);
