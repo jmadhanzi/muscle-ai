@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -9,31 +9,49 @@ import { CountUp, AnimatedProgress, AhaFlash } from "@/components/motion/Animate
 
 const OnboardingSummary = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
   const [saving, setSaving] = useState(false);
   const [showAha, setShowAha] = useState(false);
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const state = location.state || {};
+  useEffect(() => {
+    if (!user) return;
+    const load = async () => {
+      const [{ data: onb }, { data: prof }] = await Promise.all([
+        supabase.from("onboarding_data").select("*").eq("user_id", user.id).single(),
+        supabase.from("profiles").select("first_name").eq("user_id", user.id).single(),
+      ]);
+      setData({ ...onb, firstName: prof?.first_name });
+      setLoading(false);
+    };
+    load();
+  }, [user]);
 
-  // Calculate risk score (simple heuristic)
+  if (loading || !data) return null;
+
+  // Risk score calculation based on new fields
   const riskFactors = [
-    state.activityLevel === "sedentary" ? 25 : state.activityLevel === "light" ? 15 : 5,
-    (state.bodyConcerns?.length || 0) * 5,
-    state.fitnessGoals?.length > 3 ? 10 : 0,
+    data.muscle_concern === "very_concerned" ? 20 : data.muscle_concern === "somewhat" ? 12 : data.muscle_concern === "not_sure" ? 8 : 3,
+    data.fitness_level === "never_exercised" ? 25 : data.fitness_level === "beginner" ? 15 : data.fitness_level === "intermediate" ? 5 : 0,
+    (data.workouts_per_week || 0) === 0 ? 15 : (data.workouts_per_week || 0) <= 2 ? 8 : 0,
+    data.protein_intake === "less_than_50" ? 20 : data.protein_intake === "50_to_100" ? 12 : data.protein_intake === "100_to_150" ? 5 : 0,
+    (data.weeks_on_medication || 0) > 8 ? 10 : (data.weeks_on_medication || 0) > 4 ? 5 : 0,
   ];
-  const riskScore = Math.min(95, 40 + riskFactors.reduce((a: number, b: number) => a + b, 0));
+  const riskScore = Math.min(95, 20 + riskFactors.reduce((a: number, b: number) => a + b, 0));
+
+  const weightLoss = data.weight_kg && data.goal_weight ? Math.max(0, Number(data.weight_kg) - Number(data.goal_weight)) : 0;
+  const muscleLossRisk = Math.round(weightLoss * 0.4 * 10) / 10;
+  const unit = data.weight_unit || "lbs";
+  const displayWeight = unit === "lbs" ? Math.round(Number(data.weight_kg) * 2.205) : Number(data.weight_kg);
+  const displayGoal = unit === "lbs" ? Math.round(Number(data.goal_weight) * 2.205) : Number(data.goal_weight);
+  const displayMuscleRisk = unit === "lbs" ? Math.round(muscleLossRisk * 2.205) : muscleLossRisk;
 
   const handleComplete = async () => {
     if (!user) return;
     setSaving(true);
     try {
       await supabase.from("onboarding_data").update({
-        height_cm: state.heightCm,
-        weight_kg: state.weightKg,
-        activity_level: state.activityLevel,
-        fitness_goals: state.fitnessGoals,
-        body_concerns: state.bodyConcerns,
         onboarding_completed: true,
       }).eq("user_id", user.id);
 
@@ -48,9 +66,31 @@ const OnboardingSummary = () => {
     }
   };
 
+  const goalLabel: Record<string, string> = {
+    preserve_muscle: "Preserve Muscle",
+    build_muscle: "Build Muscle",
+    lose_fat_only: "Lose Fat Only",
+    all_above: "Full Protocol",
+  };
+
+  const fitnessLabel: Record<string, string> = {
+    never_exercised: "Never Exercised",
+    beginner: "Beginner",
+    intermediate: "Intermediate",
+    advanced: "Advanced",
+  };
+
+  const proteinLabel: Record<string, string> = {
+    less_than_50: "< 50g",
+    "50_to_100": "50–100g",
+    "100_to_150": "100–150g",
+    over_150: "150g+",
+  };
+
   return (
     <OnboardingLayout
       step={7}
+      totalSteps={7}
       footer={
         <button
           onClick={handleComplete}
@@ -64,7 +104,7 @@ const OnboardingSummary = () => {
     >
       <section className="mb-10">
         <h1 className="font-headline font-bold text-4xl md:text-5xl text-on-surface leading-tight tracking-tight mb-4">
-          Your muscle risk profile.
+          {data.firstName ? `${data.firstName}, here's` : "Here's"} your risk profile.
         </h1>
         <p className="text-on-surface-variant text-lg max-w-md">
           Based on your data, here's what we found.
@@ -84,10 +124,7 @@ const OnboardingSummary = () => {
             <div className="font-headline font-black text-7xl text-accent-danger">
               <CountUp end={riskScore} suffix="%" />
             </div>
-            <AnimatedProgress
-              value={riskScore}
-              barClassName="gradient-danger"
-            />
+            <AnimatedProgress value={riskScore} barClassName="gradient-danger" />
             <p className="text-on-surface-variant text-sm">
               {riskScore >= 70 ? "High risk — immediate intervention recommended" :
                riskScore >= 50 ? "Moderate risk — protocol adjustments needed" :
@@ -106,13 +143,30 @@ const OnboardingSummary = () => {
           className="bg-surface-container-low rounded-xl p-5 flex justify-between items-center"
         >
           <div>
-            <div className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">Body Metrics</div>
+            <div className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">Weight Journey</div>
             <div className="text-on-surface font-headline font-bold mt-1">
-              {state.heightCm || "—"}cm / {state.weightKg || "—"}kg
+              {displayWeight} → {displayGoal} {unit}
             </div>
           </div>
-          <span className="material-symbols-outlined text-secondary">straighten</span>
+          <span className="material-symbols-outlined text-secondary">monitor_weight</span>
         </motion.div>
+
+        {muscleLossRisk > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="bg-surface-container-low rounded-xl p-5 flex justify-between items-center border border-accent-danger/10"
+          >
+            <div>
+              <div className="text-xs font-mono text-accent-danger uppercase tracking-widest">Muscle at Risk</div>
+              <div className="text-accent-danger font-headline font-bold mt-1">
+                Up to {displayMuscleRisk} {unit} of muscle
+              </div>
+            </div>
+            <span className="material-symbols-outlined text-accent-danger">warning</span>
+          </motion.div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -121,12 +175,29 @@ const OnboardingSummary = () => {
           className="bg-surface-container-low rounded-xl p-5 flex justify-between items-center"
         >
           <div>
-            <div className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">Activity Level</div>
-            <div className="text-on-surface font-headline font-bold mt-1 capitalize">
-              {state.activityLevel?.replace("_", " ") || "—"}
+            <div className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">Fitness Level</div>
+            <div className="text-on-surface font-headline font-bold mt-1">
+              {fitnessLabel[data.fitness_level] || "—"} · {data.workouts_per_week || 0}×/week
             </div>
           </div>
-          <span className="material-symbols-outlined text-primary">directions_run</span>
+          <span className="material-symbols-outlined text-primary">fitness_center</span>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="bg-surface-container-low rounded-xl p-5 flex justify-between items-center"
+        >
+          <div>
+            <div className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">Daily Protein</div>
+            <div className={`font-headline font-bold mt-1 ${
+              data.protein_intake === "less_than_50" || data.protein_intake === "50_to_100" ? "text-accent-danger" : "text-on-surface"
+            }`}>
+              {proteinLabel[data.protein_intake] || "—"}
+            </div>
+          </div>
+          <span className="material-symbols-outlined text-accent-gold">egg_alt</span>
         </motion.div>
 
         <motion.div
@@ -136,28 +207,25 @@ const OnboardingSummary = () => {
           className="bg-surface-container-low rounded-xl p-5 flex justify-between items-center"
         >
           <div>
-            <div className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">Goals</div>
+            <div className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">Primary Goal</div>
             <div className="text-on-surface font-headline font-bold mt-1">
-              {state.fitnessGoals?.length || 0} selected
+              {goalLabel[data.primary_goal] || "—"}
             </div>
           </div>
-          <span className="material-symbols-outlined text-accent-gold">flag</span>
+          <span className="material-symbols-outlined text-primary">flag</span>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-surface-container-low rounded-xl p-5 flex justify-between items-center"
-        >
-          <div>
-            <div className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">Concern Areas</div>
-            <div className="text-accent-danger font-headline font-bold mt-1">
-              {state.bodyConcerns?.length || 0} flagged
-            </div>
-          </div>
-          <span className="material-symbols-outlined text-accent-danger">emergency</span>
-        </motion.div>
+        {data.biggest_fear && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            className="bg-surface-container-low rounded-xl p-5"
+          >
+            <div className="text-xs font-mono text-on-surface-variant uppercase tracking-widest mb-2">Your Biggest Fear</div>
+            <p className="text-on-surface text-sm italic">"{data.biggest_fear}"</p>
+          </motion.div>
+        )}
       </div>
 
       <div className="h-8" />
