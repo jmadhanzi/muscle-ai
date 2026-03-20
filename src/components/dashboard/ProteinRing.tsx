@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 
 interface ProteinRingProps {
