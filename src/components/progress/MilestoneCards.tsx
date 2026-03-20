@@ -49,6 +49,7 @@ const MilestoneCards = ({
   unlockedIds, sharedIds, onUnlock, onShare,
 }: MilestoneCardsProps) => {
   const scoreChange = Math.max(3, Math.round(muscleScore * 0.12));
+  const [generatingId, setGeneratingId] = useState<number | null>(null);
 
   // Auto-unlock milestones when day threshold is met
   useEffect(() => {
@@ -70,17 +71,39 @@ const MilestoneCards = ({
       .replace("{weight}", String(Math.round(currentWeight * 0.08)))
       .replace("{unit}", weightUnit === "kg" ? "kg" : "lbs");
 
-  const handleShare = (milestone: Milestone) => {
+  const getCardData = (milestone: Milestone) => ({
+    emoji: milestone.emoji,
+    text: fillTemplate(milestone.template),
+    hashtags: "#MuscleLock  #GLP1Muscle",
+  });
+
+  const handleShare = async (milestone: Milestone) => {
     if (!isPro && milestone.id > 2) {
       onPaywall();
       return;
     }
-    const text = fillTemplate(milestone.template);
-    onShare(milestone.id);
-    if (navigator.share) {
-      navigator.share({ text: `${milestone.emoji} ${text}\n\n#MuscleLock #GLP1Muscle` });
-    } else {
-      navigator.clipboard.writeText(`${milestone.emoji} ${text}\n\n#MuscleLock #GLP1Muscle`);
+    setGeneratingId(milestone.id);
+    try {
+      const cardData = getCardData(milestone);
+      const shareText = `${milestone.emoji} ${cardData.text}\n\n#MuscleLock #GLP1Muscle`;
+      onShare(milestone.id);
+      await shareMilestoneCard(cardData, shareText);
+    } finally {
+      setGeneratingId(null);
+    }
+  };
+
+  const handleDownload = async (milestone: Milestone) => {
+    if (!isPro && milestone.id > 2) {
+      onPaywall();
+      return;
+    }
+    setGeneratingId(milestone.id);
+    try {
+      const cardData = getCardData(milestone);
+      await downloadMilestoneCard(cardData, `musclelock-milestone-${milestone.id}.png`);
+    } finally {
+      setGeneratingId(null);
     }
   };
 
