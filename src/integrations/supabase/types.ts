@@ -18,53 +18,77 @@ export type Database = {
         Row: {
           activity_level: string | null
           age: number | null
+          biggest_fear: string | null
           biological_sex: string | null
           body_concerns: string[] | null
           created_at: string
           fitness_goals: string[] | null
+          fitness_level: string | null
+          goal_weight: number | null
           height_cm: number | null
           id: string
           injection_day: string | null
           medication: string | null
+          muscle_concern: string | null
           onboarding_completed: boolean
+          primary_goal: string | null
+          protein_intake: string | null
           updated_at: string
           user_id: string
           weeks_on_medication: number | null
           weight_kg: number | null
+          weight_unit: string | null
+          workouts_per_week: number | null
         }
         Insert: {
           activity_level?: string | null
           age?: number | null
+          biggest_fear?: string | null
           biological_sex?: string | null
           body_concerns?: string[] | null
           created_at?: string
           fitness_goals?: string[] | null
+          fitness_level?: string | null
+          goal_weight?: number | null
           height_cm?: number | null
           id?: string
           injection_day?: string | null
           medication?: string | null
+          muscle_concern?: string | null
           onboarding_completed?: boolean
+          primary_goal?: string | null
+          protein_intake?: string | null
           updated_at?: string
           user_id: string
           weeks_on_medication?: number | null
           weight_kg?: number | null
+          weight_unit?: string | null
+          workouts_per_week?: number | null
         }
         Update: {
           activity_level?: string | null
           age?: number | null
+          biggest_fear?: string | null
           biological_sex?: string | null
           body_concerns?: string[] | null
           created_at?: string
           fitness_goals?: string[] | null
+          fitness_level?: string | null
+          goal_weight?: number | null
           height_cm?: number | null
           id?: string
           injection_day?: string | null
           medication?: string | null
+          muscle_concern?: string | null
           onboarding_completed?: boolean
+          primary_goal?: string | null
+          protein_intake?: string | null
           updated_at?: string
           user_id?: string
           weeks_on_medication?: number | null
           weight_kg?: number | null
+          weight_unit?: string | null
+          workouts_per_week?: number | null
         }
         Relationships: []
       }
