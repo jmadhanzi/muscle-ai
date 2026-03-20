@@ -176,6 +176,11 @@ const Dashboard = () => {
       <DashboardHeader firstName={data.first_name} dayNumber={dayNumber} />
 
       <motion.div className="px-5 space-y-5 mt-2" variants={stagger.container} initial="initial" animate="animate">
+        {/* Trial Countdown — referred users only */}
+        <motion.div variants={stagger.item}>
+          <TrialCountdown subscriptionEnd={subscriptionEnd} referredBy={data.referred_by} />
+        </motion.div>
+
         {/* Muscle Score Gauge — always shown */}
         <motion.div variants={stagger.item}>
           <MuscleScoreGauge score={muscleScore} atRiskLbs={atRiskLbs} preservePct={preservePct} />
