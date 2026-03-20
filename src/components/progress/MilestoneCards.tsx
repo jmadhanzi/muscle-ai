@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, Share2, Download, Check, Loader2, X, Eye } from "lucide-react";
+import { Lock, Share2, Download, Check, Loader2, X, Eye, Instagram, Copy } from "lucide-react";
 import { generateMilestoneCard, shareMilestoneCard, downloadMilestoneCard } from "./milestoneCardGenerator";
+import { toast } from "sonner";
 
 interface MilestoneCardsProps {
   muscleScore: number;
