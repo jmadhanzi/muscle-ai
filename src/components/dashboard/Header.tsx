@@ -34,7 +34,10 @@ const DashboardHeader = ({ firstName, dayNumber }: HeaderProps) => {
           <button className="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center active:scale-90 transition-transform">
             <span className="material-symbols-outlined text-on-surface-variant text-xl">notifications</span>
           </button>
-          <button className="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center active:scale-90 transition-transform">
+          <button
+            onClick={() => navigate("/settings")}
+            className="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center active:scale-90 transition-transform"
+          >
             <span className="material-symbols-outlined text-on-surface-variant text-xl">settings</span>
           </button>
         </div>
