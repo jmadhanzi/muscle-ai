@@ -198,7 +198,7 @@ serve(async (req) => {
       { data: trackingRows },
     ] = await Promise.all([
       supabase.from("profiles")
-        .select("user_id, first_name, injection_day, weeks_on_medication, current_weight, weight_unit, goal_weight")
+        .select("user_id, first_name, injection_day, weeks_on_medication, current_weight, weight_unit, goal_weight, subscription_end_date, referred_by")
         .in("user_id", userIds),
       supabase.from("daily_logs")
         .select("user_id, protein_logged, checked_items")
