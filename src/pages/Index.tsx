@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 
 const HookScreen = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-mesh overflow-x-hidden">
