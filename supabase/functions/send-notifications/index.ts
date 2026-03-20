@@ -245,10 +245,10 @@ serve(async (req) => {
       const ctx: UserContext = {
         userId,
         firstName: prof?.first_name || null,
-        injectionDay: onb?.injection_day || null,
-        weeksOnMedication: onb?.weeks_on_medication || null,
+        injectionDay: prof?.injection_day || null,
+        weeksOnMedication: prof?.weeks_on_medication || null,
         proteinTarget,
-        todayProtein: track?.protein_intake || 0,
+        todayProtein: track?.protein_logged || 0,
         checkedItems: track?.checked_items || [],
         streakDays: streakMap.get(userId) || 0,
         lastOpenedAt: null, // Would need a last_active tracking column
