@@ -46,7 +46,7 @@ const ProteinIntake = () => {
     if (!user || !selected) return;
     setSaving(true);
     try {
-      await supabase.from("onboarding_data").update({ protein_intake: selected }).eq("user_id", user.id);
+      await supabase.from("profiles").update({ protein_intake: selected }).eq("user_id", user.id);
       navigate("/onboarding/goals");
     } catch {
       toast.error("Failed to save. Please try again.");

@@ -32,7 +32,7 @@ const PrimaryGoal = () => {
     if (!user || !selected) return;
     setSaving(true);
     try {
-      await supabase.from("onboarding_data").update({
+      await supabase.from("profiles").update({
         primary_goal: selected,
       }).eq("user_id", user.id);
       navigate("/onboarding/fear");

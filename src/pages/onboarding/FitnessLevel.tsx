@@ -81,9 +81,10 @@ const FitnessLevel = () => {
     if (!user || !level || !nausea) return;
     setSaving(true);
     try {
-      await supabase.from("onboarding_data").update({
+      await supabase.from("profiles").update({
         fitness_level: level,
         nausea_level: nausea,
+        nausea_frequency: nausea,
       } as Record<string, unknown>).eq("user_id", user.id);
       navigate("/onboarding/protein");
     } catch {
