@@ -22,6 +22,7 @@ import InjectionCountdown from "@/components/dashboard/InjectionCountdown";
 import ProteinRing from "@/components/dashboard/ProteinRing";
 import ProProtocol from "@/components/dashboard/ProProtocol";
 import WeeklyProgressSummary from "@/components/dashboard/WeeklyProgressSummary";
+import ReferralEarnings from "@/components/dashboard/ReferralEarnings";
 import { useInAppNotifications } from "@/hooks/useInAppNotifications";
 
 export interface OnboardingData {
