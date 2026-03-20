@@ -7,6 +7,7 @@ interface HeaderProps {
 }
 
 const DashboardHeader = ({ firstName, dayNumber }: HeaderProps) => {
+  const navigate = useNavigate();
   const greeting = firstName ? `Hi, ${firstName} 👋` : "Welcome back 👋";
   const initials = firstName ? firstName.charAt(0).toUpperCase() : "M";
 
