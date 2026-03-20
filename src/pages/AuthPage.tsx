@@ -120,10 +120,40 @@ const AuthPage = () => {
               onClick={() => setIsLogin(!isLogin)}
               className="text-primary font-medium hover:underline"
             >
-              {isLogin ? "Sign up" : "Sign in"}
+            {isLogin ? "Sign up" : "Sign in"}
             </button>
           </p>
         </div>
+
+        {/* Dev bypass — only visible in development */}
+        {import.meta.env.DEV && (
+          <button
+            onClick={async () => {
+              setLoading(true);
+              const { error } = await signIn("dev@musclelock.app", "devdev123");
+              if (error) {
+                const { error: upErr } = await supabase.auth.signUp({
+                  email: "dev@musclelock.app",
+                  password: "devdev123",
+                  options: { data: { dev_bypass: true } },
+                });
+                if (upErr) {
+                  toast.error("Dev bypass failed: " + upErr.message);
+                } else {
+                  const { error: retryErr } = await signIn("dev@musclelock.app", "devdev123");
+                  if (retryErr) toast.error("Dev bypass failed: " + retryErr.message);
+                  else navigate("/personal-identity");
+                }
+              } else {
+                navigate("/personal-identity");
+              }
+              setLoading(false);
+            }}
+            className="mt-4 w-full py-3 rounded-lg border border-dashed border-primary/30 text-primary/60 text-xs font-mono hover:bg-primary/5 transition-colors"
+          >
+            🔧 Dev Bypass (skip auth)
+          </button>
+        )}
       </div>
     </div>
   );
