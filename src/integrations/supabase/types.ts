@@ -30,6 +30,7 @@ export type Database = {
           injection_day: string | null
           medication: string | null
           muscle_concern: string | null
+          nausea_level: string | null
           onboarding_completed: boolean
           primary_goal: string | null
           protein_intake: string | null
@@ -55,6 +56,7 @@ export type Database = {
           injection_day?: string | null
           medication?: string | null
           muscle_concern?: string | null
+          nausea_level?: string | null
           onboarding_completed?: boolean
           primary_goal?: string | null
           protein_intake?: string | null
@@ -80,6 +82,7 @@ export type Database = {
           injection_day?: string | null
           medication?: string | null
           muscle_concern?: string | null
+          nausea_level?: string | null
           onboarding_completed?: boolean
           primary_goal?: string | null
           protein_intake?: string | null
