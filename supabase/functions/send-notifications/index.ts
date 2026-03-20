@@ -146,6 +146,21 @@ function evaluateNudges(ctx: UserContext): Notification[] {
     }
   }
 
+  // ── 6. Trial Expiry Warning (24h before) ──
+  if (ctx.referredBy && ctx.subscriptionEndDate) {
+    const endDate = new Date(ctx.subscriptionEndDate);
+    const hoursUntilExpiry = (endDate.getTime() - Date.now()) / (1000 * 60 * 60);
+    if (hoursUntilExpiry > 0 && hoursUntilExpiry <= 24 && ctx.hour >= 9 && ctx.hour < 10) {
+      notifs.push({
+        title: "⏰ Your free trial ends tomorrow",
+        body: `${name}, your 7-day Pro trial expires in ${Math.round(hoursUntilExpiry)} hours. Subscribe to keep your full protocol.`,
+        tag: "trial-expiry",
+        url: "/subscribe",
+        priority: "critical",
+      });
+    }
+  }
+
   return notifs;
 }
 
