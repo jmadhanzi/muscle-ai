@@ -101,7 +101,12 @@ const Dashboard = () => {
   const greeting = data.first_name ? `Hey ${data.first_name}` : "Welcome back";
 
   const toggleCheck = (id: string, free: boolean) => {
-    if (!free) return;
+    if (!free) {
+      const item = DAILY_PROTOCOL.find((p) => p.id === id);
+      setPaywallFeature(item?.label || "this feature");
+      setPaywallOpen(true);
+      return;
+    }
     setCheckedItems((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
