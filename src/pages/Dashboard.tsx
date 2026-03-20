@@ -7,6 +7,7 @@ import { CountUp, AnimatedProgress } from "@/components/motion/Animated";
 import BottomNav from "@/components/BottomNav";
 import { SkeletonCard } from "@/components/motion/Skeleton";
 import { Lock } from "lucide-react";
+import PaywallModal from "@/components/PaywallModal";
 
 interface OnboardingData {
   first_name?: string;
