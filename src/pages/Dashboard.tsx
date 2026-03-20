@@ -152,6 +152,8 @@ const Dashboard = () => {
         feature={paywall.copy.feature}
         headline={paywall.copy.headline}
         body={paywall.copy.body}
+        userName={data.first_name}
+        scoreChange={Math.max(3, Math.round(muscleScore * 0.12))}
       />
       <BottomNav />
     </div>
