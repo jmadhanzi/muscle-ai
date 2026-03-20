@@ -87,6 +87,10 @@
     @apply border-border;
   }
 
+  .font-mono, [class*="font-mono"] {
+    font-variant-numeric: tabular-nums;
+  }
+
   body {
     @apply bg-background text-foreground font-body antialiased;
   }
