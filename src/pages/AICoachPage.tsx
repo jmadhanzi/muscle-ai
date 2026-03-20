@@ -5,7 +5,7 @@ import BottomNav from "@/components/BottomNav";
 import PaywallModal from "@/components/PaywallModal";
 import { usePaywall } from "@/hooks/usePaywall";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCoachProfile } from "@/hooks/useCoachProfile";
+import { useCoachProfile, CoachUserProfile } from "@/hooks/useCoachProfile";
 import { Brain, Send, Loader2, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AI_COACH_FREE_LIMIT } from "@/config/features";
