@@ -34,12 +34,13 @@ const SettingsPage = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [{ data: prof }, { data: onb }] = await Promise.all([
-        supabase.from("profiles").select("first_name").eq("user_id", user.id).single(),
-        supabase.from("onboarding_data").select("injection_day").eq("user_id", user.id).single(),
-      ]);
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("first_name, injection_day")
+        .eq("user_id", user.id)
+        .single();
       if (prof?.first_name) setFirstName(prof.first_name);
-      if (onb?.injection_day) setInjectionDay(onb.injection_day);
+      if (prof?.injection_day) setInjectionDay(prof.injection_day);
       setLoaded(true);
     };
     load();
@@ -49,11 +50,11 @@ const SettingsPage = () => {
     if (!user) return;
     setSaving(true);
     try {
-      const [{ error: profErr }, { error: onbErr }] = await Promise.all([
-        supabase.from("profiles").update({ first_name: firstName }).eq("user_id", user.id),
-        supabase.from("onboarding_data").update({ injection_day: injectionDay }).eq("user_id", user.id),
-      ]);
-      if (profErr || onbErr) throw profErr || onbErr;
+      const { error } = await supabase
+        .from("profiles")
+        .update({ first_name: firstName, injection_day: injectionDay })
+        .eq("user_id", user.id);
+      if (error) throw error;
       toast.success("Settings saved");
     } catch (e: any) {
       toast.error(e.message || "Save failed");

@@ -26,7 +26,7 @@ import { useInAppNotifications } from "@/hooks/useInAppNotifications";
 
 export interface OnboardingData {
   first_name?: string;
-  weight_kg: number | null;
+  current_weight: number | null;
   goal_weight: number | null;
   weight_unit: string | null;
   muscle_concern: string | null;
@@ -37,6 +37,7 @@ export interface OnboardingData {
   medication: string | null;
   weeks_on_medication: number | null;
   injection_day: string | null;
+  weight_kg?: number | null;
 }
 
 export const calcMuscleScore = (data: OnboardingData) => {
@@ -55,7 +56,7 @@ export const calcMuscleScore = (data: OnboardingData) => {
 };
 
 export const calcAtRiskLbs = (data: OnboardingData, score: number) => {
-  const weightLbs = data.weight_unit === "kg" ? (data.weight_kg || 70) * 2.205 : (data.weight_kg || 154);
+  const weightLbs = data.weight_unit === "kg" ? ((data.current_weight || data.weight_kg || 70)) * 2.205 : ((data.current_weight || data.weight_kg || 154));
   const toLose = Math.max(0, weightLbs - ((data.goal_weight || weightLbs) * (data.weight_unit === "kg" ? 2.205 : 1)));
   const atRisk = toLose * 0.4 * ((100 - score) / 100);
   return { atRiskLbs: Math.round(atRisk * 10) / 10, preservePct: Math.round(60 + score * 0.35) };
@@ -86,11 +87,12 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [{ data: onb }, { data: prof }] = await Promise.all([
-        supabase.from("onboarding_data").select("*").eq("user_id", user.id).single(),
-        supabase.from("profiles").select("first_name").eq("user_id", user.id).single(),
-      ]);
-      if (onb) setData({ ...onb, first_name: prof?.first_name || undefined });
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+      if (prof) setData({ ...prof, first_name: prof.first_name || undefined, current_weight: prof.current_weight, weight_kg: prof.current_weight });
       setLoading(false);
     };
     load();

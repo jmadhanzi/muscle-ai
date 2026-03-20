@@ -18,11 +18,12 @@ const OnboardingSummary = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [{ data: onb }, { data: prof }] = await Promise.all([
-        supabase.from("onboarding_data").select("*").eq("user_id", user.id).single(),
-        supabase.from("profiles").select("first_name").eq("user_id", user.id).single(),
-      ]);
-      setData({ ...onb, firstName: prof?.first_name });
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+      if (profile) setData({ ...profile, firstName: profile.first_name });
       setLoading(false);
     };
     load();
@@ -40,18 +41,18 @@ const OnboardingSummary = () => {
   ];
   const riskScore = Math.min(95, 20 + riskFactors.reduce((a: number, b: number) => a + b, 0));
 
-  const weightLoss = data.weight_kg && data.goal_weight ? Math.max(0, Number(data.weight_kg) - Number(data.goal_weight)) : 0;
+  const weightLoss = data.current_weight && data.goal_weight ? Math.max(0, Number(data.current_weight) - Number(data.goal_weight)) : 0;
   const muscleLossRisk = Math.round(weightLoss * 0.4 * 10) / 10;
   const unit = data.weight_unit || "lbs";
-  const displayWeight = unit === "lbs" ? Math.round(Number(data.weight_kg) * 2.205) : Number(data.weight_kg);
-  const displayGoal = unit === "lbs" ? Math.round(Number(data.goal_weight) * 2.205) : Number(data.goal_weight);
+  const displayWeight = unit === "lbs" ? Math.round(Number(data.current_weight || 0) * 2.205) : Number(data.current_weight || 0);
+  const displayGoal = unit === "lbs" ? Math.round(Number(data.goal_weight || 0) * 2.205) : Number(data.goal_weight || 0);
   const displayMuscleRisk = unit === "lbs" ? Math.round(muscleLossRisk * 2.205) : muscleLossRisk;
 
   const handleComplete = async () => {
     if (!user) return;
     setSaving(true);
     try {
-      await supabase.from("onboarding_data").update({
+      await supabase.from("profiles").update({
         onboarding_completed: true,
       }).eq("user_id", user.id);
 

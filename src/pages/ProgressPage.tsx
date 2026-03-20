@@ -38,11 +38,12 @@ const ProgressPage = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [{ data: onb }, { data: prof }] = await Promise.all([
-        supabase.from("onboarding_data").select("*").eq("user_id", user.id).single(),
-        supabase.from("profiles").select("first_name").eq("user_id", user.id).single(),
-      ]);
-      if (onb) setData({ ...onb, first_name: prof?.first_name || undefined });
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+      if (prof) setData({ ...prof, first_name: prof.first_name || undefined, current_weight: prof.current_weight, weight_kg: prof.current_weight });
       setLoading(false);
     };
     load();
@@ -64,7 +65,7 @@ const ProgressPage = () => {
   const muscleScore = calcMuscleScore(data);
   const { preservePct } = calcAtRiskLbs(data, muscleScore);
   const proteinTarget = calcProteinTarget(data);
-  const currentWeight = data.weight_unit === "kg" ? (data.weight_kg || 70) : (data.weight_kg || 70) * 2.205;
+  const currentWeight = data.weight_unit === "kg" ? (data.current_weight || 70) : (data.current_weight || 70) * 2.205;
   const weeksOnMed = data.weeks_on_medication || 4;
   const dayNumber = Math.max(1, Math.min(70, weeksOnMed * 7));
 

@@ -29,31 +29,11 @@ const dayFull: Record<string, string> = {
 };
 
 const medResponse: Record<string, { icon: string; text: string; border: string }> = {
-  ozempic: {
-    icon: "science",
-    text: "Classic semaglutide. We have the most data on this — your protocol is fully evidence-backed.",
-    border: "border-secondary",
-  },
-  wegovy: {
-    icon: "warning",
-    text: "Higher-dose semaglutide means faster weight loss — and faster muscle loss. Your protocol will be more aggressive.",
-    border: "border-secondary",
-  },
-  mounjaro: {
-    icon: "bolt",
-    text: "Tirzepatide users lose weight 23% faster than semaglutide — which means muscle loss risk is HIGHER. Your protocol will be more aggressive.",
-    border: "border-destructive",
-  },
-  zepbound: {
-    icon: "bolt",
-    text: "Tirzepatide users lose weight 23% faster than semaglutide — which means muscle loss risk is HIGHER. Your protocol will be more aggressive.",
-    border: "border-destructive",
-  },
-  other: {
-    icon: "info",
-    text: "We'll use general GLP-1 protocols and optimize as we learn more about your response.",
-    border: "border-on-surface-variant",
-  },
+  ozempic: { icon: "science", text: "Classic semaglutide. We have the most data on this — your protocol is fully evidence-backed.", border: "border-secondary" },
+  wegovy: { icon: "warning", text: "Higher-dose semaglutide means faster weight loss — and faster muscle loss. Your protocol will be more aggressive.", border: "border-secondary" },
+  mounjaro: { icon: "bolt", text: "Tirzepatide users lose weight 23% faster than semaglutide — which means muscle loss risk is HIGHER. Your protocol will be more aggressive.", border: "border-destructive" },
+  zepbound: { icon: "bolt", text: "Tirzepatide users lose weight 23% faster than semaglutide — which means muscle loss risk is HIGHER. Your protocol will be more aggressive.", border: "border-destructive" },
+  other: { icon: "info", text: "We'll use general GLP-1 protocols and optimize as we learn more about your response.", border: "border-on-surface-variant" },
 };
 
 const weeksMessage = (w: number) => {
@@ -81,14 +61,15 @@ const MedicationProfile = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [{ data }, { data: profile }] = await Promise.all([
-        supabase.from("onboarding_data").select("medication, weeks_on_medication, injection_day").eq("user_id", user.id).single(),
-        supabase.from("profiles").select("first_name").eq("user_id", user.id).single(),
-      ]);
+      const { data } = await supabase
+        .from("profiles")
+        .select("medication, weeks_on_medication, injection_day, first_name")
+        .eq("user_id", user.id)
+        .single();
       if (data?.medication) setSelectedMed(data.medication);
       if (data?.weeks_on_medication != null) setWeeks(data.weeks_on_medication);
       if (data?.injection_day) setSelectedDay(data.injection_day);
-      if (profile?.first_name) setFirstName(profile.first_name);
+      if (data?.first_name) setFirstName(data.first_name);
     };
     load();
   }, [user]);
@@ -98,8 +79,8 @@ const MedicationProfile = () => {
     setSaving(true);
     try {
       await supabase
-        .from("onboarding_data")
-        .update({ medication: selectedMed, weeks_on_medication: weeks, injection_day: selectedDay })
+        .from("profiles")
+        .update({ medication: selectedMed, glp1_drug: selectedMed, weeks_on_medication: weeks, injection_day: selectedDay })
         .eq("user_id", user.id);
       navigate("/onboarding/weight");
     } catch {
@@ -126,7 +107,6 @@ const MedicationProfile = () => {
         </button>
       }
     >
-      {/* Header */}
       <motion.header className="mb-10" variants={fadeUp} initial="hidden" animate="show">
         <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-on-surface leading-[1.1]">
           Which GLP-1 are you on{name ? `, ${name}` : ""}?
@@ -134,7 +114,6 @@ const MedicationProfile = () => {
       </motion.header>
 
       <motion.div className="space-y-14" variants={stagger} initial="hidden" animate="show">
-        {/* ── Drug Cards ── */}
         <motion.div variants={fadeUp}>
           <span className="font-mono text-primary text-sm tracking-widest uppercase mb-5 block">01 / Medication</span>
           <div className="grid grid-cols-2 gap-3">
@@ -164,7 +143,6 @@ const MedicationProfile = () => {
             ))}
           </div>
 
-          {/* Other option */}
           <button
             onClick={() => setSelectedMed("other")}
             className={`w-full mt-3 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 active:scale-[0.98] ${
@@ -176,7 +154,6 @@ const MedicationProfile = () => {
             Other GLP-1 medication
           </button>
 
-          {/* Intelligent response */}
           <AnimatePresence mode="wait">
             <motion.div
               key={selectedMed}
@@ -196,7 +173,6 @@ const MedicationProfile = () => {
           </AnimatePresence>
         </motion.div>
 
-        {/* ── Weeks Slider ── */}
         <motion.div variants={fadeUp}>
           <span className="font-mono text-primary text-sm tracking-widest uppercase mb-5 block">02 / Duration</span>
           <div className="bg-surface-container-low rounded-2xl p-8">
@@ -206,41 +182,28 @@ const MedicationProfile = () => {
                 {weeks}<span className="text-xs ml-1.5 text-on-surface-variant tracking-widest uppercase">wk</span>
               </span>
             </div>
-
             <input
               className="w-full h-1.5 bg-surface-container-highest rounded-full appearance-none cursor-pointer accent-primary [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-[0_0_10px_hsla(160,100%,45%,0.4)]"
-              type="range"
-              min="0"
-              max="104"
-              value={weeks}
+              type="range" min="0" max="104" value={weeks}
               onChange={(e) => setWeeks(Number(e.target.value))}
             />
             <div className="flex justify-between mt-3 text-[10px] font-mono text-on-surface-variant uppercase tracking-wider">
-              <span>0</span>
-              <span>26</span>
-              <span>52 (1yr)</span>
-              <span>104</span>
+              <span>0</span><span>26</span><span>52 (1yr)</span><span>104</span>
             </div>
-
             <AnimatePresence mode="wait">
               <motion.div
                 key={weeks <= 4 ? "a" : weeks <= 12 ? "b" : weeks <= 52 ? "c" : "d"}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
+                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.3 }}
                 className="mt-6 flex items-start gap-3"
               >
                 <span className={`material-symbols-outlined material-filled ${wMsg.color} shrink-0`}>{wMsg.icon}</span>
-                <p className="text-sm leading-relaxed text-on-surface">
-                  {name ? `${name}, ` : ""}{wMsg.text}
-                </p>
+                <p className="text-sm leading-relaxed text-on-surface">{name ? `${name}, ` : ""}{wMsg.text}</p>
               </motion.div>
             </AnimatePresence>
           </div>
         </motion.div>
 
-        {/* ── Injection Day ── */}
         <motion.div variants={fadeUp}>
           <span className="font-mono text-primary text-sm tracking-widest uppercase mb-5 block">03 / Schedule</span>
           <label className="text-sm font-medium text-on-surface-variant block mb-4 px-1">What day do you inject?</label>

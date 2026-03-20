@@ -26,42 +26,37 @@ export function useCoachProfile(userId: string | undefined) {
     if (!userId) return;
 
     const load = async () => {
-      const [{ data: onboarding }, { data: profileRow }, { data: tracking }] = await Promise.all([
+      const [{ data: profileRow }, { data: tracking }] = await Promise.all([
         supabase
-          .from("onboarding_data")
+          .from("profiles")
           .select("*")
           .eq("user_id", userId)
           .maybeSingle(),
         supabase
-          .from("profiles")
-          .select("first_name")
+          .from("daily_logs")
+          .select("protein_logged")
           .eq("user_id", userId)
-          .maybeSingle(),
-        supabase
-          .from("daily_tracking")
-          .select("protein_intake")
-          .eq("user_id", userId)
-          .eq("tracking_date", new Date().toISOString().slice(0, 10))
+          .eq("date", new Date().toISOString().slice(0, 10))
           .maybeSingle(),
       ]);
 
-      if (onboarding) {
+      if (profileRow) {
         setProfile({
-          firstName: profileRow?.first_name || undefined,
-          age: onboarding.age || undefined,
-          sex: onboarding.biological_sex || undefined,
-          medication: onboarding.medication || undefined,
-          weeksOnMedication: onboarding.weeks_on_medication || undefined,
-          currentWeight: onboarding.weight_kg ? Number(onboarding.weight_kg) : undefined,
-          goalWeight: onboarding.goal_weight ? Number(onboarding.goal_weight) : undefined,
-          weightUnit: onboarding.weight_unit || "lbs",
-          fitnessLevel: onboarding.fitness_level || undefined,
-          injectionDay: onboarding.injection_day || undefined,
-          nauseaLevel: onboarding.nausea_level || undefined,
-          proteinIntake: onboarding.protein_intake || undefined,
-          muscleConcern: onboarding.muscle_concern || undefined,
-          primaryGoal: onboarding.primary_goal || undefined,
-          proteinToday: tracking?.protein_intake ?? 0,
+          firstName: profileRow.first_name || undefined,
+          age: profileRow.age || undefined,
+          sex: profileRow.biological_sex || undefined,
+          medication: profileRow.medication || undefined,
+          weeksOnMedication: profileRow.weeks_on_medication || undefined,
+          currentWeight: profileRow.current_weight ? Number(profileRow.current_weight) : undefined,
+          goalWeight: profileRow.goal_weight ? Number(profileRow.goal_weight) : undefined,
+          weightUnit: profileRow.weight_unit || "lbs",
+          fitnessLevel: profileRow.fitness_level || undefined,
+          injectionDay: profileRow.injection_day || undefined,
+          nauseaLevel: profileRow.nausea_level || undefined,
+          proteinIntake: profileRow.protein_intake || undefined,
+          muscleConcern: profileRow.muscle_concern || undefined,
+          primaryGoal: profileRow.primary_goal || undefined,
+          proteinToday: tracking?.protein_logged ?? 0,
         });
       }
     };

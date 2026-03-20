@@ -24,16 +24,17 @@ const ProteinIntake = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [{ data: ob }, { data: profile }] = await Promise.all([
-        supabase.from("onboarding_data").select("protein_intake, goal_weight, weight_unit").eq("user_id", user.id).single(),
-        supabase.from("profiles").select("first_name").eq("user_id", user.id).single(),
-      ]);
-      if (ob?.protein_intake) setSelected(ob.protein_intake);
-      if (ob?.goal_weight) {
-        const gw = Number(ob.goal_weight);
-        setGoalWeightLbs(ob.weight_unit === "kg" ? Math.round(gw * 2.205) : gw);
+      const { data } = await supabase
+        .from("profiles")
+        .select("protein_intake, goal_weight, weight_unit, first_name")
+        .eq("user_id", user.id)
+        .single();
+      if (data?.protein_intake) setSelected(data.protein_intake);
+      if (data?.goal_weight) {
+        const gw = Number(data.goal_weight);
+        setGoalWeightLbs(data.weight_unit === "kg" ? Math.round(gw * 2.205) : gw);
       }
-      if (profile?.first_name) setFirstName(profile.first_name);
+      if (data?.first_name) setFirstName(data.first_name);
     };
     load();
   }, [user]);
@@ -45,7 +46,7 @@ const ProteinIntake = () => {
     if (!user || !selected) return;
     setSaving(true);
     try {
-      await supabase.from("onboarding_data").update({ protein_intake: selected }).eq("user_id", user.id);
+      await supabase.from("profiles").update({ protein_intake: selected }).eq("user_id", user.id);
       navigate("/onboarding/goals");
     } catch {
       toast.error("Failed to save. Please try again.");

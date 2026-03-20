@@ -92,12 +92,13 @@ const BiggestFear = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [{ data: ob }, { data: prof }] = await Promise.all([
-        supabase.from("onboarding_data").select("biggest_fear").eq("user_id", user.id).single(),
-        supabase.from("profiles").select("first_name").eq("user_id", user.id).single(),
-      ]);
-      if (ob?.biggest_fear) setFear(ob.biggest_fear);
-      if (prof?.first_name) setFirstName(prof.first_name);
+      const { data } = await supabase
+        .from("profiles")
+        .select("biggest_fear, first_name")
+        .eq("user_id", user.id)
+        .single();
+      if (data?.biggest_fear) setFear(data.biggest_fear);
+      if (data?.first_name) setFirstName(data.first_name);
     };
     load();
   }, [user]);
@@ -114,7 +115,7 @@ const BiggestFear = () => {
     setSaving(true);
 
     // Save fear
-    await supabase.from("onboarding_data").update({ biggest_fear: fear.trim().slice(0, 100) }).eq("user_id", user.id);
+    await supabase.from("profiles").update({ biggest_fear: fear.trim().slice(0, 100) }).eq("user_id", user.id);
 
     // Enter thinking phase
     setPhase("thinking");
@@ -141,7 +142,7 @@ const BiggestFear = () => {
   const handleAchievement = useCallback(async () => {
     if (!user) return;
     // Mark onboarding complete
-    await supabase.from("onboarding_data").update({ onboarding_completed: true }).eq("user_id", user.id);
+    await supabase.from("profiles").update({ onboarding_completed: true }).eq("user_id", user.id);
     setPhase("achievement");
   }, [user]);
 

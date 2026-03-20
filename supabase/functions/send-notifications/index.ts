@@ -177,23 +177,18 @@ serve(async (req) => {
 
     // Batch fetch all user data
     const [
-      { data: onboardingRows },
       { data: profileRows },
       { data: trackingRows },
     ] = await Promise.all([
-      supabase.from("onboarding_data")
-        .select("user_id, injection_day, weeks_on_medication, weight_kg, weight_unit, goal_weight")
-        .in("user_id", userIds),
       supabase.from("profiles")
-        .select("user_id, first_name")
+        .select("user_id, first_name, injection_day, weeks_on_medication, current_weight, weight_unit, goal_weight")
         .in("user_id", userIds),
-      supabase.from("daily_tracking")
-        .select("user_id, protein_intake, checked_items")
-        .eq("tracking_date", todayStr)
+      supabase.from("daily_logs")
+        .select("user_id, protein_logged, checked_items")
+        .eq("date", todayStr)
         .in("user_id", userIds),
     ]);
 
-    const onbMap = new Map((onboardingRows || []).map((r: any) => [r.user_id, r]));
     const profMap = new Map((profileRows || []).map((r: any) => [r.user_id, r]));
     const trackMap = new Map((trackingRows || []).map((r: any) => [r.user_id, r]));
 
@@ -201,22 +196,22 @@ serve(async (req) => {
     const weekAgo = new Date(now);
     weekAgo.setDate(weekAgo.getDate() - 7);
     const { data: weekTracking } = await supabase
-      .from("daily_tracking")
-      .select("user_id, tracking_date, checked_items")
-      .gte("tracking_date", weekAgo.toISOString().slice(0, 10))
+      .from("daily_logs")
+      .select("user_id, date, checked_items")
+      .gte("date", weekAgo.toISOString().slice(0, 10))
       .in("user_id", userIds);
 
     const streakMap = new Map<string, number>();
     for (const uid of userIds) {
       const rows = (weekTracking || [])
         .filter((r: any) => r.user_id === uid && r.checked_items?.length > 0)
-        .sort((a: any, b: any) => b.tracking_date.localeCompare(a.tracking_date));
+        .sort((a: any, b: any) => b.date.localeCompare(a.date));
       
       let streak = 0;
       const checkDate = new Date(now);
       for (let i = 0; i < 7; i++) {
         const dateStr = checkDate.toISOString().slice(0, 10);
-        if (rows.some((r: any) => r.tracking_date === dateStr)) {
+        if (rows.some((r: any) => r.date === dateStr)) {
           streak++;
           checkDate.setDate(checkDate.getDate() - 1);
         } else {
@@ -238,24 +233,22 @@ serve(async (req) => {
     }
 
     for (const [userId, userSubs] of subsByUser) {
-      const onb = onbMap.get(userId);
       const prof = profMap.get(userId);
       const track = trackMap.get(userId);
 
-      // Calculate protein target
-      const goalLbs = onb?.weight_unit === "kg"
-        ? (onb?.goal_weight || 70) * 2.205
-        : (onb?.goal_weight || 154);
+      const goalLbs = prof?.weight_unit === "kg"
+        ? (prof?.goal_weight || 70) * 2.205
+        : (prof?.goal_weight || 154);
       const proteinTarget = Math.round(goalLbs * 0.7);
-      const weekNumber = Math.max(1, Math.ceil((onb?.weeks_on_medication || 1) * 7 / 7));
+      const weekNumber = Math.max(1, Math.ceil((prof?.weeks_on_medication || 1) * 7 / 7));
 
       const ctx: UserContext = {
         userId,
         firstName: prof?.first_name || null,
-        injectionDay: onb?.injection_day || null,
-        weeksOnMedication: onb?.weeks_on_medication || null,
+        injectionDay: prof?.injection_day || null,
+        weeksOnMedication: prof?.weeks_on_medication || null,
         proteinTarget,
-        todayProtein: track?.protein_intake || 0,
+        todayProtein: track?.protein_logged || 0,
         checkedItems: track?.checked_items || [],
         streakDays: streakMap.get(userId) || 0,
         lastOpenedAt: null, // Would need a last_active tracking column
