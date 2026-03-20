@@ -132,6 +132,7 @@ const AICoachPage = () => {
 
     await streamChat({
       messages: newMessages,
+      userProfile,
       onDelta: upsert,
       onDone: () => setIsLoading(false),
       onError: (msg) => {
