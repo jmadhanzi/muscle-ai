@@ -299,6 +299,7 @@ const Dashboard = () => {
         </motion.div>
       </motion.div>
 
+      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} feature={paywallFeature} />
       <BottomNav />
     </div>
   );
