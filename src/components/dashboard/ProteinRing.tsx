@@ -3,24 +3,20 @@ import { motion, useInView } from "framer-motion";
 
 interface ProteinRingProps {
   target: number;
-  initial?: number;
+  current: number;
+  onAdd: (amount: number) => void;
 }
 
 const QUICK_ADD = [20, 30, 50];
 
-const ProteinRing = ({ target, initial = 0 }: ProteinRingProps) => {
+const ProteinRing = ({ target, current, onAdd }: ProteinRingProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true });
-  const [current, setCurrent] = useState(initial);
 
   const pct = Math.min(current / target, 1);
   const r = 44;
   const circumference = 2 * Math.PI * r;
   const offset = circumference * (1 - pct);
-
-  const addProtein = useCallback((amount: number) => {
-    setCurrent((prev) => Math.min(prev + amount, target * 1.5));
-  }, [target]);
 
   const color = pct >= 1 ? "hsl(160,100%,45%)" : pct >= 0.6 ? "hsl(160,100%,45%)" : "hsl(38,92%,50%)";
 
