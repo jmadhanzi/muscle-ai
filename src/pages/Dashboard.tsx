@@ -79,7 +79,7 @@ const Dashboard = () => {
   const paywall = usePaywall();
   const [data, setData] = useState<OnboardingData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  const { proteinIntake, checkedItems, addProtein, toggleItem, loaded: trackingLoaded } = useDailyTracking(user?.id);
   const timeTriggersRan = useRef(false);
 
   useEffect(() => {
