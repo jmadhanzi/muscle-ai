@@ -14,7 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      onboarding_data: {
+        Row: {
+          age: number | null
+          biological_sex: string | null
+          created_at: string
+          id: string
+          injection_day: string | null
+          medication: string | null
+          onboarding_completed: boolean
+          updated_at: string
+          user_id: string
+          weeks_on_medication: number | null
+        }
+        Insert: {
+          age?: number | null
+          biological_sex?: string | null
+          created_at?: string
+          id?: string
+          injection_day?: string | null
+          medication?: string | null
+          onboarding_completed?: boolean
+          updated_at?: string
+          user_id: string
+          weeks_on_medication?: number | null
+        }
+        Update: {
+          age?: number | null
+          biological_sex?: string | null
+          created_at?: string
+          id?: string
+          injection_day?: string | null
+          medication?: string | null
+          onboarding_completed?: boolean
+          updated_at?: string
+          user_id?: string
+          weeks_on_medication?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          first_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
