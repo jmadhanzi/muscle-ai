@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 
 const HookScreen = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-mesh overflow-x-hidden">
@@ -73,7 +75,7 @@ const HookScreen = () => {
 
             {/* CTA */}
             <button
-              onClick={() => navigate("/personal-identity")}
+              onClick={() => navigate(user ? "/personal-identity" : "/auth")}
               className="w-full py-6 px-8 rounded-lg bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline font-bold text-xl flex items-center justify-center gap-3 active:scale-95 duration-200 shadow-[0_20px_40px_hsla(155,100%,71%,0.2)]"
             >
               Show me how to stop this

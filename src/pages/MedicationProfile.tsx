@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 
@@ -12,16 +15,52 @@ const medications = [
 const days = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 const MedicationProfile = () => {
+  const { user } = useAuth();
   const [selectedMed, setSelectedMed] = useState("Ozempic");
   const [weeks, setWeeks] = useState(12);
   const [selectedDay, setSelectedDay] = useState("THU");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    const loadData = async () => {
+      const { data } = await supabase
+        .from("onboarding_data")
+        .select("medication, weeks_on_medication, injection_day")
+        .eq("user_id", user.id)
+        .single();
+      if (data?.medication) setSelectedMed(data.medication);
+      if (data?.weeks_on_medication != null) setWeeks(data.weeks_on_medication);
+      if (data?.injection_day) setSelectedDay(data.injection_day);
+    };
+    loadData();
+  }, [user]);
+
+  const handleCalculate = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      await supabase
+        .from("onboarding_data")
+        .update({
+          medication: selectedMed,
+          weeks_on_medication: weeks,
+          injection_day: selectedDay,
+          onboarding_completed: true,
+        })
+        .eq("user_id", user.id);
+      toast.success("Profile saved! Your muscle protection protocol is being calculated.");
+    } catch {
+      toast.error("Failed to save. Please try again.");
+    }
+    setSaving(false);
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
       <Navbar showProfile showNotification />
 
       <main className="flex-grow pt-24 pb-32 px-6 max-w-2xl mx-auto w-full">
-        {/* Progress bar */}
         <header className="mb-12">
           <div className="flex gap-2 mb-8 justify-center">
             {Array.from({ length: 7 }).map((_, i) => (
@@ -40,7 +79,6 @@ const MedicationProfile = () => {
           </h1>
         </header>
 
-        {/* Medication grid */}
         <section className="grid grid-cols-2 gap-4 mb-10">
           {medications.map((med) => (
             <button
@@ -77,7 +115,6 @@ const MedicationProfile = () => {
           ))}
         </section>
 
-        {/* Info callout */}
         <div className="bg-secondary-container/10 border-l-4 border-secondary p-6 rounded-r-xl mb-12">
           <div className="flex items-start gap-4">
             <span className="material-symbols-outlined text-secondary mt-1">psychology</span>
@@ -87,7 +124,6 @@ const MedicationProfile = () => {
           </div>
         </div>
 
-        {/* Weeks slider */}
         <div className="space-y-12">
           <div className="space-y-6">
             <div className="flex justify-between items-end">
@@ -113,7 +149,6 @@ const MedicationProfile = () => {
             </div>
           </div>
 
-          {/* Injection day */}
           <div className="space-y-6">
             <label className="font-headline font-bold text-xl text-on-surface block">What day do you inject?</label>
             <div className="flex justify-between gap-2 overflow-x-auto pb-2">
@@ -134,10 +169,13 @@ const MedicationProfile = () => {
           </div>
         </div>
 
-        {/* CTA */}
         <div className="mt-16">
-          <button className="w-full py-5 rounded-xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-headline font-bold text-xl flex items-center justify-center gap-3 shadow-[0_10px_30px_hsla(155,100%,71%,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all">
-            Calculate My Risk
+          <button
+            onClick={handleCalculate}
+            disabled={saving}
+            className="w-full py-5 rounded-xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-headline font-bold text-xl flex items-center justify-center gap-3 shadow-[0_10px_30px_hsla(155,100%,71%,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Calculate My Risk"}
             <span className="material-symbols-outlined font-bold">trending_up</span>
           </button>
           <p className="text-center mt-4 text-[10px] font-mono text-on-surface-variant uppercase tracking-widest opacity-60">
