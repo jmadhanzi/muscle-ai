@@ -318,9 +318,9 @@ const PaywallModal = ({
                   {UNLOCK_LIST.map((item, i) => (
                     <motion.div
                       key={i}
-                      initial={{ opacity: 0, x: -8 }}
+                      initial={{ opacity: 0, x: 24 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.6 + i * 0.08, duration: 0.35, ease: "easeOut" }}
+                      transition={{ delay: 0.6 + i * 0.08, duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}
                       className="flex items-center gap-2.5 text-sm text-on-surface"
                     >
                       <span className="material-symbols-outlined text-primary text-base shrink-0">
