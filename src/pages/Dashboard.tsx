@@ -87,6 +87,30 @@ const Dashboard = () => {
     load();
   }, [user]);
 
+  // ── Time-based paywall triggers ──
+  useEffect(() => {
+    if (!data || timeTriggersRan.current) return;
+    timeTriggersRan.current = true;
+
+    const dayNumber = Math.max(1, Math.min(70, data.weeks_on_medication ? data.weeks_on_medication * 7 : 1));
+    if (dayNumber >= 3) {
+      setTimeout(() => paywall.fire("day3_return"), 1500);
+      return;
+    }
+
+    if (data.injection_day) {
+      const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+      const injectionIdx = days.indexOf(data.injection_day.toLowerCase());
+      if (injectionIdx !== -1) {
+        const today = new Date().getDay();
+        const dayBefore = (injectionIdx - 1 + 7) % 7;
+        if (today === dayBefore) {
+          setTimeout(() => paywall.fire("injection_day"), 1500);
+        }
+      }
+    }
+  }, [data, paywall]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-mesh px-5 pt-16 pb-24 space-y-4">
@@ -100,34 +124,6 @@ const Dashboard = () => {
   const muscleScore = calcMuscleScore(data);
   const { atRiskLbs, preservePct } = calcAtRiskLbs(data, muscleScore);
   const proteinTarget = calcProteinTarget(data);
-
-  // ── Time-based paywall triggers ──
-  const timeTriggersRan = useRef(false);
-  useEffect(() => {
-    if (timeTriggersRan.current) return;
-    timeTriggersRan.current = true;
-
-    // Day 3 return → streak protection
-    const dayNumber = Math.max(1, Math.min(70, data.weeks_on_medication ? data.weeks_on_medication * 7 : 1));
-    if (dayNumber >= 3) {
-      // Small delay so dashboard renders first
-      setTimeout(() => paywall.fire("day3_return"), 1500);
-      return; // Only one time-based trigger per load
-    }
-
-    // Day before injection day → injection protocol
-    if (data.injection_day) {
-      const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-      const injectionIdx = days.indexOf(data.injection_day.toLowerCase());
-      if (injectionIdx !== -1) {
-        const today = new Date().getDay(); // 0=Sun
-        const dayBefore = (injectionIdx - 1 + 7) % 7;
-        if (today === dayBefore) {
-          setTimeout(() => paywall.fire("injection_day"), 1500);
-        }
-      }
-    }
-  }, [data, paywall]);
 
   const toggleCheck = (id: string, free: boolean) => {
     if (!free) {
