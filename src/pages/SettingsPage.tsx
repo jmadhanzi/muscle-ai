@@ -34,12 +34,13 @@ const SettingsPage = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [{ data: prof }, { data: onb }] = await Promise.all([
-        supabase.from("profiles").select("first_name").eq("user_id", user.id).single(),
-        supabase.from("onboarding_data").select("injection_day").eq("user_id", user.id).single(),
-      ]);
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("first_name, injection_day")
+        .eq("user_id", user.id)
+        .single();
       if (prof?.first_name) setFirstName(prof.first_name);
-      if (onb?.injection_day) setInjectionDay(onb.injection_day);
+      if (prof?.injection_day) setInjectionDay(prof.injection_day);
       setLoaded(true);
     };
     load();
