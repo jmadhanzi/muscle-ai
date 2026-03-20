@@ -83,7 +83,8 @@ async function streamChat({
 const AICoachPage = () => {
   const navigate = useNavigate();
   const paywall = usePaywall();
-  const { isPro } = useAuth();
+  const { isPro, user } = useAuth();
+  const userProfile = useCoachProfile(user?.id);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
