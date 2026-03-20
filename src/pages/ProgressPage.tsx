@@ -34,7 +34,7 @@ const ProgressPage = () => {
   const [loading, setLoading] = useState(true);
 
   const { unlockedIds, sharedIds, loaded: milestonesLoaded, unlock, markShared } = useMilestones(user?.id);
-  const { referralCode, referralCount, monthsEarned, loaded: referralsLoaded, ensureReferralExists } = useReferrals(user?.id);
+  const { referralCode, referralCount, monthsEarned, loaded: referralsLoaded, ensureReferralExists } = useReferrals(user?.id, data?.first_name);
 
   useEffect(() => {
     if (!user) return;
