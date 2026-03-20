@@ -196,9 +196,9 @@ serve(async (req) => {
     const weekAgo = new Date(now);
     weekAgo.setDate(weekAgo.getDate() - 7);
     const { data: weekTracking } = await supabase
-      .from("daily_tracking")
-      .select("user_id, tracking_date, checked_items")
-      .gte("tracking_date", weekAgo.toISOString().slice(0, 10))
+      .from("daily_logs")
+      .select("user_id, date, checked_items")
+      .gte("date", weekAgo.toISOString().slice(0, 10))
       .in("user_id", userIds);
 
     const streakMap = new Map<string, number>();
