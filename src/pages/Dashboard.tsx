@@ -8,8 +8,15 @@ import BottomNav from "@/components/BottomNav";
 import { SkeletonCard } from "@/components/motion/Skeleton";
 import { Lock } from "lucide-react";
 import PaywallModal from "@/components/PaywallModal";
+import { DAILY_PROTOCOL, FREE_FEATURES, PRO_FEATURES } from "@/config/features";
+import DashboardRiskCard from "@/components/dashboard/RiskCard";
+import DashboardLeanMass from "@/components/dashboard/LeanMass";
+import DashboardProtocol from "@/components/dashboard/Protocol";
+import DashboardQuickStats from "@/components/dashboard/QuickStats";
+import DashboardFreeFeatures from "@/components/dashboard/FreeFeatures";
+import DashboardProTeaser from "@/components/dashboard/ProTeaser";
 
-interface OnboardingData {
+export interface OnboardingData {
   first_name?: string;
   weight_kg: number | null;
   goal_weight: number | null;
@@ -23,7 +30,7 @@ interface OnboardingData {
   weeks_on_medication: number | null;
 }
 
-const calcRiskScore = (data: OnboardingData) => {
+export const calcRiskScore = (data: OnboardingData) => {
   const factors = [
     data.muscle_concern === "very_concerned" ? 20 : data.muscle_concern === "somewhat" ? 12 : data.muscle_concern === "not_sure" ? 8 : 3,
     data.fitness_level === "never_exercised" ? 25 : data.fitness_level === "beginner" ? 15 : data.fitness_level === "intermediate" ? 5 : 0,
@@ -34,22 +41,13 @@ const calcRiskScore = (data: OnboardingData) => {
   return Math.min(95, 20 + factors.reduce((a, b) => a + b, 0));
 };
 
-const calcLeanMass = (weight: number | null, riskScore: number) => {
+export const calcLeanMass = (weight: number | null, riskScore: number) => {
   if (!weight) return null;
-  const fatPct = 0.25; // rough estimate
+  const fatPct = 0.25;
   const leanKg = weight * (1 - fatPct);
   const atRiskKg = leanKg * (riskScore / 100) * 0.15;
   return { leanKg: Math.round(leanKg * 10) / 10, atRiskKg: Math.round(atRiskKg * 10) / 10 };
 };
-
-const DAILY_PROTOCOL = [
-  { id: "protein", icon: "egg_alt", label: "Hit protein target", detail: "1.2g per kg body weight", free: true },
-  { id: "resistance", icon: "fitness_center", label: "Resistance training", detail: "3 compound exercises", free: true },
-  { id: "creatine", icon: "science", label: "Creatine monohydrate", detail: "5g daily", free: true },
-  { id: "sleep", icon: "bedtime", label: "Sleep optimization", detail: "7-9 hours window", free: false },
-  { id: "timing", icon: "schedule", label: "Meal timing protocol", detail: "Synced to injection day", free: false },
-  { id: "recovery", icon: "self_improvement", label: "Recovery protocol", detail: "Active recovery plan", free: false },
-];
 
 const stagger = {
   container: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } },
@@ -86,9 +84,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-mesh px-5 pt-16 pb-24 space-y-4">
-        <SkeletonCard />
-        <SkeletonCard />
-        <SkeletonCard />
+        <SkeletonCard /><SkeletonCard /><SkeletonCard />
       </div>
     );
   }
@@ -100,8 +96,6 @@ const Dashboard = () => {
 
   const riskScore = calcRiskScore(data);
   const lean = calcLeanMass(data.weight_kg, riskScore);
-  const riskLevel = riskScore >= 70 ? "HIGH" : riskScore >= 50 ? "MODERATE" : "LOW";
-  const riskColor = riskScore >= 70 ? "text-accent-danger" : riskScore >= 50 ? "text-accent-gold" : "text-primary";
   const greeting = data.first_name ? `Hey ${data.first_name}` : "Welcome back";
 
   const toggleCheck = (id: string, free: boolean) => {
@@ -118,12 +112,16 @@ const Dashboard = () => {
     });
   };
 
+  const openPaywall = (feature: string) => {
+    setPaywallFeature(feature);
+    setPaywallOpen(true);
+  };
+
   const completedFree = DAILY_PROTOCOL.filter((p) => p.free && checkedItems.has(p.id)).length;
   const totalFree = DAILY_PROTOCOL.filter((p) => p.free).length;
 
   return (
     <div className="min-h-screen bg-mesh pb-24">
-      {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -139,118 +137,34 @@ const Dashboard = () => {
         </button>
       </motion.header>
 
-      <motion.div
-        className="px-5 space-y-5"
-        variants={stagger.container}
-        initial="initial"
-        animate="animate"
-      >
-        {/* Risk Score Card */}
+      <motion.div className="px-5 space-y-5" variants={stagger.container} initial="initial" animate="animate">
         <motion.div variants={stagger.item}>
-          <div className="relative overflow-hidden rounded-lg bg-surface-container-lowest border border-accent-danger/15 p-6">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-accent-danger/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">Muscle Loss Risk</span>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <span className={`font-headline font-black text-5xl ${riskColor}`}>
-                    <CountUp end={riskScore} suffix="%" />
-                  </span>
-                  <span className={`text-xs font-mono font-bold uppercase tracking-wider ${riskColor}`}>{riskLevel}</span>
-                </div>
-              </div>
-              <div className="w-12 h-12 rounded-full bg-accent-danger/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-accent-danger">monitor_heart</span>
-              </div>
-            </div>
-            <AnimatedProgress value={riskScore} barClassName="gradient-danger" />
-            <p className="text-on-surface-variant text-xs mt-3">
-              {riskScore >= 70
-                ? "Immediate intervention recommended. Follow your protocol."
-                : riskScore >= 50
-                  ? "Moderate risk detected. Stay consistent with your protocol."
-                  : "Your risk is manageable. Keep up the good work."}
-            </p>
-          </div>
+          <DashboardRiskCard riskScore={riskScore} />
         </motion.div>
 
-        {/* Lean Mass Estimate */}
         {lean && (
           <motion.div variants={stagger.item}>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-surface-container-low rounded-lg p-5">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">Lean Mass</span>
-                <div className="font-headline font-bold text-3xl text-on-surface mt-1">
-                  <CountUp end={lean.leanKg} decimals={1} suffix="kg" />
-                </div>
-                <span className="text-on-surface-variant text-xs">Estimated</span>
-              </div>
-              <div className="bg-surface-container-low rounded-lg p-5 border border-accent-danger/10">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-accent-danger">At Risk</span>
-                <div className="font-headline font-bold text-3xl text-accent-danger mt-1">
-                  <CountUp end={lean.atRiskKg} decimals={1} suffix="kg" />
-                </div>
-                <span className="text-on-surface-variant text-xs">Could be lost</span>
-              </div>
-            </div>
+            <DashboardLeanMass lean={lean} />
           </motion.div>
         )}
 
-        {/* Daily Protocol */}
         <motion.div variants={stagger.item}>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-headline font-bold text-lg text-on-surface">Today's Protocol</h2>
-            <span className="text-xs font-mono text-primary">{completedFree}/{totalFree} done</span>
-          </div>
-          <div className="space-y-2">
-            {DAILY_PROTOCOL.map((item) => {
-              const checked = checkedItems.has(item.id);
-              const locked = !item.free;
-              return (
-                <motion.button
-                  key={item.id}
-                  onClick={() => toggleCheck(item.id, item.free)}
-                  className={`w-full flex items-center gap-4 p-4 rounded-lg transition-all duration-200 active:scale-[0.97] text-left ${
-                    locked
-                      ? "bg-surface-container-low/50 opacity-60 cursor-default"
-                      : checked
-                        ? "bg-primary/10 border border-primary/20"
-                        : "bg-surface-container-low hover:bg-surface-container"
-                  }`}
-                  whileTap={locked ? {} : { scale: 0.97 }}
-                >
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                      locked
-                        ? "bg-surface-variant"
-                        : checked
-                          ? "gradient-hero"
-                          : "bg-surface-container-high"
-                    }`}
-                  >
-                    {locked ? (
-                      <Lock className="w-4 h-4 text-on-surface-variant" />
-                    ) : checked ? (
-                      <span className="material-symbols-outlined text-on-primary text-lg">check</span>
-                    ) : (
-                      <span className="material-symbols-outlined text-on-surface-variant text-lg">{item.icon}</span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium ${checked ? "text-primary line-through" : "text-on-surface"}`}>
-                      {item.label}
-                    </p>
-                    <p className="text-xs text-on-surface-variant truncate">{item.detail}</p>
-                  </div>
-                  {locked && (
-                    <span className="text-[9px] font-mono uppercase tracking-widest text-accent-gold bg-accent-gold/10 px-2 py-0.5 rounded-full">
-                      Pro
-                    </span>
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
+          <DashboardProtocol
+            checkedItems={checkedItems}
+            completedFree={completedFree}
+            totalFree={totalFree}
+            onToggle={toggleCheck}
+          />
+        </motion.div>
+
+        {/* Free Features Summary */}
+        <motion.div variants={stagger.item}>
+          <DashboardFreeFeatures onPaywall={openPaywall} />
+        </motion.div>
+
+        {/* Pro Teaser */}
+        <motion.div variants={stagger.item}>
+          <DashboardProTeaser />
         </motion.div>
 
         {/* Upgrade CTA */}
@@ -266,40 +180,15 @@ const Dashboard = () => {
               </div>
               <div className="flex-1">
                 <p className="font-headline font-bold text-on-primary">Unlock Full Protocol</p>
-                <p className="text-on-primary/70 text-xs mt-0.5">
-                  AI coaching, meal timing, recovery plans & more
-                </p>
+                <p className="text-on-primary/70 text-xs mt-0.5">AI coaching, meal timing, recovery plans & more</p>
               </div>
               <span className="material-symbols-outlined text-on-primary">arrow_forward</span>
             </div>
           </button>
         </motion.div>
 
-        {/* Quick Stats Row */}
         <motion.div variants={stagger.item}>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="bg-surface-container-low rounded-lg p-4 text-center">
-              <span className="material-symbols-outlined text-secondary text-xl">fitness_center</span>
-              <p className="font-headline font-bold text-on-surface text-lg mt-1 capitalize">
-                {data.fitness_level?.replace("_", " ") || "—"}
-              </p>
-              <p className="text-[9px] font-mono uppercase tracking-widest text-on-surface-variant">Fitness</p>
-            </div>
-            <div className="bg-surface-container-low rounded-lg p-4 text-center">
-              <span className="material-symbols-outlined text-primary text-xl">egg_alt</span>
-              <p className="font-headline font-bold text-on-surface text-sm mt-1">
-                {data.protein_intake?.replace(/_/g, " ") || "—"}
-              </p>
-              <p className="text-[9px] font-mono uppercase tracking-widest text-on-surface-variant">Protein</p>
-            </div>
-            <div className="bg-surface-container-low rounded-lg p-4 text-center">
-              <span className="material-symbols-outlined text-accent-gold text-xl">flag</span>
-              <p className="font-headline font-bold text-on-surface text-sm mt-1 capitalize">
-                {data.primary_goal?.replace(/_/g, " ") || "—"}
-              </p>
-              <p className="text-[9px] font-mono uppercase tracking-widest text-on-surface-variant">Goal</p>
-            </div>
-          </div>
+          <DashboardQuickStats data={data} />
         </motion.div>
       </motion.div>
 
