@@ -175,7 +175,7 @@ const Dashboard = () => {
         {isPro && (
           <motion.div variants={stagger.item} className="grid grid-cols-2 gap-3">
             <WeeklyStreakRing completedDays={completedDays} />
-            <ProteinRing target={proteinTarget} />
+            <ProteinRing target={proteinTarget} current={proteinIntake} onAdd={addProtein} />
           </motion.div>
         )}
 
