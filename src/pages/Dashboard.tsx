@@ -8,6 +8,7 @@ import { SkeletonCard } from "@/components/motion/Skeleton";
 import PaywallModal from "@/components/PaywallModal";
 import { DAILY_PROTOCOL } from "@/config/features";
 import { usePaywall } from "@/hooks/usePaywall";
+import { useDailyTracking } from "@/hooks/useDailyTracking";
 import DashboardHeader from "@/components/dashboard/Header";
 import MuscleScoreGauge from "@/components/dashboard/MuscleScoreGauge";
 import StatsRow from "@/components/dashboard/StatsRow";
@@ -78,7 +79,7 @@ const Dashboard = () => {
   const paywall = usePaywall();
   const [data, setData] = useState<OnboardingData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  const { proteinIntake, checkedItems, addProtein, toggleItem, loaded: trackingLoaded } = useDailyTracking(user?.id);
   const timeTriggersRan = useRef(false);
 
   useEffect(() => {
@@ -118,7 +119,7 @@ const Dashboard = () => {
     }
   }, [data, paywall, isPro]);
 
-  if (loading) {
+  if (loading || !trackingLoaded) {
     return (
       <div className="min-h-screen bg-mesh px-5 pt-16 pb-24 space-y-4">
         <SkeletonCard /><SkeletonCard /><SkeletonCard />
@@ -147,11 +148,7 @@ const Dashboard = () => {
       paywall.fire("protocol_locked");
       return;
     }
-    setCheckedItems((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    toggleItem(id);
   };
 
   const completedFree = DAILY_PROTOCOL.filter((p) => p.free && checkedItems.has(p.id)).length;
@@ -178,7 +175,7 @@ const Dashboard = () => {
         {isPro && (
           <motion.div variants={stagger.item} className="grid grid-cols-2 gap-3">
             <WeeklyStreakRing completedDays={completedDays} />
-            <ProteinRing target={proteinTarget} />
+            <ProteinRing target={proteinTarget} current={proteinIntake} onAdd={addProtein} />
           </motion.div>
         )}
 

@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_tracking: {
+        Row: {
+          checked_items: string[]
+          created_at: string
+          id: string
+          protein_intake: number
+          tracking_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checked_items?: string[]
+          created_at?: string
+          id?: string
+          protein_intake?: number
+          tracking_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checked_items?: string[]
+          created_at?: string
+          id?: string
+          protein_intake?: number
+          tracking_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       onboarding_data: {
         Row: {
           activity_level: string | null
