@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import PaywallModal from "@/components/PaywallModal";
 import { usePaywall } from "@/hooks/usePaywall";
+import { useAuth } from "@/contexts/AuthContext";
 import { Brain, Send, Loader2, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AI_COACH_FREE_LIMIT } from "@/config/features";
@@ -80,6 +81,7 @@ async function streamChat({
 const AICoachPage = () => {
   const navigate = useNavigate();
   const paywall = usePaywall();
+  const { isPro } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -87,8 +89,8 @@ const AICoachPage = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const userMessageCount = messages.filter((m) => m.role === "user").length;
-  const isLimitReached = userMessageCount >= AI_COACH_FREE_LIMIT;
-  const remaining = Math.max(0, AI_COACH_FREE_LIMIT - userMessageCount);
+  const isLimitReached = !isPro && userMessageCount >= AI_COACH_FREE_LIMIT;
+  const remaining = isPro ? Infinity : Math.max(0, AI_COACH_FREE_LIMIT - userMessageCount);
 
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
@@ -156,15 +158,22 @@ const AICoachPage = () => {
         <div>
           <h1 className="font-headline font-bold text-xl text-on-surface">AI Coach</h1>
           <p className="text-on-surface-variant text-xs mt-0.5">
-            {isLimitReached ? "Free messages used" : `${remaining} free message${remaining === 1 ? "" : "s"} left`}
+            {isPro ? "Unlimited messages" : isLimitReached ? "Free messages used" : `${remaining} free message${remaining === 1 ? "" : "s"} left`}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className={`px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-widest ${
-            isLimitReached ? "bg-accent-danger/10 text-accent-danger" : "bg-primary/10 text-primary"
-          }`}>
-            {userMessageCount}/{AI_COACH_FREE_LIMIT}
-          </div>
+          {!isPro && (
+            <div className={`px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-widest ${
+              isLimitReached ? "bg-accent-danger/10 text-accent-danger" : "bg-primary/10 text-primary"
+            }`}>
+              {userMessageCount}/{AI_COACH_FREE_LIMIT}
+            </div>
+          )}
+          {isPro && (
+            <div className="px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-widest bg-primary/10 text-primary">
+              Pro
+            </div>
+          )}
           {!isEmpty && (
             <button
               onClick={() => setMessages([])}
@@ -193,7 +202,7 @@ const AICoachPage = () => {
               Trained on clinical research for GLP-1 muscle preservation protocols.
             </p>
             <p className="text-xs font-mono text-primary mb-8">
-              {AI_COACH_FREE_LIMIT} free messages · Unlimited with Pro
+              {isPro ? "Unlimited messages" : `${AI_COACH_FREE_LIMIT} free messages · Unlimited with Pro`}
             </p>
 
             <div className="w-full max-w-sm space-y-2">

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import PaywallModal from "@/components/PaywallModal";
 import { usePaywall } from "@/hooks/usePaywall";
+import { useAuth } from "@/contexts/AuthContext";
 import { CountUp, AnimatedProgress } from "@/components/motion/Animated";
 import { Lock, TrendingUp, TrendingDown } from "lucide-react";
 
@@ -26,6 +27,7 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const ProgressPage = () => {
   const paywall = usePaywall();
+  const { isPro } = useAuth();
 
   return (
     <div className="min-h-screen bg-mesh pb-24">
@@ -42,36 +44,39 @@ const ProgressPage = () => {
       <div className="px-5 space-y-6">
         {/* Metric Cards */}
         <div className="grid grid-cols-2 gap-3">
-          {METRICS.map((m, i) => (
-            <motion.button
-              key={m.label}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + i * 0.06, duration: 0.4, ease }}
-              onClick={() => !m.free && paywall.fire("analytics_tap")}
-              className={`relative rounded-lg p-5 text-left active:scale-[0.97] transition-all duration-200 ${
-                m.free ? "bg-surface-container-lowest border border-border" : "bg-surface-container-low/50 opacity-60 border border-transparent"
-              }`}
-            >
-              {!m.free && (
-                <div className="absolute top-3 right-3">
-                  <Lock className="w-3 h-3 text-on-surface-variant" />
+          {METRICS.map((m, i) => {
+            const unlocked = isPro || m.free;
+            return (
+              <motion.button
+                key={m.label}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.06, duration: 0.4, ease }}
+                onClick={() => !unlocked && paywall.fire("analytics_tap")}
+                className={`relative rounded-lg p-5 text-left active:scale-[0.97] transition-all duration-200 ${
+                  unlocked ? "bg-surface-container-lowest border border-border" : "bg-surface-container-low/50 opacity-60 border border-transparent"
+                }`}
+              >
+                {!unlocked && (
+                  <div className="absolute top-3 right-3">
+                    <Lock className="w-3 h-3 text-on-surface-variant" />
+                  </div>
+                )}
+                <span className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">{m.label}</span>
+                <div className="font-headline font-bold text-2xl text-on-surface mt-1">
+                  {unlocked ? <CountUp end={m.value} decimals={1} /> : "—"}
+                  <span className="text-sm font-normal text-on-surface-variant">{m.unit}</span>
                 </div>
-              )}
-              <span className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">{m.label}</span>
-              <div className="font-headline font-bold text-2xl text-on-surface mt-1">
-                {m.free ? <CountUp end={m.value} decimals={1} /> : "—"}
-                <span className="text-sm font-normal text-on-surface-variant">{m.unit}</span>
-              </div>
-              {m.free && (
-                <div className={`flex items-center gap-1 mt-1 text-xs font-mono ${m.trend === "up" ? "text-primary" : "text-accent-danger"}`}>
-                  {m.trend === "up" ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                  {m.change > 0 ? "+" : ""}{m.change}
-                  <span className="text-on-surface-variant">this week</span>
-                </div>
-              )}
-            </motion.button>
-          ))}
+                {unlocked && (
+                  <div className={`flex items-center gap-1 mt-1 text-xs font-mono ${m.trend === "up" ? "text-primary" : "text-accent-danger"}`}>
+                    {m.trend === "up" ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                    {m.change > 0 ? "+" : ""}{m.change}
+                    <span className="text-on-surface-variant">this week</span>
+                  </div>
+                )}
+              </motion.button>
+            );
+          })}
         </div>
 
         {/* Weekly Adherence */}
