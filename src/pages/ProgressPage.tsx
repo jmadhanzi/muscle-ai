@@ -142,6 +142,15 @@ const ProgressPage = () => {
             />
           </motion.div>
         )}
+
+        {user && (
+          <motion.div variants={stagger.item}>
+            <ReferralLeaderboard
+              userReferrals={referralCount}
+              userName={data?.first_name || undefined}
+            />
+          </motion.div>
+        )}
       </motion.div>
 
       <PaywallModal

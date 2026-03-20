@@ -243,6 +243,11 @@ const Dashboard = () => {
           </motion.div>
         )}
 
+        {/* Referral Earnings — always shown */}
+        <motion.div variants={stagger.item}>
+          <ReferralEarnings userId={user?.id} firstName={data.first_name} />
+        </motion.div>
+
         {/* Social Proof Feed — always shown */}
         <motion.div variants={stagger.item}>
           <SocialProofFeed />
