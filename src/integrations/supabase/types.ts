@@ -16,9 +16,13 @@ export type Database = {
     Tables: {
       onboarding_data: {
         Row: {
+          activity_level: string | null
           age: number | null
           biological_sex: string | null
+          body_concerns: string[] | null
           created_at: string
+          fitness_goals: string[] | null
+          height_cm: number | null
           id: string
           injection_day: string | null
           medication: string | null
@@ -26,11 +30,16 @@ export type Database = {
           updated_at: string
           user_id: string
           weeks_on_medication: number | null
+          weight_kg: number | null
         }
         Insert: {
+          activity_level?: string | null
           age?: number | null
           biological_sex?: string | null
+          body_concerns?: string[] | null
           created_at?: string
+          fitness_goals?: string[] | null
+          height_cm?: number | null
           id?: string
           injection_day?: string | null
           medication?: string | null
@@ -38,11 +47,16 @@ export type Database = {
           updated_at?: string
           user_id: string
           weeks_on_medication?: number | null
+          weight_kg?: number | null
         }
         Update: {
+          activity_level?: string | null
           age?: number | null
           biological_sex?: string | null
+          body_concerns?: string[] | null
           created_at?: string
+          fitness_goals?: string[] | null
+          height_cm?: number | null
           id?: string
           injection_day?: string | null
           medication?: string | null
@@ -50,6 +64,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           weeks_on_medication?: number | null
+          weight_kg?: number | null
         }
         Relationships: []
       }
