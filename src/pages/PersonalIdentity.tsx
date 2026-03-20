@@ -10,7 +10,7 @@ const PersonalIdentity = () => {
   const { user } = useAuth();
   const [firstName, setFirstName] = useState("");
   const [age, setAge] = useState(48);
-  const [selectedSex, setSelectedSex] = useState<string>("Female");
+  const [selectedSex, setSelectedSex] = useState<string>("female");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -28,19 +28,18 @@ const PersonalIdentity = () => {
   }, [user]);
 
   const handleNext = async () => {
-    if (!user) return;
+    if (!user || !firstName.trim()) return;
     setSaving(true);
     try {
-      await supabase.from("profiles").update({ first_name: firstName }).eq("user_id", user.id);
-      
+      await supabase.from("profiles").update({ first_name: firstName.trim() }).eq("user_id", user.id);
+
       const { data: existing } = await supabase.from("onboarding_data").select("id").eq("user_id", user.id).single();
-      
       if (existing) {
         await supabase.from("onboarding_data").update({ age, biological_sex: selectedSex }).eq("user_id", user.id);
       } else {
         await supabase.from("onboarding_data").insert({ user_id: user.id, age, biological_sex: selectedSex });
       }
-      
+
       navigate("/medication-profile");
     } catch {
       toast.error("Failed to save. Please try again.");
@@ -48,14 +47,20 @@ const PersonalIdentity = () => {
     setSaving(false);
   };
 
+  const sexOptions = [
+    { value: "male", label: "Male" },
+    { value: "female", label: "Female" },
+    { value: "other", label: "Other" },
+  ];
+
   return (
     <OnboardingLayout
       step={1}
       footer={
         <button
           onClick={handleNext}
-          disabled={saving}
-          className="w-full py-5 rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold text-lg flex items-center justify-center gap-3 shadow-[0_8px_32px_hsla(160,100%,45%,0.25)] active:scale-95 transition-transform duration-200 disabled:opacity-50"
+          disabled={saving || !firstName.trim()}
+          className="w-full py-5 rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold text-lg flex items-center justify-center gap-3 shadow-[0_8px_32px_hsla(160,100%,45%,0.25)] active:scale-95 transition-transform duration-200 disabled:opacity-40"
         >
           {saving ? "Saving..." : "Next step"}
           <span className="material-symbols-outlined">arrow_forward</span>
@@ -129,21 +134,21 @@ const PersonalIdentity = () => {
           <div className="space-y-4">
             <label className="block text-sm font-medium text-on-surface-variant px-1">Biological sex?</label>
             <div className="grid grid-cols-3 gap-3">
-              {["Male", "Female", "Other"].map((sex) => (
+              {sexOptions.map((opt) => (
                 <button
-                  key={sex}
-                  onClick={() => setSelectedSex(sex)}
+                  key={opt.value}
+                  onClick={() => setSelectedSex(opt.value)}
                   className={`py-4 px-2 rounded-full font-medium transition-all ${
-                    selectedSex === sex
+                    selectedSex === opt.value
                       ? "bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold shadow-[0_0_20px_hsla(160,100%,45%,0.3)]"
                       : "bg-surface-container-highest text-on-surface border border-transparent hover:border-primary/20"
                   }`}
                 >
-                  {sex}
+                  {opt.label}
                 </button>
               ))}
             </div>
-            {selectedSex === "Female" && (
+            {selectedSex === "female" && (
               <div className="mt-6 flex items-start gap-4 p-5 rounded-xl bg-surface-container-high border-l-4 border-primary shadow-sm">
                 <span className="material-symbols-outlined material-filled text-primary">analytics</span>
                 <p className="text-sm leading-relaxed text-on-surface">
