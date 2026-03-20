@@ -41,7 +41,7 @@ const OnboardingSummary = () => {
   ];
   const riskScore = Math.min(95, 20 + riskFactors.reduce((a: number, b: number) => a + b, 0));
 
-  const weightLoss = data.weight_kg && data.goal_weight ? Math.max(0, Number(data.weight_kg) - Number(data.goal_weight)) : 0;
+  const weightLoss = data.current_weight && data.goal_weight ? Math.max(0, Number(data.current_weight) - Number(data.goal_weight)) : 0;
   const muscleLossRisk = Math.round(weightLoss * 0.4 * 10) / 10;
   const unit = data.weight_unit || "lbs";
   const displayWeight = unit === "lbs" ? Math.round(Number(data.weight_kg) * 2.205) : Number(data.weight_kg);
