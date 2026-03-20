@@ -115,7 +115,7 @@ const BiggestFear = () => {
     setSaving(true);
 
     // Save fear
-    await supabase.from("onboarding_data").update({ biggest_fear: fear.trim().slice(0, 100) }).eq("user_id", user.id);
+    await supabase.from("profiles").update({ biggest_fear: fear.trim().slice(0, 100) }).eq("user_id", user.id);
 
     // Enter thinking phase
     setPhase("thinking");
