@@ -56,7 +56,7 @@ export const calcMuscleScore = (data: OnboardingData) => {
 };
 
 export const calcAtRiskLbs = (data: OnboardingData, score: number) => {
-  const weightLbs = data.weight_unit === "kg" ? (data.weight_kg || 70) * 2.205 : (data.weight_kg || 154);
+  const weightLbs = data.weight_unit === "kg" ? ((data.current_weight || data.weight_kg || 70)) * 2.205 : ((data.current_weight || data.weight_kg || 154));
   const toLose = Math.max(0, weightLbs - ((data.goal_weight || weightLbs) * (data.weight_unit === "kg" ? 2.205 : 1)));
   const atRisk = toLose * 0.4 * ((100 - score) / 100);
   return { atRiskLbs: Math.round(atRisk * 10) / 10, preservePct: Math.round(60 + score * 0.35) };
