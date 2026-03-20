@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, LogOut, Crown } from "lucide-react";
+import { ArrowLeft, LogOut, Crown, Bell, BellOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 const DAYS_OF_WEEK = [
   { value: "monday", label: "Monday" },
