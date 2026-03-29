@@ -1,6 +1,6 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 import { SplashScreen } from '@capacitor/splash-screen';
-import { StatusBar } from '@capacitor/status-bar';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 const config: CapacitorConfig = {
   appId: 'com.muscleai.app',
@@ -13,15 +13,16 @@ const config: CapacitorConfig = {
       showSpinner: true,
     },
     StatusBar: {
-      style: 'light',
-      backgroundColor: '#000000',
+      style: Style.Default,
+      backgroundColor: '#050a0f',
+      overlaysWebView: false
     },
   },
   server: {
     androidScheme: 'https',
   },
   ios: {
-    contentInset: 'always',
+    contentInset: 'never',
   },
 };
 

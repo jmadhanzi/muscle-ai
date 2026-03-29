@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications, type PermissionStatus } from '@capacitor/push-notifications';
 import { SplashScreen } from '@capacitor/splash-screen';
-import { StatusBar } from '@capacitor/status-bar';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 /**
  * Initialize Capacitor plugins
@@ -15,17 +15,6 @@ export async function initializeCapacitor(): Promise<void> {
   }
 
   try {
-    // Initialize Status Bar
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await StatusBar.setStyle({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      style: 'light' as any,
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await StatusBar.setBackgroundColor({
-      color: '#000000',
-    });
-
     // Initialize Splash Screen
     await SplashScreen.hide();
 
