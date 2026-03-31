@@ -1,4 +1,4 @@
-package com.muscleai.app;
+package com.jmadhanzi.musclelockai;
 
 import com.getcapacitor.BridgeActivity;
 

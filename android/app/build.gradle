@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.muscleai.app"
+    namespace "com.jmadhanzi.musclelockai"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.muscleai.app"
+        applicationId "com.jmadhanzi.musclelockai"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -40,6 +40,7 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.8.0"))
 }
 
 apply from: 'capacitor.build.gradle'

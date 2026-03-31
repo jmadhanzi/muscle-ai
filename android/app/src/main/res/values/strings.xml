@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Muscle AI</string>
     <string name="title_activity_main">Muscle AI</string>
-    <string name="package_name">com.muscleai.app</string>
-    <string name="custom_url_scheme">com.muscleai.app</string>
+    <string name="package_name">com.jmadhanzi.musclelockai</string>
+    <string name="custom_url_scheme">com.jmadhanzi.musclelockai</string>
 </resources>

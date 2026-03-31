@@ -3,7 +3,7 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
 
 const config: CapacitorConfig = {
-  appId: 'com.muscleai.app',
+  appId: 'com.jmadhanzi.musclelockai',
   appName: 'Muscle AI',
   webDir: 'dist',
   plugins: {
