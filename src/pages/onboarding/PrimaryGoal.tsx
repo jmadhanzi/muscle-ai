@@ -20,6 +20,10 @@ const PrimaryGoal = () => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     if (!user) return;
     const load = async () => {
       const { data } = await supabase.from("profiles").select("primary_goal").eq("user_id", user.id).single();

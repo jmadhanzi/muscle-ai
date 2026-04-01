@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
@@ -81,11 +81,17 @@ const stagger = {
 const Dashboard = () => {
   const { user, isPro, subscriptionEnd } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const paywall = usePaywall();
   const [data, setData] = useState<OnboardingData | null>(null);
   const [loading, setLoading] = useState(true);
   const { proteinIntake, checkedItems, addProtein, toggleItem, loaded: trackingLoaded } = useDailyTracking(user?.id);
   const timeTriggersRan = useRef(false);
+
+  // Scroll to top when tab becomes active (including back button navigation)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!user) return;

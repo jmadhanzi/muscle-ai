@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -14,11 +14,17 @@ const ageMessage = (age: number) => {
 
 const PersonalIdentity = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [firstName, setFirstName] = useState("");
   const [age, setAge] = useState(48);
   const [selectedSex, setSelectedSex] = useState<string>("female");
   const [saving, setSaving] = useState(false);
+
+  // Scroll to top when page becomes active (including back button navigation)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!user) return;

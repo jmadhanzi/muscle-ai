@@ -42,7 +42,7 @@ const WorkoutsPage = () => {
   const [activeWorkout, setActiveWorkout] = useState<WorkoutDay | null>(null);
   const [completedWorkouts, setCompletedWorkouts] = useState<Set<string>>(new Set());
 
-  // Scroll to top when tab changes
+  // Scroll to top
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTab]);

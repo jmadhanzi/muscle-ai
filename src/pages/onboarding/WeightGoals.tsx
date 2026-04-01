@@ -48,6 +48,10 @@ const WeightGoals = () => {
   const [showSources, setShowSources] = useState(false);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     if (!user) return;
     const load = async () => {
       const { data } = await supabase

@@ -10,6 +10,11 @@ function useCounter(target: number, duration = 1600, delay = 800) {
   const [count, setCount] = useState(0);
   const [started, setStarted] = useState(false);
 
+  // Scroll to top
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   useEffect(() => {
     const t = setTimeout(() => setStarted(true), delay);
     return () => clearTimeout(t);

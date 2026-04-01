@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Shield, Brain, Stethoscope, Lock, Trash2 } from "lucide-react";
@@ -19,6 +19,11 @@ const AboutPage = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+    // Scroll to top
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const openRef = (id: string) => {
     const ref = CLINICAL_REFERENCES.find((r) => r.id === id);

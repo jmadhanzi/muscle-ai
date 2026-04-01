@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Trash2 } from "lucide-react";
+import { useEffect } from "react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -20,6 +21,11 @@ const ChatHeader = ({
 }: ChatHeaderProps) => {
   const navigate = useNavigate();
   const drugLabel = medication || "GLP-1";
+
+  // Scroll to top when tab becomes active
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   return (
     <motion.header
