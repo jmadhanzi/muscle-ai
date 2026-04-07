@@ -30,7 +30,7 @@ const StarterPrompts = ({ userProfile, isPro, freeLimit, onSend }: StarterPrompt
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.1, ease }}
-     className="flex flex-col items-center justify-center h-full text-center px-4 pt-[calc(6rem+env(safe-area-inset-top))]"
+      className="flex flex-col items-center justify-center h-full text-center px-4"
     >
       <div className="w-16 h-16 rounded-full gradient-hero flex items-center justify-center mb-5 shadow-[0_0_40px_hsla(160,100%,45%,0.12)]">
         <span className="material-symbols-outlined text-[hsl(var(--on-primary))] text-3xl">psychology</span>

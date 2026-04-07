@@ -26,11 +26,6 @@ const SettingsPage = () => {
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
-  // Scroll to top 
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
-
   useEffect(() => {
     if (!user) return;
     const load = async () => {
