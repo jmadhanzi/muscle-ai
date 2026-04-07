@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -51,6 +51,7 @@ const fadeUp = {
 
 const MedicationProfile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [selectedMed, setSelectedMed] = useState("ozempic");
   const [weeks, setWeeks] = useState(12);
@@ -92,6 +93,10 @@ const MedicationProfile = () => {
   const wMsg = weeksMessage(weeks);
   const resp = medResponse[selectedMed];
   const name = firstName.trim();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   return (
     <OnboardingLayout

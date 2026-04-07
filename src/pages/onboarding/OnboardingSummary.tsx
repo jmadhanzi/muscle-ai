@@ -17,6 +17,10 @@ const OnboardingSummary = () => {
   const hasReferral = Boolean(data?.referred_by || localStorage.getItem("pending_referral_code"));
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     if (!user) return;
     const load = async () => {
       const { data: profile } = await supabase

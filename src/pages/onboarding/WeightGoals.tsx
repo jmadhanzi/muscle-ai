@@ -47,6 +47,19 @@ const WeightGoals = () => {
   const [firstName, setFirstName] = useState("");
   const [showSources, setShowSources] = useState(false);
 
+
+  useEffect(() => {
+  if (showSources) {
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "auto";
+  }
+}, [showSources]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
@@ -122,7 +135,7 @@ const WeightGoals = () => {
         <button
           onClick={handleNext}
           disabled={saving || goalWeight >= currentWeight}
-          className="w-full py-5 rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold text-lg flex items-center justify-center gap-3 shadow-[0_8px_32px_hsla(160,100%,45%,0.25)] active:scale-[0.97] transition-transform duration-200 disabled:opacity-40"
+          className="w-full z-10 py-5 rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold text-lg flex items-center justify-center gap-3 shadow-[0_8px_32px_hsla(160,100%,45%,0.25)] active:scale-[0.97] transition-transform duration-200 disabled:opacity-40"
         >
           {saving ? "Saving…" : "Next step"}
           <span className="material-symbols-outlined">arrow_forward</span>
@@ -248,44 +261,99 @@ const WeightGoals = () => {
         </AnimatePresence>
       </motion.div>
 
-      <AnimatePresence>
-        {showSources && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+<AnimatePresence>
+  {showSources && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={() => setShowSources(false)}
+    >
+      <motion.div
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 40, opacity: 0 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        onClick={(e) => e.stopPropagation()}
+        className="
+          bg-surface-container-low 
+          border border-outline-variant/20 
+          rounded-2xl 
+          p-6 md:p-8 
+          max-w-lg w-full 
+          max-h-[80vh] 
+          overflow-y-auto 
+          pb-[calc(6rem+env(safe-area-inset-bottom))]
+        "
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-headline font-bold text-xl text-on-surface">
+            Clinical Sources
+          </h3>
+          <button
             onClick={() => setShowSources(false)}
+            className="w-9 h-9 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors active:scale-95"
           >
-            <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-surface-container-low border border-outline-variant/20 rounded-2xl p-6 md:p-8 max-w-lg w-full max-h-[80vh] overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-headline font-bold text-xl text-on-surface">Clinical Sources</h3>
-                <button onClick={() => setShowSources(false)} className="w-9 h-9 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors active:scale-95">
-                  <span className="material-symbols-outlined text-xl">close</span>
-                </button>
-              </div>
-              <div className="space-y-5">
-                <div className="p-4 rounded-xl bg-surface-container-high">
-                  <p className="text-sm font-medium text-on-surface mb-1">Lean Mass Loss with GLP-1 RAs</p>
-                  <p className="text-xs text-on-surface-variant leading-relaxed">Wilding JPH, et al. "Once-Weekly Semaglutide in Adults with Overweight or Obesity." <em className="text-secondary">NEJM</em>, 2021; 384:989-1002.</p>
-                  <p className="text-xs text-on-surface-variant mt-2">Finding: ~40% of weight lost was lean body mass in the semaglutide group without structured resistance training.</p>
-                </div>
-                <div className="p-4 rounded-xl bg-surface-container-high">
-                  <p className="text-sm font-medium text-on-surface mb-1">Resistance Training + GLP-1</p>
-                  <p className="text-xs text-on-surface-variant leading-relaxed">Lundgren JR, et al. "Healthy Weight Loss Maintenance with Exercise, Liraglutide, or Both Combined." <em className="text-secondary">NEJM</em>, 2021; 384:1719-1730.</p>
-                  <p className="text-xs text-on-surface-variant mt-2">Finding: Structured resistance exercise reduced lean mass loss to ~8% of total weight lost.</p>
-                </div>
-                <div className="p-4 rounded-xl bg-surface-container-high">
-                  <p className="text-sm font-medium text-on-surface mb-1">Tirzepatide Body Composition</p>
-                  <p className="text-xs text-on-surface-variant leading-relaxed">Jastreboff AM, et al. "Tirzepatide Once Weekly for the Treatment of Obesity." <em className="text-secondary">NEJM</em>, 2022; 387:205-216.</p>
-                  <p className="text-xs text-on-surface-variant mt-2">Finding: Tirzepatide produced 23% greater weight loss vs semaglutide, with proportional lean mass loss.</p>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <span className="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="space-y-5">
+          <div className="p-4 rounded-xl bg-surface-container-high">
+            <p className="text-sm font-medium text-on-surface mb-1">
+              Lean Mass Loss with GLP-1 RAs
+            </p>
+            <p className="text-xs text-on-surface-variant leading-relaxed">
+              Wilding JPH, et al. "Once-Weekly Semaglutide in Adults with
+              Overweight or Obesity."{" "}
+              <em className="text-secondary">NEJM</em>, 2021; 384:989-1002.
+            </p>
+            <p className="text-xs text-on-surface-variant mt-2">
+              Finding: ~40% of weight lost was lean body mass in the
+              semaglutide group without structured resistance training.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-surface-container-high">
+            <p className="text-sm font-medium text-on-surface mb-1">
+              Resistance Training + GLP-1
+            </p>
+            <p className="text-xs text-on-surface-variant leading-relaxed">
+              Lundgren JR, et al. "Healthy Weight Loss Maintenance with
+              Exercise, Liraglutide, or Both Combined."{" "}
+              <em className="text-secondary">NEJM</em>, 2021; 384:1719-1730.
+            </p>
+            <p className="text-xs text-on-surface-variant mt-2">
+              Finding: Structured resistance exercise reduced lean mass loss
+              to ~8% of total weight lost.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-surface-container-high">
+            <p className="text-sm font-medium text-on-surface mb-1">
+              Tirzepatide Body Composition
+            </p>
+            <p className="text-xs text-on-surface-variant leading-relaxed">
+              Jastreboff AM, et al. "Tirzepatide Once Weekly for the Treatment
+              of Obesity."{" "}
+              <em className="text-secondary">NEJM</em>, 2022; 387:205-216.
+            </p>
+            <p className="text-xs text-on-surface-variant mt-2">
+              Finding: Tirzepatide produced 23% greater weight loss vs
+              semaglutide, with proportional lean mass loss.
+            </p>
+          </div>
+        </div>
+
+        {/* Bottom spacer (extra safety for iOS) */}
+        <div className="h-6" />
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
     </OnboardingLayout>
   );
 };

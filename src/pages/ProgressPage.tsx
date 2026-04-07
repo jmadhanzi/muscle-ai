@@ -36,6 +36,11 @@ const ProgressPage = () => {
   const { unlockedIds, sharedIds, loaded: milestonesLoaded, unlock, markShared } = useMilestones(user?.id);
   const { referralCode, referralCount, monthsEarned, loaded: referralsLoaded, ensureReferralExists } = useReferrals(user?.id, data?.first_name);
 
+  // Scroll to top 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+  
   useEffect(() => {
     if (!user) return;
     const load = async () => {

@@ -32,6 +32,11 @@ const SubscriptionPage = () => {
   const billedAs = yearly ? `$${STRIPE_CONFIG.yearly.price}/year` : `$${STRIPE_CONFIG.monthly.price}/month`;
   const selectedPriceId = yearly ? STRIPE_CONFIG.yearly.price_id : STRIPE_CONFIG.monthly.price_id;
 
+  // Scroll to top 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   // Check for successful checkout return
   useEffect(() => {
     if (searchParams.get("checkout") === "success") {
