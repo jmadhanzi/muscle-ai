@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import DeepLinkHandler from "@/components/DeepLinkHandler";
 import Index from "./pages/Index.tsx";
 import AuthPage from "./pages/AuthPage.tsx";
 import PersonalIdentity from "./pages/PersonalIdentity.tsx";
@@ -35,6 +36,8 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
+        {/* DeepLinkHandler handles referral codes from deep links */}
+        <DeepLinkHandler />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />

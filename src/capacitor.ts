@@ -1,7 +1,36 @@
 import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 import { PushNotifications, type PermissionStatus } from '@capacitor/push-notifications';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
+
+/**
+ * Deep link URL handler
+ * Stores referral code from deep links for processing
+ */
+function handleDeepLink(url: string): void {
+  console.log('Deep link received:', url);
+  
+  try {
+    const urlObj = new URL(url);
+    const path = urlObj.pathname;
+    const searchParams = urlObj.searchParams;
+    
+    // Handle /ref/:code paths
+    if (path.startsWith('/ref/') || path.startsWith('ref/')) {
+      const referralCode = path.split('/ref/')[1] || path.split('ref/')[1] || searchParams.get('code');
+      
+      if (referralCode) {
+        // Store in sessionStorage for the web view
+        sessionStorage.setItem('referral_code', referralCode);
+        sessionStorage.setItem('referral_timestamp', Date.now().toString());
+        console.log('Referral code stored from deep link:', referralCode);
+      }
+    }
+  } catch (error) {
+    console.error('Error parsing deep link URL:', error);
+  }
+}
 
 /**
  * Initialize Capacitor plugins
@@ -17,6 +46,12 @@ export async function initializeCapacitor(): Promise<void> {
   try {
     // Initialize Splash Screen
     await SplashScreen.hide();
+
+    // Set up deep link handler
+    App.addListener('appUrlOpen', (data) => {
+      console.log('appUrlOpen event:', data);
+      handleDeepLink(data.url);
+    });
 
     // Initialize Push Notifications
     await setupPushNotifications();
@@ -59,4 +94,4 @@ async function setupPushNotifications(): Promise<void> {
   });
 }
 
-export { PushNotifications, SplashScreen, StatusBar };
+export { PushNotifications, SplashScreen, StatusBar, App };

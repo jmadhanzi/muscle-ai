@@ -23,6 +23,7 @@ const config: CapacitorConfig = {
   },
   ios: {
     contentInset: 'never',
+    scheme: 'musclelock',
   },
 };
 
