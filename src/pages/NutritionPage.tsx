@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import PaywallModal from "@/components/PaywallModal";
@@ -19,11 +19,6 @@ const NutritionPage = () => {
   const { proteinIntake, addProtein } = useDailyTracking(user?.id);
   const [activeFilter, setActiveFilter] = useState<MealTag | "all">("all");
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
-
-  // Scroll to top when filter changes
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [activeFilter]);
 
   // Compute protein target (fallback 140g)
   const proteinTarget = 140;

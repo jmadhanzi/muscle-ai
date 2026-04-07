@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import PaywallModal from "@/components/PaywallModal";
@@ -41,11 +41,6 @@ const WorkoutsPage = () => {
   const [activeTab, setActiveTab] = useState<ProgramTab>("strength");
   const [activeWorkout, setActiveWorkout] = useState<WorkoutDay | null>(null);
   const [completedWorkouts, setCompletedWorkouts] = useState<Set<string>>(new Set());
-
-  // Scroll to top
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [activeTab]);
 
   const week = PROGRAM[currentWeek - 1];
   const isWeekLocked = !isPro && !week.free;
