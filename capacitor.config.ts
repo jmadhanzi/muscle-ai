@@ -1,10 +1,11 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { Purchases } from '@revenuecat/purchases-capacitor';
 
 const config: CapacitorConfig = {
   appId: 'com.jmadhanzi.musclelockai',
-  appName: 'Muscle AI',
+  appName: 'MuscleLock AI',
   webDir: 'dist',
   plugins: {
     SplashScreen: {
@@ -17,6 +18,7 @@ const config: CapacitorConfig = {
       backgroundColor: '#050a0f',
       overlaysWebView: false
     },
+    Purchases: {},
   },
   server: {
     androidScheme: 'https',

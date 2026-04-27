@@ -6,6 +6,8 @@ import { FEATURE_COMPARISON, PRO_FEATURES } from "@/config/features";
 import { STRIPE_CONFIG } from "@/config/stripe";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useRevenueCat } from "@/hooks/useRevenueCat";
+import { Capacitor } from "@capacitor/core";
 import { toast } from "sonner";
 
 const SAVE_PCT = Math.round((1 - STRIPE_CONFIG.yearly.monthly_equivalent / STRIPE_CONFIG.monthly.price) * 100);
@@ -23,6 +25,7 @@ const SubscriptionPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isPro, subscriptionEnd, checkSubscription } = useAuth();
+  const { offerings, purchasePackage, loading: revenueCatLoading, restorePurchases, checkSubscriptionStatus, fetchOfferings } = useRevenueCat();
   const [yearly, setYearly] = useState(true);
   const [selectedTestimonial, setSelectedTestimonial] = useState(0);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -32,10 +35,15 @@ const SubscriptionPage = () => {
   const billedAs = yearly ? `$${STRIPE_CONFIG.yearly.price}/year` : `$${STRIPE_CONFIG.monthly.price}/month`;
   const selectedPriceId = yearly ? STRIPE_CONFIG.yearly.price_id : STRIPE_CONFIG.monthly.price_id;
 
-  // Scroll to top 
+  // Scroll to top and refresh offerings on load
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+
+    // Refresh offerings on page load for native platforms
+    if (Capacitor.isNativePlatform()) {
+      fetchOfferings();
+    }
+  }, [fetchOfferings]);
 
   // Check for successful checkout return
   useEffect(() => {
@@ -45,20 +53,44 @@ const SubscriptionPage = () => {
   }, [searchParams, checkSubscription]);
 
   const handleSubscribe = async () => {
-    setCheckoutLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId: selectedPriceId },
-      });
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, "_blank");
+    if (Capacitor.isNativePlatform()) {
+      console.log('Current offerings:', offerings);
+      const currentOffering = offerings[0];
+      if (!currentOffering) {
+        toast.error(`No offerings available. Found ${offerings.length} offerings. Check RevenueCat configuration.`);
+        return;
       }
-    } catch (e) {
-      toast.error("Could not start checkout. Please try again.");
-      console.error(e);
-    } finally {
-      setCheckoutLoading(false);
+
+      console.log('Current offering packages:', currentOffering.availablePackages);
+      const monthlyPackage = currentOffering.availablePackages.find(pkg => pkg.packageType === 'MONTHLY');
+      const yearlyPackage = currentOffering.availablePackages.find(pkg => pkg.packageType === 'ANNUAL');
+
+      console.log('Monthly package:', monthlyPackage);
+      console.log('Yearly package:', yearlyPackage);
+
+      const selectedPackage = yearly ? yearlyPackage : monthlyPackage;
+      if (!selectedPackage) {
+        toast.error(`Selected package (${yearly ? 'yearly' : 'monthly'}) not available. Available package types: ${currentOffering.availablePackages.map(p => p.packageType).join(', ')}`);
+        return;
+      }
+
+      await purchasePackage(selectedPackage);
+    } else {
+      setCheckoutLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("create-checkout", {
+          body: { priceId: selectedPriceId },
+        });
+        if (error) throw error;
+        if (data?.url) {
+          window.open(data.url, "_blank");
+        }
+      } catch (e) {
+        toast.error("Could not start checkout. Please try again.");
+        console.error(e);
+      } finally {
+        setCheckoutLoading(false);
+      }
     }
   };
 
@@ -109,14 +141,25 @@ const SubscriptionPage = () => {
                 Renews {new Date(subscriptionEnd).toLocaleDateString()}
               </p>
             )}
-            <button
-              onClick={handleManage}
-              disabled={portalLoading}
-              className="mt-6 px-6 py-3 rounded-full bg-surface-container-high text-on-surface font-headline font-bold text-sm active:scale-[0.97] transition-transform duration-200 flex items-center gap-2 mx-auto"
-            >
-              {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="material-symbols-outlined text-sm">settings</span>}
-              Manage Subscription
-            </button>
+            {Capacitor.isNativePlatform() ? (
+              <button
+                onClick={restorePurchases}
+                disabled={revenueCatLoading}
+                className="mt-6 px-6 py-3 rounded-full bg-surface-container-high text-on-surface font-headline font-bold text-sm active:scale-[0.97] transition-transform duration-200 flex items-center gap-2 mx-auto"
+              >
+                {revenueCatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="material-symbols-outlined text-sm">restore</span>}
+                Restore Purchases
+              </button>
+            ) : (
+              <button
+                onClick={handleManage}
+                disabled={portalLoading}
+                className="mt-6 px-6 py-3 rounded-full bg-surface-container-high text-on-surface font-headline font-bold text-sm active:scale-[0.97] transition-transform duration-200 flex items-center gap-2 mx-auto"
+              >
+                {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="material-symbols-outlined text-sm">settings</span>}
+                Manage Subscription
+              </button>
+            )}
           </motion.section>
         )}
 
@@ -223,6 +266,16 @@ const SubscriptionPage = () => {
                   })}
                 </div>
 
+                {Capacitor.isNativePlatform() && offerings.length === 0 && (
+                  <button
+                    onClick={fetchOfferings}
+                    disabled={revenueCatLoading}
+                    className="w-full py-2 mb-2 rounded-full bg-surface-container-high text-on-surface font-headline font-bold text-sm active:scale-[0.97] transition-transform duration-200 disabled:opacity-70"
+                  >
+                    {revenueCatLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Refresh Offerings'}
+                  </button>
+                )}
+
                 <button
                   onClick={handleSubscribe}
                   disabled={checkoutLoading}
@@ -238,7 +291,7 @@ const SubscriptionPage = () => {
                   )}
                 </button>
                 <p className="text-center text-on-surface-variant text-[10px] mt-3 font-mono tracking-wide">
-                  {STRIPE_CONFIG.trial.default_days}-day free trial · Cancel anytime · Money-back guarantee
+                  {Capacitor.isNativePlatform() ? 'Sandbox testing mode' : `${STRIPE_CONFIG.trial.default_days}-day free trial`} · Cancel anytime · Money-back guarantee
                 </p>
               </div>
             </motion.div>

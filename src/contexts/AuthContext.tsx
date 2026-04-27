@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { PRO_PRODUCT_IDS } from "@/config/stripe";
+import { useRevenueCat } from "@/hooks/useRevenueCat";
+import { Capacitor } from "@capacitor/core";
 
 interface AuthContextType {
   session: Session | null;
@@ -22,9 +24,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isPro, setIsPro] = useState(false);
+  const [supabaseIsPro, setSupabaseIsPro] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+
+  const { isPro: revenueCatIsPro } = useRevenueCat();
+
+  // Determine isPro based on platform
+  const isPro = Capacitor.isNativePlatform() ? revenueCatIsPro : supabaseIsPro;
 
   const checkSubscription = useCallback(async () => {
     try {
@@ -36,7 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       if (data) {
         const isActive = data.subscribed && PRO_PRODUCT_IDS.includes(data.product_id);
-        setIsPro(isActive);
+        setSupabaseIsPro(isActive);
         setSubscriptionEnd(data.subscription_end || null);
       }
     } catch (e) {
@@ -72,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Process pending referral on first sign-in
         processReferral(session.user.id);
       } else {
-        setIsPro(false);
+        setSupabaseIsPro(false);
         setSubscriptionEnd(null);
       }
     });
