@@ -36,9 +36,9 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
-        {/* DeepLinkHandler handles referral codes from deep links */}
-        <DeepLinkHandler />
         <BrowserRouter>
+          {/* DeepLinkHandler handles referral codes from deep links */}
+          <DeepLinkHandler />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/ref/:code" element={<ReferralLanding />} />
