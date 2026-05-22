@@ -22,9 +22,11 @@ const config: CapacitorConfig = {
   },
   server: {
     androidScheme: 'https',
+    iosScheme: 'http',
   },
   ios: {
     contentInset: 'never',
+    scheme: 'musclelock',
   },
 };
 

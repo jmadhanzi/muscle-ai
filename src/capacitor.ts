@@ -1,7 +1,59 @@
 import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 import { PushNotifications, type PermissionStatus } from '@capacitor/push-notifications';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
+
+/**
+ * Deep link URL handler
+ * Stores referral code from deep links for processing
+ */
+function handleDeepLink(url: string): void {
+  console.log('Deep link received:', url);
+  
+  try {
+    const urlObj = new URL(url);
+    let path = urlObj.pathname;
+    const searchParams = urlObj.searchParams;
+
+    // For custom schemes, the "host" might be part of the path
+    // e.g., "musclelock://ref/TEST123" has host="ref", pathname="/TEST123"
+    // So combine them as "ref/TEST123"
+    if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:' && urlObj.host && !urlObj.host.includes('.')) {
+      // Custom scheme with non-domain host, treat host as part of path
+      path = urlObj.host + urlObj.pathname;
+    }
+
+    console.log('Parsed deep link - protocol:', urlObj.protocol, 'host:', urlObj.host, 'pathname:', urlObj.pathname, 'combined path:', path, 'searchParams:', Object.fromEntries(searchParams));
+
+    // Handle /ref/:code or ref/:code paths
+    if (path.startsWith('/ref/') || path.startsWith('ref/')) {
+      const referralCode = path.split('/ref/')[1] || path.split('ref/')[1] || searchParams.get('code');
+      console.log('Extracted referral code:', referralCode);
+
+      if (referralCode) {
+        // Store in sessionStorage for the web view
+        sessionStorage.setItem('referral_code', referralCode);
+        sessionStorage.setItem('referral_timestamp', Date.now().toString());
+        console.log('Referral code stored from deep link:', referralCode);
+
+        // Dispatch custom event to notify React app of deep link
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('deepLinkReceived', {
+            detail: { referralCode, url }
+          }));
+          console.log('Dispatched deepLinkReceived event');
+        }, 50);
+      } else {
+        console.log('No referral code extracted');
+      }
+    } else {
+      console.log('Path does not start with /ref/ or ref/');
+    }
+  } catch (error) {
+    console.error('Error parsing deep link URL:', error);
+  }
+}
 
 /**
  * Initialize Capacitor plugins
@@ -17,6 +69,12 @@ export async function initializeCapacitor(): Promise<void> {
   try {
     // Initialize Splash Screen
     await SplashScreen.hide();
+
+    // Set up deep link handler
+    App.addListener('appUrlOpen', (data) => {
+      console.log('appUrlOpen event:', data);
+      handleDeepLink(data.url);
+    });
 
     // Initialize Push Notifications
     await setupPushNotifications();
@@ -59,4 +117,4 @@ async function setupPushNotifications(): Promise<void> {
   });
 }
 
-export { PushNotifications, SplashScreen, StatusBar };
+export { PushNotifications, SplashScreen, StatusBar, App };

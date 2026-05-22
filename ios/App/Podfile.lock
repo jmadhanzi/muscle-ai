@@ -1,6 +1,8 @@
 PODS:
   - Capacitor (8.2.0):
     - CapacitorCordova
+  - CapacitorApp (8.1.0):
+    - Capacitor
   - CapacitorCordova (8.2.0)
   - CapacitorPushNotifications (8.0.3):
     - Capacitor
@@ -17,6 +19,7 @@ PODS:
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorPushNotifications (from `../../node_modules/@capacitor/push-notifications`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
@@ -31,6 +34,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   Capacitor:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorApp:
+    :path: "../../node_modules/@capacitor/app"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorPushNotifications:
@@ -44,6 +49,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Capacitor: 49a454e1cdbd520bc106a220adca7913536a4933
+  CapacitorApp: 449ffe26375e96f8aaaee625ac6e01e5c57c8650
   CapacitorCordova: a9ac88d84a1f5280f33b349fe50fce1902683ac0
   CapacitorPushNotifications: e4437b4ec1b2070685bf032c210f346432214c5f
   CapacitorSplashScreen: 4b46c72298db552b3c57ce021ef028b6dc7f1fa7
@@ -52,6 +58,6 @@ SPEC CHECKSUMS:
   RevenueCat: f0d05079b59c33c645293bbc1fa78469ea7fcae7
   RevenuecatPurchasesCapacitor: 3356e6e8b9ae8d9e7386990b53adeedac59aa6e8
 
-PODFILE CHECKSUM: 36aade40da6f340260f00268079934db1cb37c95
+PODFILE CHECKSUM: 1f34251b6ca5b078064eceefbc5acd67139c5baa
 
 COCOAPODS: 1.16.2
