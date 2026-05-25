@@ -24,16 +24,19 @@ const ease = [0.16, 1, 0.3, 1] as const;
 const SubscriptionPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isPro, subscriptionEnd, checkSubscription } = useAuth();
+  const { user, isPro, subscriptionEnd, checkSubscription } = useAuth();
   const { offerings, purchasePackage, loading: revenueCatLoading, restorePurchases, checkSubscriptionStatus, fetchOfferings } = useRevenueCat();
   const [yearly, setYearly] = useState(true);
   const [selectedTestimonial, setSelectedTestimonial] = useState(0);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [hasReferral, setHasReferral] = useState(false);
 
   const price = yearly ? STRIPE_CONFIG.yearly.monthly_equivalent : STRIPE_CONFIG.monthly.price;
   const billedAs = yearly ? `$${STRIPE_CONFIG.yearly.price}/year` : `$${STRIPE_CONFIG.monthly.price}/month`;
   const selectedPriceId = yearly ? STRIPE_CONFIG.yearly.price_id : STRIPE_CONFIG.monthly.price_id;
+
+  const trialDays = hasReferral ? STRIPE_CONFIG.trial.referral_days : STRIPE_CONFIG.trial.default_days;
 
   // Scroll to top and refresh offerings on load
   useEffect(() => {
@@ -52,6 +55,20 @@ const SubscriptionPage = () => {
     }
   }, [searchParams, checkSubscription]);
 
+  // Load referral status to decide 7d vs 3d trial packages (RevenueCat) and display
+  useEffect(() => {
+    if (!user) return;
+    const loadReferral = async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("referred_by")
+        .eq("user_id", user.id)
+        .single();
+      setHasReferral(!!profile?.referred_by);
+    };
+    loadReferral();
+  }, [user]);
+
   const handleSubscribe = async () => {
     if (Capacitor.isNativePlatform()) {
       console.log('Current offerings:', offerings);
@@ -62,15 +79,29 @@ const SubscriptionPage = () => {
       }
 
       console.log('Current offering packages:', currentOffering.availablePackages);
-      const monthlyPackage = currentOffering.availablePackages.find(pkg => pkg.packageType === 'MONTHLY');
-      const yearlyPackage = currentOffering.availablePackages.find(pkg => pkg.packageType === 'ANNUAL');
+      let monthlyPackage;
+      let yearlyPackage;
+      if (hasReferral) {
+        monthlyPackage = currentOffering.availablePackages.find(pkg => pkg.identifier === 'monthly_7d') ||
+                         currentOffering.availablePackages.find(pkg => /7d|7_d|7-day/i.test(pkg.identifier)) ||
+                         currentOffering.availablePackages.find(pkg => pkg.packageType === 'MONTHLY');
+        yearlyPackage = currentOffering.availablePackages.find(pkg => pkg.identifier === 'yearly_7d') ||
+                        currentOffering.availablePackages.find(pkg => /7d|7_d|7-day/i.test(pkg.identifier)) ||
+                        currentOffering.availablePackages.find(pkg => pkg.packageType === 'ANNUAL');
+      } else {
+        monthlyPackage = currentOffering.availablePackages.find(pkg => pkg.identifier === 'monthly' || pkg.identifier === '$rc_monthly') ||
+                         currentOffering.availablePackages.find(pkg => pkg.packageType === 'MONTHLY' && !/7d|7_d/i.test(pkg.identifier));
+        yearlyPackage = currentOffering.availablePackages.find(pkg => pkg.identifier === 'yearly' || pkg.identifier === '$rc_annual') ||
+                        currentOffering.availablePackages.find(pkg => pkg.packageType === 'ANNUAL' && !/7d|7_d/i.test(pkg.identifier));
+      }
 
       console.log('Monthly package:', monthlyPackage);
       console.log('Yearly package:', yearlyPackage);
 
       const selectedPackage = yearly ? yearlyPackage : monthlyPackage;
       if (!selectedPackage) {
-        toast.error(`Selected package (${yearly ? 'yearly' : 'monthly'}) not available. Available package types: ${currentOffering.availablePackages.map(p => p.packageType).join(', ')}`);
+        const desired = yearly ? (hasReferral ? 'yearly_7d' : 'yearly') : (hasReferral ? 'monthly_7d' : 'monthly');
+        toast.error(`Selected package (${desired}) not available. Available: ${currentOffering.availablePackages.map(p => p.identifier || p.packageType).join(', ')}`);
         return;
       }
 
@@ -285,13 +316,13 @@ const SubscriptionPage = () => {
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
                     <>
-                      Start {STRIPE_CONFIG.trial.default_days}-Day Free Trial
+                       Start {trialDays}-Day Free Trial
                       <span className="material-symbols-outlined">arrow_forward</span>
                     </>
                   )}
                 </button>
                 <p className="text-center text-on-surface-variant text-[10px] mt-3 font-mono tracking-wide">
-                  {Capacitor.isNativePlatform() ? 'Sandbox testing mode' : `${STRIPE_CONFIG.trial.default_days}-day free trial`} · Cancel anytime · Money-back guarantee
+                  {Capacitor.isNativePlatform() ? 'Sandbox testing mode' : `${trialDays}-day free trial`} · Cancel anytime · Money-back guarantee
                 </p>
               </div>
             </motion.div>
@@ -415,7 +446,7 @@ const SubscriptionPage = () => {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  Start {STRIPE_CONFIG.trial.default_days}-Day Free Trial
+                   Start {trialDays}-Day Free Trial
                   <span className="material-symbols-outlined">lock_open</span>
                 </>
               )}
