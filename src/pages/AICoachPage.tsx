@@ -5,6 +5,7 @@ import PaywallModal from "@/components/PaywallModal";
 import { usePaywall } from "@/hooks/usePaywall";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
+import { supabase } from "@/integrations/supabase/client";
 import { AI_COACH_FREE_LIMIT } from "@/config/features";
 
 import ChatHeader from "@/components/coach/ChatHeader";
@@ -13,7 +14,7 @@ import TypingIndicator from "@/components/coach/TypingIndicator";
 import StarterPrompts from "@/components/coach/StarterPrompts";
 import ChatInputBar from "@/components/coach/ChatInputBar";
 import PaywallBanner from "@/components/coach/PaywallBanner";
-import { ChatDisclaimerBanner, OnboardingDisclaimer, useDisclaimer } from "@/components/DisclaimerBanner";
+import { ChatDisclaimerBanner } from "@/components/DisclaimerBanner";
 
 type Msg = { role: "user" | "assistant"; content: string; time: string };
 
@@ -24,19 +25,22 @@ function now() {
 }
 
 async function streamChat({
-  messages, userProfile, onDelta, onDone, onError,
+  messages, userProfile, authToken, onDelta, onDone, onError,
 }: {
   messages: Msg[];
   userProfile?: ReturnType<typeof useCoachProfile>;
+  authToken: string;
   onDelta: (text: string) => void;
   onDone: () => void;
   onError: (msg: string) => void;
 }) {
+  // FIX: use the user's session JWT, not the anon key, so the edge
+  // function can identify the user and enforce the free message limit.
   const resp = await fetch(CHAT_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      Authorization: `Bearer ${authToken}`,
     },
     body: JSON.stringify({
       messages: messages.map((m) => ({ role: m.role, content: m.content })),
@@ -84,8 +88,7 @@ async function streamChat({
 
 const AICoachPage = () => {
   const paywall = usePaywall();
-  const { isPro, user } = useAuth();
-  const disclaimer = useDisclaimer();
+  const { isPro, user, session } = useAuth();
   const userProfile = useCoachProfile(user?.id);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -112,6 +115,10 @@ const AICoachPage = () => {
       return;
     }
 
+    // FIX: get the session JWT to authenticate the edge function call
+    const { data: sessionData } = await supabase.auth.getSession();
+    const authToken = sessionData.session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
     const userMsg: Msg = { role: "user", content: trimmed, time: now() };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
@@ -134,6 +141,7 @@ const AICoachPage = () => {
     await streamChat({
       messages: newMessages,
       userProfile,
+      authToken,
       onDelta: upsert,
       onDone: () => setIsLoading(false),
       onError: (msg) => {

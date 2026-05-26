@@ -19,7 +19,8 @@ export function useDailyTracking(userId: string | undefined) {
         .eq("date", todayStr())
         .maybeSingle();
       if (data) {
-        setProteinIntake(data.protein_logged);
+        // FIX: protein_logged can be null in DB — default to 0
+        setProteinIntake(data.protein_logged ?? 0);
         setCheckedItems(new Set(data.checked_items || []));
       }
       setLoaded(true);

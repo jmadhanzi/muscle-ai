@@ -45,9 +45,13 @@ const OnboardingSummary = () => {
   const weightLoss = data.current_weight && data.goal_weight ? Math.max(0, Number(data.current_weight) - Number(data.goal_weight)) : 0;
   const muscleLossRisk = Math.round(weightLoss * 0.4 * 10) / 10;
   const unit = data.weight_unit || "lbs";
-  const displayWeight = unit === "lbs" ? Math.round(Number(data.current_weight || 0) * 2.205) : Number(data.current_weight || 0);
-  const displayGoal = unit === "lbs" ? Math.round(Number(data.goal_weight || 0) * 2.205) : Number(data.goal_weight || 0);
-  const displayMuscleRisk = unit === "lbs" ? Math.round(muscleLossRisk * 2.205) : muscleLossRisk;
+  // FIX: DB stores weight in the user's chosen unit.
+  // When unit="lbs", values are already in lbs — no conversion needed.
+  // When unit="kg", convert to lbs for display only if we want lbs, or show raw kg.
+  // We display in the user's chosen unit, so no conversion at all.
+  const displayWeight = Math.round(Number(data.current_weight || 0));
+  const displayGoal = Math.round(Number(data.goal_weight || 0));
+  const displayMuscleRisk = Math.round(muscleLossRisk * 10) / 10;
 
   const handleComplete = async () => {
     if (!user) return;
