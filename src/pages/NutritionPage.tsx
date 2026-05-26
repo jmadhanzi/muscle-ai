@@ -5,6 +5,8 @@ import PaywallModal from "@/components/PaywallModal";
 import { usePaywall } from "@/hooks/usePaywall";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDailyTracking } from "@/hooks/useDailyTracking";
+import { supabase } from "@/integrations/supabase/client";
+import { calcProteinTarget, type OnboardingData } from "@/pages/Dashboard";
 import { MEALS, MEAL_FILTERS } from "@/data/mealLibrary";
 import type { Meal, MealTag } from "@/data/mealLibrary";
 import MealCard from "@/components/meals/MealCard";
@@ -20,17 +22,28 @@ const NutritionPage = () => {
   const [activeFilter, setActiveFilter] = useState<MealTag | "all">("all");
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
 
-  // Scroll to top when filter changes
+  // FIX: Load protein target from profile instead of hardcoding 140g
+  const [profileData, setProfileData] = useState<OnboardingData | null>(null);
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [activeFilter]);
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("current_weight, goal_weight, weight_unit, first_name, protein_target")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setProfileData(data as unknown as OnboardingData);
+      });
+  }, [user]);
 
-  // Compute protein target (fallback 140g)
-  const proteinTarget = 140;
+  // Use calculated target from profile, fall back to 140 if profile not loaded yet
+  const proteinTarget = profileData
+    ? (profileData as any).protein_target || calcProteinTarget(profileData)
+    : 140;
+
+  const firstName = profileData?.first_name || user?.user_metadata?.first_name || "You";
   const remaining = Math.max(0, proteinTarget - proteinIntake);
   const progressPct = Math.min(100, (proteinIntake / proteinTarget) * 100);
-
-  const firstName = user?.user_metadata?.first_name || "You";
 
   const filteredMeals = useMemo(() => {
     if (activeFilter === "all") return MEALS;
@@ -46,7 +59,6 @@ const NutritionPage = () => {
 
   return (
     <div className="min-h-screen bg-mesh pb-24">
-      {/* Expanded Meal Detail */}
       <AnimatePresence>
         {selectedMeal && (
           <MealDetail
@@ -64,99 +76,99 @@ const NutritionPage = () => {
         transition={{ duration: 0.5, ease }}
         className="px-5 pt-14 pb-2"
       >
-        <h1 className="font-headline font-bold text-2xl text-[hsl(var(--on-surface))]">MuscleLock Meals</h1>
-        <p className="text-[hsl(var(--on-surface-variant))] text-sm mt-0.5">
-          {firstName}, you need <span className="text-[hsl(var(--primary))] font-bold">{proteinTarget}g</span> protein today.{" "}
-          <span className="font-mono text-xs">{proteinIntake}g logged, {remaining}g to go</span>
+        <h1 className="font-headline font-bold text-2xl text-on-surface">
+          {firstName}'s Meal Plan
+        </h1>
+        <p className="text-on-surface-variant text-sm mt-0.5">
+          High-protein meals synced to your injection schedule
         </p>
       </motion.header>
 
-      <div className="px-5 space-y-5">
-        {/* Protein Progress Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.05, ease }}
-        >
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs font-mono text-[hsl(var(--on-surface-variant))]">Protein today</span>
-            <span className="text-xs font-mono text-[hsl(var(--primary))] font-bold">
-              {proteinIntake}g / {proteinTarget}g
-            </span>
-          </div>
-          <div className="h-3 rounded-full bg-[hsl(var(--surface-container-high))] overflow-hidden">
-            <motion.div
-              className="h-full rounded-full gradient-hero"
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPct}%` }}
-              transition={{ duration: 0.8, ease }}
-            />
-          </div>
-        </motion.div>
+      {/* Protein Progress Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1, ease }}
+        className="mx-5 my-3 bg-surface-container-lowest rounded-xl p-4 border border-white/[0.06]"
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-mono uppercase tracking-widest text-on-surface-variant">Today's Protein</span>
+          <span className="text-sm font-headline font-bold text-on-surface">
+            <span className="text-primary">{proteinIntake}g</span> / {proteinTarget}g
+          </span>
+        </div>
+        <div className="h-2 bg-surface-variant rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-primary rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${progressPct}%` }}
+            transition={{ duration: 0.8, ease }}
+          />
+        </div>
+        <p className="text-[10px] text-on-surface-variant/60 mt-1.5 font-mono">
+          {remaining > 0 ? `${remaining}g remaining` : "🎯 Daily target hit!"}
+        </p>
+      </motion.div>
 
-        {/* Filter Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1, ease }}
-          className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1"
-        >
-          {MEAL_FILTERS.map((filter) => (
+      {/* Filter tabs */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2, ease }}
+        className="px-5 mb-4"
+      >
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <button
+            onClick={() => setActiveFilter("all")}
+            className={`shrink-0 px-4 py-2 rounded-full text-xs font-mono uppercase tracking-widest transition-colors ${
+              activeFilter === "all"
+                ? "bg-primary text-primary-foreground"
+                : "bg-surface-container-low text-on-surface-variant border border-white/[0.06]"
+            }`}
+          >
+            All
+          </button>
+          {MEAL_FILTERS.map((f) => (
             <button
-              key={filter.id}
-              onClick={() => setActiveFilter(filter.id)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all active:scale-[0.97] ${
-                activeFilter === filter.id
-                  ? "bg-[hsl(var(--primary)/0.15)] text-[hsl(var(--primary))]"
-                  : "bg-[hsl(var(--surface-container-low))] text-[hsl(var(--on-surface-variant))] hover:bg-[hsl(var(--surface-container))]"
+              key={f.tag}
+              onClick={() => setActiveFilter(f.tag)}
+              className={`shrink-0 px-4 py-2 rounded-full text-xs font-mono uppercase tracking-widest transition-colors ${
+                activeFilter === f.tag
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-surface-container-low text-on-surface-variant border border-white/[0.06]"
               }`}
             >
-              <span>{filter.icon}</span>
-              {filter.label}
+              {f.label}
             </button>
           ))}
-        </motion.div>
-
-        {/* Meal Cards Grid */}
-        <div className="grid grid-cols-2 gap-2.5">
-          {filteredMeals.map((meal, i) => {
-            const unlocked = isPro || meal.free;
-            return (
-              <MealCard
-                key={meal.id}
-                meal={meal}
-                index={i}
-                locked={!unlocked}
-                onTap={() => setSelectedMeal(meal)}
-                onPaywall={() => paywall.fire("meal_locked")}
-              />
-            );
-          })}
         </div>
+      </motion.div>
 
-        {filteredMeals.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-sm text-[hsl(var(--on-surface-variant))]">No meals match this filter.</p>
-          </div>
-        )}
-
-        {/* Protein Tip */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3, ease }}
-          className="bg-[hsl(var(--secondary)/0.08)] border border-[hsl(var(--secondary)/0.15)] rounded-lg p-4"
-        >
-          <div className="flex items-start gap-3">
-            <span className="material-symbols-outlined text-[hsl(var(--secondary))] text-xl mt-0.5">lightbulb</span>
-            <div>
-              <p className="text-sm font-medium text-[hsl(var(--on-surface))] mb-1">Protein Tip</p>
-              <p className="text-xs text-[hsl(var(--on-surface-variant))] leading-relaxed">
-                Aim for 1.2–1.6g protein per kg of body weight to minimize muscle loss on GLP-1 medications. Spread intake across 3–4 meals.
-              </p>
-            </div>
-          </div>
-        </motion.div>
+      {/* Meal grid */}
+      <div className="px-5 grid grid-cols-1 gap-3">
+        {filteredMeals.map((meal, i) => {
+          const isLocked = !isPro && !meal.free;
+          return (
+            <motion.div
+              key={meal.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04, ease }}
+            >
+              <MealCard
+                meal={meal}
+                isLocked={isLocked}
+                onSelect={() => {
+                  if (isLocked) {
+                    paywall.fire("meal_locked");
+                  } else {
+                    setSelectedMeal(meal);
+                  }
+                }}
+              />
+            </motion.div>
+          );
+        })}
       </div>
 
       <PaywallModal

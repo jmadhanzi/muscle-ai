@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { toast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 
 const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
@@ -24,7 +23,6 @@ export function useInAppNotifications({
   isPro,
 }: UseInAppNotificationsProps) {
   const hasShown = useRef(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (hasShown.current) return;
@@ -50,7 +48,7 @@ export function useInAppNotifications({
               duration: 8000,
             });
           }, 2000);
-          return; // Don't stack with other notifs
+          return;
         }
 
         if (diff === 1) {
@@ -129,5 +127,6 @@ export function useInAppNotifications({
         });
       }, 3000);
     }
-  }, [injectionDay, streakDays, checkedItemsCount, proteinIntake, proteinTarget, firstName, isPro, navigate]);
+    // FIX: removed `navigate` from deps — it was imported but never called in the effect body
+  }, [injectionDay, streakDays, checkedItemsCount, proteinIntake, proteinTarget, firstName, isPro]);
 }

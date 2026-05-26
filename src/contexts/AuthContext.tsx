@@ -77,7 +77,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
       if (session?.user) {
         setTimeout(() => checkSubscription(), 0);
-        // Process pending referral on first sign-in
         processReferral(session.user.id);
       } else {
         setSupabaseIsPro(false);
@@ -123,7 +122,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, isPro, subscriptionLoading, subscriptionEnd, checkSubscription, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{
+      session, user, loading, isPro, subscriptionLoading, subscriptionEnd,
+      checkSubscription, signUp, signIn, signOut,
+    }}>
       {children}
     </AuthContext.Provider>
   );
