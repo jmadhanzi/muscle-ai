@@ -24,7 +24,7 @@ const ChatInputBar = ({
   };
 
   return (
-    <div className="shrink-0 px-4 pb-24 pt-2">
+    <div className="shrink-0 px-4 pb-[var(--nav-bottom)] pt-2">
       <div
         className={`flex items-end gap-2 bg-[hsl(var(--surface-container-low))] rounded-2xl border p-2 transition-colors ${
           isLimitReached

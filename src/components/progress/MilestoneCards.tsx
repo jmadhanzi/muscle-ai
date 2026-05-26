@@ -4,6 +4,7 @@ import { Lock, Share2, Download, Check, Loader2, X, Eye, Instagram, Copy } from 
 import { captureCardElement, shareFromElement, downloadFromElement } from "./milestoneCardGenerator";
 import MilestoneCardTemplate, { type MilestoneCardData } from "./MilestoneCardTemplate";
 import { toast } from "sonner";
+import { copyToClipboard, openBrowser } from "@/lib/capacitor";
 
 interface MilestoneCardsProps {
   muscleScore: number;
@@ -314,7 +315,7 @@ const MilestoneCards = ({
                     await handleDownloadFromPreview();
                     const cardData = getCardData(previewMilestone);
                     const text = `${previewMilestone.emoji} ${cardData.text}\n\n${cardData.hashtags}`;
-                    await navigator.clipboard.writeText(text);
+                    await copyToClipboard(text);
                     toast.success("Image downloaded & caption copied — paste into Instagram Stories");
                   }}
                   disabled={generatingId === previewMilestone?.id || previewLoading}
@@ -333,7 +334,7 @@ const MilestoneCards = ({
                     const tweetText = encodeURIComponent(
                       `${previewMilestone.emoji} ${cardData.text}\n\n${cardData.hashtags}`
                     );
-                    window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, "_blank");
+                    await openBrowser(`https://twitter.com/intent/tweet?text=${tweetText}`);
                     await handleDownloadFromPreview();
                     toast.success("Image downloaded — attach it to your post on X");
                   }}
@@ -353,7 +354,7 @@ const MilestoneCards = ({
                     const quote = encodeURIComponent(
                       `${previewMilestone.emoji} ${getCardData(previewMilestone).text}\n\n${getCardData(previewMilestone).hashtags}`
                     );
-                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${quote}`, "_blank");
+                    await openBrowser(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${quote}`);
                     await handleDownloadFromPreview();
                     toast.success("Image downloaded — attach it to your Facebook post");
                   }}
@@ -395,7 +396,7 @@ const MilestoneCards = ({
                   if (!previewMilestone) return;
                   const cardData = getCardData(previewMilestone);
                   const text = `${previewMilestone.emoji} ${cardData.text}\n\n${cardData.hashtags}`;
-                  await navigator.clipboard.writeText(text);
+                  await copyToClipboard(text);
                   toast.success("Caption copied to clipboard");
                 }}
                 className="w-full flex items-center justify-center gap-1.5 py-2 mt-2 text-[11px] font-mono text-on-surface-variant active:scale-[0.97] transition-transform"

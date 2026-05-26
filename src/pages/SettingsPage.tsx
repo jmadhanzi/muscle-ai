@@ -75,13 +75,13 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-mesh pb-24">
+    <div className="min-h-screen bg-mesh pb-[var(--nav-bottom)]">
       {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease }}
-        className="px-5 pt-14 pb-4 flex items-center gap-3"
+        className="px-5 pt-[var(--header-top)] pb-4 flex items-center gap-3"
       >
         <button
           onClick={() => navigate("/dashboard")}

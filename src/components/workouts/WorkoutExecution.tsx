@@ -88,7 +88,7 @@ const WorkoutExecution = ({ workout, onComplete, onExit }: WorkoutExecutionProps
       className="fixed inset-0 z-50 bg-[hsl(var(--surface))] flex flex-col"
     >
       {/* Top bar */}
-      <div className="shrink-0 px-4 pt-14 pb-3 flex items-center justify-between">
+      <div className="shrink-0 px-4 pt-[var(--header-top)] pb-3 flex items-center justify-between">
         <button
           onClick={onExit}
           className="p-2 rounded-lg hover:bg-[hsl(var(--surface-container))] transition-colors active:scale-95"

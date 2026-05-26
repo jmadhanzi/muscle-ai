@@ -155,7 +155,7 @@ const Dashboard = () => {
 
   if (loading || !trackingLoaded) {
     return (
-      <div className="min-h-screen bg-mesh px-5 pt-16 pb-24 space-y-4">
+      <div className="min-h-screen bg-mesh px-5 pt-16 pb-[var(--nav-bottom)] space-y-4">
         <SkeletonCard /><SkeletonCard /><SkeletonCard />
       </div>
     );
@@ -175,7 +175,7 @@ const Dashboard = () => {
   const totalFree = DAILY_PROTOCOL.filter((p) => p.free).length;
 
   return (
-    <div className="min-h-screen bg-mesh pb-24">
+    <div className="min-h-screen bg-mesh pb-[var(--nav-bottom)]">
       <DashboardHeader firstName={data.first_name} dayNumber={dayNumber} />
 
       <motion.div className="px-5 space-y-5 mt-2" variants={stagger.container} initial="initial" animate="animate">

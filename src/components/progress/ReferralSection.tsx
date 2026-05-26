@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Share2, Copy, Users, Gift } from "lucide-react";
-import { shareContent, copyToClipboard } from "@/lib/capacitor";
+import { shareContent, copyToClipboard, appBaseUrl } from "@/lib/capacitor";
 import { toast } from "sonner";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -16,7 +16,7 @@ interface ReferralSectionProps {
 const ReferralSection = ({ referralCode, referralCount, monthsEarned, onShareClick }: ReferralSectionProps) => {
   const [copied, setCopied] = useState(false);
 
-  const referralLink = `${window.location.origin}/ref/${referralCode}`;
+  const referralLink = `${appBaseUrl()}/ref/${referralCode}`;
 
   const handleCopy = async () => {
     await copyToClipboard(referralLink);

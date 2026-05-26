@@ -3,6 +3,7 @@
  * Captures hidden HTML templates at 1080×1080 (square) or 1080×1920 (story).
  */
 import html2canvas from "html2canvas";
+import { shareFile, openBrowser } from "@/lib/capacitor";
 
 export interface CardData {
   emoji: string;
@@ -43,32 +44,26 @@ export async function downloadFromElement(element: HTMLElement, filename: string
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  // FIX: always revoke to prevent memory leak
   URL.revokeObjectURL(url);
 }
 
 export async function shareFromElement(element: HTMLElement, text: string) {
-  let url: string | null = null;
+  let blobUrl: string | null = null;
   try {
-    url = await captureCardElement(element);
-    const response = await fetch(url);
+    blobUrl = await captureCardElement(element);
+    const response = await fetch(blobUrl);
     const blob = await response.blob();
-    // FIX: revoke the object URL before the share dialog opens
-    URL.revokeObjectURL(url);
-    url = null;
+
+    // Revoke the intermediate object URL before sharing
+    URL.revokeObjectURL(blobUrl);
+    blobUrl = null;
 
     const file = new File([blob], "musclelock-milestone.png", { type: "image/png" });
-    if (navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ files: [file], text });
-    } else {
-      // Fallback: open in new tab
-      const fallbackUrl = URL.createObjectURL(blob);
-      window.open(fallbackUrl, "_blank");
-      setTimeout(() => URL.revokeObjectURL(fallbackUrl), 60_000);
-    }
+
+    // shareFile handles Capacitor native share sheet + web fallbacks
+    await shareFile(file, text);
   } catch (err) {
-    // FIX: ensure the object URL is revoked even on failure
-    if (url) URL.revokeObjectURL(url);
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
     throw err;
   }
 }

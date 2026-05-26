@@ -5,18 +5,15 @@ const config: CapacitorConfig = {
   appName: "MuscleLock AI",
   webDir: "dist",
 
-  // Server config: use live-reload URL in dev, empty in prod
-  // To enable live reload during development, set the url to your
-  // local dev server, e.g.: "http://192.168.1.x:8080"
-  // Leave empty or omit for production builds.
   server: {
+    // Use HTTPS scheme on Android WebView (required for cookies / Supabase auth)
     androidScheme: "https",
   },
 
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2000,
-      launchAutoHide: true,
+      launchShowDuration: 0,        // We control hide manually in main.tsx
+      launchAutoHide: false,
       backgroundColor: "#080C12",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
@@ -24,33 +21,40 @@ const config: CapacitorConfig = {
       splashFullScreen: true,
       splashImmersive: true,
     },
+
+    // FIX: Style.Light = white icons/text on dark background.
+    // "dark" in Capacitor StatusBar means BLACK content (for light-bg apps).
+    // Our app bg is #080C12, so we need LIGHT (white) status bar content.
     StatusBar: {
-      style: "dark", // dark content (light bg) | "light" for light content on dark bg
+      style: "LIGHT",
       backgroundColor: "#080C12",
       overlaysWebView: false,
     },
+
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"],
     },
-    // Capacitor Browser plugin — used for Stripe checkout
+
     Browser: {
       presentationStyle: "fullscreen",
     },
   },
 
-  // iOS-specific
   ios: {
+    // Extends content under the status bar — our safe-area CSS handles the inset
     contentInset: "always",
-    // Deep link scheme for Stripe and email confirmation callbacks
+    // Custom URL scheme for deep links (email confirm, OAuth callbacks)
+    // Users must also add this to their Xcode Info.plist URL Types
     scheme: "musclelock",
+    // Prevent text size adjustment when rotating
+    allowsLinkPreview: false,
   },
 
-  // Android-specific
   android: {
-    // Deep link scheme
     allowMixedContent: false,
     captureInput: true,
-    webContentsDebuggingEnabled: false, // set true only during dev
+    // Set to true only during development for Chrome DevTools debugging
+    webContentsDebuggingEnabled: false,
   },
 };
 

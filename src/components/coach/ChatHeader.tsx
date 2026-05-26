@@ -26,7 +26,7 @@ const ChatHeader = ({
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease }}
-      className="shrink-0 px-4 pt-14 pb-2"
+      className="shrink-0 px-4 pt-[var(--header-top)] pb-2"
     >
       <div className="flex items-center justify-between mb-1">
         <button

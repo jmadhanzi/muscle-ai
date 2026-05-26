@@ -5,7 +5,7 @@ import { Crown, Share2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useReferrals } from "@/hooks/useReferrals";
 import { supabase } from "@/integrations/supabase/client";
-import { openBrowser, shareContent, copyToClipboard } from "@/lib/capacitor";
+import { openBrowser, shareContent, copyToClipboard, appBaseUrl } from "@/lib/capacitor";
 import { toast } from "sonner";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -37,7 +37,7 @@ const SubscriptionSection = ({ userId, firstName }: SubscriptionSectionProps) =>
 
   const handleShareReferral = async () => {
     await ensureReferralExists();
-    const url = `${window.location.origin}/ref/${referralCode}`;
+    const url = `${appBaseUrl()}/ref/${referralCode}`;
     try {
       await shareContent({ title: "Join MuscleLock", text: "Get 7 days of Pro free!", url });
     } catch {

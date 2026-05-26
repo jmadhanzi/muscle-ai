@@ -97,7 +97,7 @@ const WorkoutsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-mesh pb-24">
+    <div className="min-h-screen bg-mesh pb-[var(--nav-bottom)]">
       {/* Workout Execution Overlay */}
       <AnimatePresence>
         {activeWorkout && (
@@ -114,7 +114,7 @@ const WorkoutsPage = () => {
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease }}
-        className="px-5 pt-14 pb-2"
+        className="px-5 pt-[var(--header-top)] pb-2"
       >
         <div className="flex items-center justify-between mb-3">
           <h1 className="font-headline font-bold text-2xl text-[hsl(var(--on-surface))]">Training Program</h1>

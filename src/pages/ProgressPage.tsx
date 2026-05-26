@@ -52,7 +52,7 @@ const ProgressPage = () => {
 
   if (loading || !milestonesLoaded || !referralsLoaded) {
     return (
-      <div className="min-h-screen bg-mesh px-5 pt-16 pb-24 space-y-4">
+      <div className="min-h-screen bg-mesh px-5 pt-16 pb-[var(--nav-bottom)] space-y-4">
         <SkeletonCard /><SkeletonCard /><SkeletonCard />
       </div>
     );
@@ -71,12 +71,12 @@ const ProgressPage = () => {
   const dayNumber = Math.max(1, Math.min(70, weeksOnMed * 7));
 
   return (
-    <div className="min-h-screen bg-mesh pb-24">
+    <div className="min-h-screen bg-mesh pb-[var(--nav-bottom)]">
       <motion.header
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease }}
-        className="px-5 pt-14 pb-2"
+        className="px-5 pt-[var(--header-top)] pb-2"
       >
         <h1 className="font-headline font-bold text-2xl text-on-surface">Your MuscleLock Journey</h1>
         <p className="text-on-surface-variant text-sm mt-0.5">
