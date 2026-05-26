@@ -5,7 +5,7 @@ import { Brain, Shield, FileText, Scale, Trash2, Stethoscope } from "lucide-reac
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import ClinicalReferenceSheet, { CitationMark } from "@/components/ClinicalReferenceSheet";
+import ClinicalReferenceSheet from "@/components/ClinicalReferenceSheet";
 import { CLINICAL_REFERENCES } from "@/data/clinicalReferences";
 import type { ClinicalReference } from "@/data/clinicalReferences";
 
@@ -18,11 +18,6 @@ const AboutSection = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-
-  const openRef = (id: string) => {
-    const ref = CLINICAL_REFERENCES.find((r) => r.id === id);
-    if (ref) { setSelectedRef(ref); setSheetOpen(true); }
-  };
 
   const handleDeleteAccount = async () => {
     if (!confirmDelete) { setConfirmDelete(true); return; }
@@ -40,24 +35,24 @@ const AboutSection = () => {
       await signOut();
       toast.success("Account data deleted. You've been signed out.");
       navigate("/");
-    } catch (e: any) {
-      toast.error(e.message || "Delete failed");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Delete failed");
     } finally {
       setDeleting(false);
       setConfirmDelete(false);
     }
   };
 
+  // FIX: Privacy and Terms now navigate to the actual /privacy and /terms routes
   const linkRows = [
     { icon: <Brain className="w-4 h-4 text-primary" />, label: "How Muscle Score Works", action: () => navigate("/about") },
-    { icon: <Stethoscope className="w-4 h-4 text-primary" />, label: "Clinical References", action: () => navigate("/about") },
+    { icon: <Stethoscope className="w-4 h-4 text-primary" />, label: "Clinical References", action: () => { setSelectedRef(CLINICAL_REFERENCES[0]); setSheetOpen(true); } },
     { icon: <Shield className="w-4 h-4 text-primary" />, label: "Privacy Policy", action: () => navigate("/privacy") },
     { icon: <FileText className="w-4 h-4 text-primary" />, label: "Terms of Service", action: () => navigate("/terms") },
   ];
 
   return (
     <>
-      {/* About links */}
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
@@ -80,7 +75,6 @@ const AboutSection = () => {
         ))}
       </motion.div>
 
-      {/* Medical Disclaimer */}
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
@@ -99,7 +93,6 @@ const AboutSection = () => {
         </p>
       </motion.div>
 
-      {/* Delete Account */}
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}

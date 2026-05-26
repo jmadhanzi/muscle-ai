@@ -133,9 +133,9 @@ const SubscriptionPage = () => {
       if (data?.url) {
         window.open(data.url, "_blank");
       }
-    } catch (e) {
+    } catch {
       toast.error("Could not open subscription management.");
-      console.error(e);
+      
     } finally {
       setPortalLoading(false);
     }

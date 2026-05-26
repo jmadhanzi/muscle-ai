@@ -38,7 +38,7 @@ const SettingsPage = () => {
         .from("profiles")
         .select("first_name, injection_day, current_weight, weight_unit, protein_target, avatar_url")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
       if (prof) {
         if (prof.first_name) setFirstName(prof.first_name);
         if (prof.injection_day) setInjectionDay(prof.injection_day);
