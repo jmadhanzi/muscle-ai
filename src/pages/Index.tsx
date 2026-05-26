@@ -286,6 +286,505 @@ const FAQItem = ({ q, a, delay, inView }: { q: string; a: string; delay: number;
   );
 };
 
+// ─── Press / Social Proof Row ─────────────────────────────────────────────────
+
+const PRESS = [
+  { name: "Forbes", sub: "Health" },
+  { name: "Healthline", sub: "" },
+  { name: "Men's Health", sub: "" },
+  { name: "Shape", sub: "" },
+  { name: "Well+Good", sub: "" },
+  { name: "Everyday Health", sub: "" },
+];
+
+const PressRow = ({ inView, refProp }: { inView: boolean; refProp: React.Ref<HTMLDivElement> }) => (
+  <div ref={refProp} className="w-full mb-16">
+    <motion.p
+      initial={{ opacity: 0 }}
+      animate={inView ? { opacity: 1 } : {}}
+      transition={{ duration: 0.5, ease }}
+      className="text-center text-[10px] font-mono uppercase tracking-widest text-on-surface-variant/40 mb-5"
+    >
+      As featured in
+    </motion.p>
+
+    {/* Scrolling marquee row */}
+    <div className="relative overflow-hidden">
+      {/* Fade edges */}
+      <div className="absolute left-0 top-0 bottom-0 w-12 z-10 bg-gradient-to-r from-[hsl(var(--background))] to-transparent pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-12 z-10 bg-gradient-to-l from-[hsl(var(--background))] to-transparent pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={inView ? { opacity: 1 } : {}}
+        transition={{ duration: 0.6, delay: 0.15, ease }}
+        className="flex gap-10 items-center"
+        style={{ animation: "marquee 22s linear infinite" }}
+      >
+        {[...PRESS, ...PRESS].map((p, i) => (
+          <div key={i} className="flex items-baseline gap-0.5 shrink-0 select-none">
+            <span className="font-headline font-bold text-base text-on-surface-variant/30 tracking-tight whitespace-nowrap">
+              {p.name}
+            </span>
+            {p.sub && (
+              <span className="text-[10px] font-mono text-on-surface-variant/20 ml-0.5 uppercase tracking-wider">
+                {p.sub}
+              </span>
+            )}
+          </div>
+        ))}
+      </motion.div>
+    </div>
+
+    {/* Inline keyframe via a style tag */}
+    <style>{`@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
+
+    {/* App Store badge row */}
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay: 0.3, ease }}
+      className="flex items-center justify-center gap-6 mt-6"
+    >
+      {/* App Store badge */}
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container-lowest border border-white/[0.06]">
+        <svg viewBox="0 0 24 24" className="w-5 h-5 text-on-surface" fill="currentColor">
+          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11"/>
+        </svg>
+        <div>
+          <div className="flex items-center gap-1">
+            {[...Array(5)].map((_, i) => (
+              <span key={i} className="material-symbols-outlined text-primary text-[10px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+            ))}
+          </div>
+          <p className="text-[10px] font-mono text-on-surface-variant/60">4.9 · App Store</p>
+        </div>
+      </div>
+
+      {/* Downloads badge */}
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container-lowest border border-white/[0.06]">
+        <span className="material-symbols-outlined text-primary text-xl">download</span>
+        <div>
+          <p className="text-xs font-headline font-bold text-on-surface">52K+</p>
+          <p className="text-[10px] font-mono text-on-surface-variant/60">Downloads</p>
+        </div>
+      </div>
+
+      {/* HIPAA badge */}
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container-lowest border border-white/[0.06]">
+        <span className="material-symbols-outlined text-primary text-xl">verified_user</span>
+        <div>
+          <p className="text-xs font-headline font-bold text-on-surface">HIPAA</p>
+          <p className="text-[10px] font-mono text-on-surface-variant/60">Aligned</p>
+        </div>
+      </div>
+    </motion.div>
+  </div>
+);
+
+// ─── Phone Preview ─────────────────────────────────────────────────────────────
+
+const SCREENS = [
+  {
+    label: "Muscle Score",
+    icon: "monitor_heart",
+  },
+  {
+    label: "AI Coach",
+    icon: "psychology",
+  },
+  {
+    label: "My Plan",
+    icon: "fitness_center",
+  },
+];
+
+// Screen 1 — Muscle Score reveal
+const ScreenScore = ({ active }: { active: boolean }) => {
+  const [score, setScore] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    const t = setTimeout(() => {
+      const start = performance.now();
+      const tick = (now: number) => {
+        const p = Math.min((now - start) / 1200, 1);
+        setScore(Math.round(67 * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [active]);
+
+  const radius = 52;
+  const circ = 2 * Math.PI * radius;
+  const progress = (score / 85) * circ;
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Status bar */}
+      <div className="flex items-center justify-between px-4 pt-3 pb-1">
+        <span className="text-[10px] font-mono text-on-surface-variant/50">9:41</span>
+        <div className="flex gap-1 items-center">
+          <span className="material-symbols-outlined text-on-surface-variant/50" style={{ fontSize: 12 }}>signal_cellular_alt</span>
+          <span className="material-symbols-outlined text-on-surface-variant/50" style={{ fontSize: 12 }}>battery_full</span>
+        </div>
+      </div>
+
+      {/* Header */}
+      <div className="px-4 pb-3">
+        <p className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant/50">Your result</p>
+        <p className="font-headline font-bold text-sm text-on-surface">Muscle Score</p>
+      </div>
+
+      {/* Score circle */}
+      <div className="flex flex-col items-center py-3 flex-1">
+        <div className="relative w-36 h-36 mb-3">
+          <svg viewBox="0 0 130 130" className="w-full h-full -rotate-90">
+            <circle cx="65" cy="65" r={radius} fill="none" stroke="hsl(var(--surface-variant))" strokeWidth="8" />
+            <motion.circle
+              cx="65" cy="65" r={radius}
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth="8"
+              strokeLinecap="round"
+              strokeDasharray={circ}
+              strokeDashoffset={circ - progress}
+              transition={{ duration: 1.2, ease: "easeOut" }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="font-headline font-black text-3xl text-primary leading-none">{score}</span>
+            <span className="text-[9px] font-mono text-on-surface-variant/60 uppercase tracking-widest">/ 85</span>
+          </div>
+        </div>
+
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-4">
+          <span className="material-symbols-outlined text-primary" style={{ fontSize: 12 }}>shield</span>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-primary font-bold">Well Protected</span>
+        </div>
+
+        {/* Breakdown */}
+        <div className="w-full px-4 space-y-2">
+          {[
+            { label: "Protein intake", val: "94g/day", ok: true },
+            { label: "Training freq.", val: "3× / week", ok: true },
+            { label: "GLP-1 duration", val: "8 months", ok: false },
+          ].map(r => (
+            <div key={r.label} className="flex items-center justify-between bg-surface-container-high rounded-lg px-3 py-2">
+              <span className="text-[10px] text-on-surface-variant">{r.label}</span>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-mono text-on-surface">{r.val}</span>
+                <span className={`material-symbols-outlined ${r.ok ? "text-primary" : "text-accent-gold"}`} style={{ fontSize: 12, fontVariationSettings: "'FILL' 1" }}>
+                  {r.ok ? "check_circle" : "warning"}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA button */}
+      <div className="px-4 pb-4">
+        <div className="w-full h-9 rounded-xl bg-primary flex items-center justify-center gap-1">
+          <span className="font-headline font-bold text-[11px] text-primary-foreground">See my full protocol</span>
+          <span className="material-symbols-outlined text-primary-foreground" style={{ fontSize: 13 }}>arrow_forward</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Screen 2 — AI Coach
+const ScreenCoach = () => {
+  const [typedChars, setTypedChars] = useState(0);
+  const reply = "On GLP-1 therapy, 40% of weight lost can be muscle. Your protein is good — but your leucine timing on injection day is the key fix.";
+
+  useEffect(() => {
+    setTypedChars(0);
+    const t = setTimeout(() => {
+      const start = performance.now();
+      const tick = (now: number) => {
+        const p = Math.min((now - start) / 2600, 1);
+        setTypedChars(Math.round(reply.length * (1 - Math.pow(1 - p, 2))));
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }, 500);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Status bar */}
+      <div className="flex items-center justify-between px-4 pt-3 pb-1">
+        <span className="text-[10px] font-mono text-on-surface-variant/50">9:41</span>
+        <div className="flex gap-1 items-center">
+          <span className="material-symbols-outlined text-on-surface-variant/50" style={{ fontSize: 12 }}>signal_cellular_alt</span>
+          <span className="material-symbols-outlined text-on-surface-variant/50" style={{ fontSize: 12 }}>battery_full</span>
+        </div>
+      </div>
+
+      {/* Header */}
+      <div className="px-4 pb-2 flex items-center gap-2">
+        <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+          <span className="material-symbols-outlined text-primary" style={{ fontSize: 13 }}>psychology</span>
+        </div>
+        <div>
+          <p className="font-headline font-bold text-[11px] text-on-surface">AI Coach</p>
+          <div className="flex items-center gap-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-[9px] text-on-surface-variant/50">Online</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Chat */}
+      <div className="flex-1 px-4 space-y-3 overflow-hidden py-2">
+        {/* AI opener */}
+        <div className="flex gap-2 items-end">
+          <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-primary" style={{ fontSize: 10 }}>psychology</span>
+          </div>
+          <div className="bg-surface-container-high rounded-xl rounded-bl-sm px-3 py-2 max-w-[85%]">
+            <p className="text-[10px] text-on-surface leading-relaxed">Hey Sarah! Your Muscle Score is 67. Let's talk about why your injection day might be your weak spot.</p>
+          </div>
+        </div>
+
+        {/* User question */}
+        <div className="flex justify-end">
+          <div className="bg-primary/15 border border-primary/20 rounded-xl rounded-br-sm px-3 py-2 max-w-[80%]">
+            <p className="text-[10px] text-primary leading-relaxed">Why am I still losing muscle even though I train 3x a week?</p>
+          </div>
+        </div>
+
+        {/* AI streaming reply */}
+        <div className="flex gap-2 items-end">
+          <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-primary" style={{ fontSize: 10 }}>psychology</span>
+          </div>
+          <div className="bg-surface-container-high rounded-xl rounded-bl-sm px-3 py-2 max-w-[85%]">
+            <p className="text-[10px] text-on-surface leading-relaxed">
+              {reply.slice(0, typedChars)}
+              {typedChars < reply.length && (
+                <span className="inline-block w-0.5 h-3 bg-primary ml-0.5 animate-pulse align-middle" />
+              )}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Input */}
+      <div className="px-4 pb-4 pt-2">
+        <div className="flex items-center gap-2 bg-surface-container-high rounded-xl px-3 py-2 border border-white/[0.06]">
+          <span className="text-[10px] text-on-surface-variant/40 flex-1">Ask anything about GLP-1...</span>
+          <span className="material-symbols-outlined text-primary" style={{ fontSize: 16 }}>send</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Screen 3 — Weekly Plan
+const ScreenPlan = () => (
+  <div className="flex flex-col h-full">
+    {/* Status bar */}
+    <div className="flex items-center justify-between px-4 pt-3 pb-1">
+      <span className="text-[10px] font-mono text-on-surface-variant/50">9:41</span>
+      <div className="flex gap-1 items-center">
+        <span className="material-symbols-outlined text-on-surface-variant/50" style={{ fontSize: 12 }}>signal_cellular_alt</span>
+        <span className="material-symbols-outlined text-on-surface-variant/50" style={{ fontSize: 12 }}>battery_full</span>
+      </div>
+    </div>
+
+    {/* Header */}
+    <div className="px-4 pb-2">
+      <p className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant/50">Week 6 of 10</p>
+      <p className="font-headline font-bold text-sm text-on-surface">Your Protocol</p>
+    </div>
+
+    {/* Progress bar */}
+    <div className="px-4 mb-3">
+      <div className="flex justify-between mb-1">
+        <span className="text-[9px] text-on-surface-variant/60">Muscle preservation</span>
+        <span className="text-[9px] font-mono font-bold text-primary">94%</span>
+      </div>
+      <div className="h-1.5 bg-surface-variant rounded-full overflow-hidden">
+        <motion.div
+          className="h-full bg-primary rounded-full"
+          initial={{ width: "0%" }}
+          animate={{ width: "94%" }}
+          transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
+        />
+      </div>
+    </div>
+
+    {/* Mini chart */}
+    <div className="px-4 mb-3">
+      <div className="bg-surface-container-high rounded-xl p-3">
+        <p className="text-[9px] font-mono uppercase tracking-widest text-on-surface-variant/50 mb-2">Fat vs Muscle loss</p>
+        <svg viewBox="0 0 200 60" className="w-full h-12">
+          {/* Fat loss line (good) */}
+          <motion.path
+            d="M0 50 C30 45 60 35 90 28 C120 21 150 18 200 15"
+            fill="none" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round"
+            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+            transition={{ duration: 1.5, delay: 0.3, ease: "easeOut" }}
+          />
+          {/* Muscle loss line (flat = good) */}
+          <motion.path
+            d="M0 55 C30 55 60 54 90 54 C120 53 150 53 200 53"
+            fill="none" stroke="hsl(var(--secondary))" strokeWidth="2" strokeLinecap="round" strokeDasharray="4 3"
+            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+            transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
+          />
+          {/* Labels */}
+          <text x="204" y="17" fontSize="7" fill="hsl(var(--primary))" fontFamily="monospace">Fat</text>
+          <text x="204" y="55" fontSize="7" fill="hsl(var(--secondary))" fontFamily="monospace">Muscle</text>
+        </svg>
+      </div>
+    </div>
+
+    {/* Today's checklist */}
+    <div className="px-4 flex-1">
+      <p className="text-[9px] font-mono uppercase tracking-widest text-on-surface-variant/50 mb-2">Today · Injection day</p>
+      <div className="space-y-1.5">
+        {[
+          { label: "94g protein target", done: true, icon: "egg_alt" },
+          { label: "Upper body — 35 min", done: true, icon: "fitness_center" },
+          { label: "5g creatine + leucine", done: false, icon: "science" },
+          { label: "Injection day meal #2", done: false, icon: "restaurant" },
+        ].map(item => (
+          <div key={item.label} className={`flex items-center gap-2 rounded-lg px-3 py-2 ${item.done ? "bg-primary/8 border border-primary/15" : "bg-surface-container-high"}`}>
+            <span className={`material-symbols-outlined ${item.done ? "text-primary" : "text-on-surface-variant/40"}`} style={{ fontSize: 13, fontVariationSettings: item.done ? "'FILL' 1" : "'FILL' 0" }}>
+              {item.done ? "check_circle" : item.icon}
+            </span>
+            <span className={`text-[10px] ${item.done ? "text-on-surface line-through decoration-primary/40" : "text-on-surface-variant"}`}>{item.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div className="px-4 pb-4 pt-2">
+      <div className="h-1 w-12 bg-on-surface-variant/20 rounded-full mx-auto" />
+    </div>
+  </div>
+);
+
+const PhonePreview = ({
+  inView, refProp, activeScreen, setActiveScreen
+}: {
+  inView: boolean;
+  refProp: React.Ref<HTMLDivElement>;
+  activeScreen: number;
+  setActiveScreen: (n: number) => void;
+}) => (
+  <div ref={refProp} className="w-full mb-16">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, ease }}
+      className="text-center mb-8"
+    >
+      <span className="text-[10px] font-mono uppercase tracking-widest text-primary">See it in action</span>
+      <h2 className="font-headline font-bold text-2xl text-on-surface mt-2 leading-tight">
+        Your first 3 minutes in the app
+      </h2>
+      <p className="text-sm text-on-surface-variant mt-2 leading-relaxed">
+        Tap any screen to explore.
+      </p>
+    </motion.div>
+
+    {/* Screen tabs */}
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.4, delay: 0.1, ease }}
+      className="flex gap-2 justify-center mb-6"
+    >
+      {SCREENS.map((s, i) => (
+        <button
+          key={s.label}
+          onClick={() => setActiveScreen(i)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-widest transition-all duration-300 ${
+            activeScreen === i
+              ? "bg-primary text-primary-foreground"
+              : "bg-surface-container-lowest border border-white/[0.06] text-on-surface-variant"
+          }`}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 11 }}>{s.icon}</span>
+          {s.label}
+        </button>
+      ))}
+    </motion.div>
+
+    {/* Phone frame */}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.96, y: 24 }}
+      animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
+      transition={{ duration: 0.7, delay: 0.15, ease }}
+      className="relative mx-auto"
+      style={{ width: 260, height: 528 }}
+    >
+      {/* Outer glow */}
+      <div
+        className="absolute -inset-4 rounded-[52px] opacity-20 blur-xl"
+        style={{ background: "hsl(var(--primary))" }}
+      />
+
+      {/* Phone shell */}
+      <div className="relative w-full h-full rounded-[44px] bg-surface-container-lowest border-2 border-white/[0.12] overflow-hidden shadow-2xl">
+        {/* Notch / Dynamic Island */}
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 w-24 h-6 bg-black rounded-full flex items-center justify-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-surface-container-high" />
+          <div className="w-3.5 h-3.5 rounded-full bg-surface-container-high" />
+        </div>
+
+        {/* Screen content — animated swap */}
+        <div className="absolute inset-0 bg-[hsl(var(--background))]" style={{ paddingTop: 40 }}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeScreen}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3, ease }}
+              className="h-full"
+            >
+              {activeScreen === 0 && <ScreenScore active={inView && activeScreen === 0} />}
+              {activeScreen === 1 && <ScreenCoach />}
+              {activeScreen === 2 && <ScreenPlan />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[hsl(var(--background))] to-transparent flex items-end justify-center pb-3 pointer-events-none z-10">
+          <div className="w-24 h-1 bg-on-surface-variant/30 rounded-full" />
+        </div>
+      </div>
+
+      {/* Side buttons */}
+      <div className="absolute -right-[3px] top-28 w-[3px] h-10 bg-white/10 rounded-r-sm" />
+      <div className="absolute -left-[3px] top-24 w-[3px] h-8 bg-white/10 rounded-l-sm" />
+      <div className="absolute -left-[3px] top-36 w-[3px] h-12 bg-white/10 rounded-l-sm" />
+    </motion.div>
+
+    {/* Progress dots */}
+    <div className="flex justify-center gap-2 mt-6">
+      {SCREENS.map((_, i) => (
+        <button
+          key={i}
+          onClick={() => setActiveScreen(i)}
+          className={`rounded-full transition-all duration-300 ${
+            activeScreen === i ? "w-6 h-2 bg-primary" : "w-2 h-2 bg-on-surface-variant/30"
+          }`}
+        />
+      ))}
+    </div>
+  </div>
+);
+
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 const TESTIMONIALS: TestimonialProps[] = [
@@ -366,10 +865,23 @@ const HookScreen = () => {
     }
   }
 
+  const pressRef = useRef(null);
+  const pressInView = useInView(pressRef, { once: true, amount: 0.3 });
+  const appPreviewRef = useRef(null);
+  const appPreviewInView = useInView(appPreviewRef, { once: true, amount: 0.2 });
+  const [activeScreen, setActiveScreen] = useState(0);
+
   useEffect(() => {
     const t = setTimeout(() => setShowStat(true), 800);
     return () => clearTimeout(t);
   }, []);
+
+  // Auto-cycle phone screens once in view
+  useEffect(() => {
+    if (!appPreviewInView) return;
+    const interval = setInterval(() => setActiveScreen(s => (s + 1) % 3), 3400);
+    return () => clearInterval(interval);
+  }, [appPreviewInView]);
 
   // Subtle scroll nudge
   useEffect(() => {
@@ -534,6 +1046,9 @@ const HookScreen = () => {
           </p>
         </motion.div>
 
+        {/* ── Press & social proof row ── */}
+        <PressRow inView={pressInView} refProp={pressRef} />
+
         {/* ── SECTION 4: Features — What you actually get ── */}
         <div ref={featuresRef} className="w-full mb-16">
           <motion.div
@@ -602,6 +1117,14 @@ const HookScreen = () => {
             />
           </div>
         </div>
+
+        {/* ── App Preview — Phone mockup ── */}
+        <PhonePreview
+          inView={appPreviewInView}
+          refProp={appPreviewRef}
+          activeScreen={activeScreen}
+          setActiveScreen={setActiveScreen}
+        />
 
         {/* ── SECTION 5: How it works — 3 steps ── */}
         <div ref={howRef} className="w-full mb-16">
