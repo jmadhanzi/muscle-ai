@@ -25,6 +25,8 @@ import NutritionPage from "./pages/NutritionPage.tsx";
 import ProgressPage from "./pages/ProgressPage.tsx";
 import SettingsPage from "./pages/SettingsPage.tsx";
 import AboutPage from "./pages/AboutPage.tsx";
+import PrivacyPage from "./pages/PrivacyPage.tsx";
+import TermsPage from "./pages/TermsPage.tsx";
 import ReferralLanding from "./pages/ReferralLanding.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -60,6 +62,8 @@ const App = () => (
             <Route path="/progress" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/about" element={<ProtectedRoute><AboutPage /></ProtectedRoute>} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
