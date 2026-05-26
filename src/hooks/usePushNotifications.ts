@@ -1,4 +1,10 @@
+/**
+ * Push notifications hook — platform-aware:
+ *  • Native iOS/Android → @capacitor/push-notifications
+ *  • Web               → Web Push API (service worker + VAPID)
+ */
 import { useState, useEffect, useCallback } from "react";
+import { isNative } from "@/lib/capacitor";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -7,8 +13,14 @@ const VAPID_PUBLIC_KEY = "BA_Pubh8_F-yuICJUrx2nawf8Pd688rshUIEPf2zg2B1xhpCCyEfpn
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = window.atob(base64);
-  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+  return Uint8Array.from([...window.atob(base64)].map((c) => c.charCodeAt(0)));
+}
+
+async function saveTokenToDb(userId: string, token: string) {
+  await supabase.from("push_subscriptions").upsert(
+    { user_id: userId, endpoint: token, p256dh: "", auth: "" },
+    { onConflict: "user_id,endpoint" }
+  );
 }
 
 export function usePushNotifications(userId: string | undefined) {
@@ -16,30 +28,79 @@ export function usePushNotifications(userId: string | undefined) {
   const [isSupported, setIsSupported] = useState(false);
   const [permissionState, setPermissionState] = useState<NotificationPermission>("default");
 
+  // ── Detect support ──────────────────────────────────────────────────────
   useEffect(() => {
-    const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
-    setIsSupported(supported);
-    if (supported) setPermissionState(Notification.permission);
+    if (isNative) {
+      // Native always supports push (pending user permission)
+      setIsSupported(true);
+      setPermissionState("default");
+    } else {
+      const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+      setIsSupported(supported);
+      if (supported) setPermissionState(Notification.permission);
+    }
   }, []);
 
+  // ── Check existing native subscription ─────────────────────────────────
   useEffect(() => {
-    if (!isSupported) return;
+    if (!isNative || !isSupported) return;
+    import("@capacitor/push-notifications").then(({ PushNotifications }) => {
+      PushNotifications.checkPermissions().then(({ receive }) => {
+        setIsSubscribed(receive === "granted");
+        setPermissionState(receive === "granted" ? "granted" : "default");
+      });
+    });
+  }, [isSupported]);
+
+  // ── Check existing web subscription ────────────────────────────────────
+  useEffect(() => {
+    if (isNative || !isSupported) return;
     navigator.serviceWorker.ready.then(async (reg) => {
       const sub = await reg.pushManager.getSubscription();
       setIsSubscribed(!!sub);
     });
   }, [isSupported]);
 
+  // ── Register web service worker ─────────────────────────────────────────
   useEffect(() => {
-    if (!isSupported) return;
+    if (isNative || !isSupported) return;
     navigator.serviceWorker.register("/sw.js").catch(() => {
-      // SW registration failure is non-critical — app still works without push
+      // Non-critical — app works without push
     });
   }, [isSupported]);
 
+  // ── Subscribe ───────────────────────────────────────────────────────────
   const subscribe = useCallback(async () => {
     if (!userId || !isSupported) return;
-    try {
+
+    if (isNative) {
+      // Native push via Capacitor
+      const { PushNotifications } = await import("@capacitor/push-notifications");
+
+      const { receive } = await PushNotifications.requestPermissions();
+      if (receive !== "granted") {
+        toast({ title: "Notifications blocked", description: "Enable in your device Settings.", variant: "destructive" });
+        return;
+      }
+      setPermissionState("granted");
+
+      await PushNotifications.register();
+
+      // Listen for the FCM/APNs token once
+      const tokenListener = await PushNotifications.addListener("registration", async (token) => {
+        await saveTokenToDb(userId, token.value);
+        setIsSubscribed(true);
+        toast({ title: "🔔 Notifications enabled", description: "You'll get injection day and streak reminders." });
+        await tokenListener.remove();
+      });
+
+      const errorListener = await PushNotifications.addListener("registrationError", async () => {
+        toast({ title: "Subscription failed", description: "Something went wrong. Try again.", variant: "destructive" });
+        await errorListener.remove();
+      });
+
+    } else {
+      // Web push
       const permission = await Notification.requestPermission();
       setPermissionState(permission);
       if (permission !== "granted") {
@@ -54,8 +115,6 @@ export function usePushNotifications(userId: string | undefined) {
       });
 
       const subJson = sub.toJSON();
-
-      // FIX: push_subscriptions IS in the generated types — remove "as any"
       const { error } = await supabase.from("push_subscriptions").upsert({
         user_id: userId,
         endpoint: subJson.endpoint!,
@@ -70,27 +129,28 @@ export function usePushNotifications(userId: string | undefined) {
 
       setIsSubscribed(true);
       toast({ title: "🔔 Notifications enabled", description: "You'll get injection day and streak reminders." });
-    } catch {
-      toast({ title: "Subscription failed", description: "Something went wrong. Try again.", variant: "destructive" });
     }
   }, [userId, isSupported]);
 
+  // ── Unsubscribe ─────────────────────────────────────────────────────────
   const unsubscribe = useCallback(async () => {
     if (!userId || !isSupported) return;
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.getSubscription();
-      if (sub) {
-        const endpoint = sub.endpoint;
-        await sub.unsubscribe();
-        // FIX: push_subscriptions IS in the generated types — remove "as any"
-        await supabase.from("push_subscriptions").delete().eq("user_id", userId).eq("endpoint", endpoint);
-      }
-      setIsSubscribed(false);
-      toast({ title: "Notifications disabled", description: "You won't receive push reminders." });
-    } catch {
-      // Unsubscribe failure is non-critical
+
+    if (isNative) {
+      // Can't programmatically unsubscribe from APNs/FCM — direct to settings
+      toast({ title: "To disable", description: "Go to device Settings → MuscleLock → Notifications." });
+      return;
     }
+
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      const endpoint = sub.endpoint;
+      await sub.unsubscribe();
+      await supabase.from("push_subscriptions").delete().eq("user_id", userId).eq("endpoint", endpoint);
+    }
+    setIsSubscribed(false);
+    toast({ title: "Notifications disabled", description: "You won't receive push reminders." });
   }, [userId, isSupported]);
 
   return { isSupported, isSubscribed, permissionState, subscribe, unsubscribe };

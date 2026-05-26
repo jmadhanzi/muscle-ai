@@ -14,22 +14,18 @@ export default defineConfig(({ mode }) => ({
     alias: { "@": path.resolve(__dirname, "./src") },
   },
   build: {
-    // Raise the warning threshold slightly (the app is media-heavy)
+    // Capacitor loads files from its own server (capacitor://localhost),
+    // so relative paths are required. This is a no-op in the browser.
+    outDir: "dist",
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         manualChunks: {
-          // React runtime — changes almost never
           "vendor-react": ["react", "react-dom"],
-          // Router
           "vendor-router": ["react-router-dom"],
-          // Animation library
           "vendor-motion": ["framer-motion"],
-          // Supabase client
           "vendor-supabase": ["@supabase/supabase-js"],
-          // Charting
           "vendor-charts": ["recharts"],
-          // All Radix UI primitives together
           "vendor-radix": [
             "@radix-ui/react-dialog",
             "@radix-ui/react-dropdown-menu",
@@ -44,10 +40,20 @@ export default defineConfig(({ mode }) => ({
             "@radix-ui/react-progress",
             "@radix-ui/react-avatar",
           ],
-          // Markdown renderer (only used in coach chat)
           "vendor-markdown": ["react-markdown"],
-          // html2canvas (only used in milestone sharing)
           "vendor-html2canvas": ["html2canvas"],
+          // Keep Capacitor plugins in their own chunk
+          "vendor-capacitor": [
+            "@capacitor/core",
+            "@capacitor/push-notifications",
+            "@capacitor/browser",
+            "@capacitor/share",
+            "@capacitor/clipboard",
+            "@capacitor/haptics",
+            "@capacitor/status-bar",
+            "@capacitor/splash-screen",
+            "@capacitor/app",
+          ],
         },
       },
     },

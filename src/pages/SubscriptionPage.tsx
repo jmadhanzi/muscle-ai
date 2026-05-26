@@ -47,7 +47,7 @@ const SubscriptionPage = () => {
       });
       if (error) throw error;
       if (data?.url) {
-        window.open(data.url, "_blank");
+        const { openBrowser } = await import("@/lib/capacitor"); await openBrowser(data.url);
       }
     } catch {
       toast.error("Could not start checkout. Please try again.");
@@ -63,7 +63,7 @@ const SubscriptionPage = () => {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
       if (data?.url) {
-        window.open(data.url, "_blank");
+        const { openBrowser } = await import("@/lib/capacitor"); await openBrowser(data.url);
       }
     } catch {
       toast.error("Could not open subscription management.");

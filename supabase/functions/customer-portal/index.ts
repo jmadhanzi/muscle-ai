@@ -36,7 +36,7 @@ serve(async (req) => {
     if (customers.data.length === 0) throw new Error("No Stripe customer found");
 
     const customerId = customers.data[0].id;
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    const origin = Deno.env.get("APP_URL") ?? req.headers.get("origin") ?? "https://musclelock.app";
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,

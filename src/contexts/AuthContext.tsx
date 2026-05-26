@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, APP_WEB_URL } from "@/integrations/supabase/client";
 import { PRO_PRODUCT_IDS } from "@/config/stripe";
 
 interface AuthContextType {
@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: APP_WEB_URL },
     });
     return { error: error as Error | null };
   };

@@ -5,6 +5,7 @@ import { Crown, Share2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useReferrals } from "@/hooks/useReferrals";
 import { supabase } from "@/integrations/supabase/client";
+import { openBrowser, shareContent, copyToClipboard } from "@/lib/capacitor";
 import { toast } from "sonner";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -26,9 +27,9 @@ const SubscriptionSection = ({ userId, firstName }: SubscriptionSectionProps) =>
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
-    } catch (e: any) {
-      toast.error(e.message || "Could not open billing portal");
+      if (data?.url) await openBrowser(data.url);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Could not open billing portal");
     } finally {
       setPortalLoading(false);
     }
@@ -37,10 +38,11 @@ const SubscriptionSection = ({ userId, firstName }: SubscriptionSectionProps) =>
   const handleShareReferral = async () => {
     await ensureReferralExists();
     const url = `${window.location.origin}/ref/${referralCode}`;
-    if (navigator.share) {
-      navigator.share({ title: "Join MuscleLock", text: "Get 7 days of Pro free!", url });
-    } else {
-      await navigator.clipboard.writeText(url);
+    try {
+      await shareContent({ title: "Join MuscleLock", text: "Get 7 days of Pro free!", url });
+    } catch {
+      // Share was cancelled or failed — fall back to clipboard
+      await copyToClipboard(url);
       setCopied(true);
       toast.success("Referral link copied!");
       setTimeout(() => setCopied(false), 2000);
@@ -56,7 +58,6 @@ const SubscriptionSection = ({ userId, firstName }: SubscriptionSectionProps) =>
     >
       <span className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">Subscription</span>
 
-      {/* Current Plan */}
       <div className="flex items-center gap-3">
         <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isPro ? "gradient-hero" : "bg-surface-container-high"}`}>
           <Crown className={`w-4 h-4 ${isPro ? "text-on-primary" : "text-on-surface-variant"}`} />
@@ -79,7 +80,6 @@ const SubscriptionSection = ({ userId, firstName }: SubscriptionSectionProps) =>
         </div>
       </div>
 
-      {/* Actions */}
       {isPro ? (
         <button
           onClick={handleManageSubscription}
@@ -98,7 +98,6 @@ const SubscriptionSection = ({ userId, firstName }: SubscriptionSectionProps) =>
         </button>
       )}
 
-      {/* Referral Card */}
       {referralCode && (
         <div className="bg-surface-container-low rounded-lg p-4 space-y-3 border border-primary/10">
           <div className="flex items-center justify-between">

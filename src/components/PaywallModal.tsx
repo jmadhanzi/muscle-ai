@@ -153,7 +153,7 @@ const PaywallModal = ({
         body: { priceId },
       });
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
+      if (data?.url) { const { openBrowser } = await import("@/lib/capacitor"); await openBrowser(data.url); }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Checkout failed");
     } finally {

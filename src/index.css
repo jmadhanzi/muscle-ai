@@ -150,3 +150,28 @@ input[type='range']::-webkit-slider-thumb {
   border-radius: 50%;
   box-shadow: 0 0 10px hsla(160, 100%, 45%, 0.5);
 }
+
+/* ─── Capacitor / Native safe-area support ─────────────────────────────────
+   viewport-fit=cover is set in index.html.
+   These variables expose the safe area to all components. ──────────────── */
+:root {
+  --safe-top:    env(safe-area-inset-top,    0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left,   0px);
+  --safe-right:  env(safe-area-inset-right,  0px);
+
+  /* Header safe offset: Navbar/header uses pt-14 (56px).
+     On iPhone with notch/Dynamic Island that's ~59px, so we add the delta. */
+  --header-top: calc(3.5rem + var(--safe-top));
+  /* Bottom nav safe offset: pb-24 (96px) + home indicator */
+  --nav-bottom:  calc(6rem + var(--safe-bottom));
+}
+
+/* Apply safe-area to fixed bottom elements */
+.fixed-bottom-nav {
+  padding-bottom: var(--safe-bottom);
+}
+
+/* Utility classes for safe-area-aware spacing */
+.pt-safe { padding-top: var(--safe-top); }
+.pb-safe { padding-bottom: var(--safe-bottom); }
