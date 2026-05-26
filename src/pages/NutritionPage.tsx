@@ -36,9 +36,9 @@ const NutritionPage = () => {
       });
   }, [user]);
 
-  // Use calculated target from profile, fall back to 140 if profile not loaded yet
+  // Use profile's stored protein_target if set, otherwise calculate from weight
   const proteinTarget = profileData
-    ? (profileData as any).protein_target || calcProteinTarget(profileData)
+    ? ((profileData as OnboardingData & { protein_target?: number }).protein_target ?? calcProteinTarget(profileData))
     : 140;
 
   const firstName = profileData?.first_name || user?.user_metadata?.first_name || "You";

@@ -5,7 +5,6 @@ import { Switch } from "@/components/ui/switch";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 const ease = [0.16, 1, 0.3, 1] as const;
-
 const NOTIF_KEY = "musclelock_notif_prefs";
 
 interface NotifPrefs {
@@ -40,18 +39,28 @@ const NotificationsSection = ({ userId }: NotificationsSectionProps) => {
     try {
       const stored = localStorage.getItem(NOTIF_KEY);
       return stored ? { ...defaultPrefs, ...JSON.parse(stored) } : defaultPrefs;
-    } catch { return defaultPrefs; }
+    } catch {
+      return defaultPrefs;
+    }
   });
 
   useEffect(() => {
     localStorage.setItem(NOTIF_KEY, JSON.stringify(prefs));
   }, [prefs]);
 
-  const update = (key: keyof NotifPrefs, value: any) => {
-    setPrefs(p => ({ ...p, [key]: value }));
+  // FIX: explicit type instead of `value: any`
+  const update = <K extends keyof NotifPrefs>(key: K, value: NotifPrefs[K]) => {
+    setPrefs((p) => ({ ...p, [key]: value }));
   };
 
-  const rows: { key: keyof NotifPrefs; icon: React.ReactNode; label: string; desc: string; timeKey?: keyof NotifPrefs; freqKey?: keyof NotifPrefs }[] = [
+  const rows: {
+    key: keyof NotifPrefs;
+    icon: React.ReactNode;
+    label: string;
+    desc: string;
+    timeKey?: keyof NotifPrefs;
+    freqKey?: keyof NotifPrefs;
+  }[] = [
     { key: "injectionReminder", icon: <Syringe className="w-4 h-4" />, label: "Injection Reminders", desc: "Get reminded on your injection day", timeKey: "injectionTime" },
     { key: "proteinReminder", icon: <span className="text-base">🥩</span>, label: "Protein Reminders", desc: "Stay on top of your protein goals", freqKey: "proteinFrequency" },
     { key: "workoutReminder", icon: <Dumbbell className="w-4 h-4" />, label: "Workout Reminders", desc: "Never miss a training session", timeKey: "workoutTime" },
@@ -77,7 +86,9 @@ const NotificationsSection = ({ userId }: NotificationsSectionProps) => {
           <div>
             <p className="text-sm font-medium text-on-surface">Push Notifications</p>
             <p className="text-[10px] text-on-surface-variant">
-              {push.isSupported ? (push.isSubscribed ? "Enabled" : "Disabled") : "Not supported"}
+              {push.isSupported
+                ? push.isSubscribed ? "Enabled" : "Disabled"
+                : "Not supported on this device"}
             </p>
           </div>
         </div>
@@ -89,7 +100,6 @@ const NotificationsSection = ({ userId }: NotificationsSectionProps) => {
         )}
       </div>
 
-      {/* Individual toggles */}
       <div className="space-y-3">
         {rows.map(({ key, icon, label, desc, timeKey, freqKey }) => (
           <div key={key} className="space-y-2">
@@ -105,33 +115,31 @@ const NotificationsSection = ({ userId }: NotificationsSectionProps) => {
               </div>
               <Switch
                 checked={prefs[key] as boolean}
-                onCheckedChange={(v) => update(key, v)}
+                onCheckedChange={(v) => update(key, v as NotifPrefs[typeof key])}
               />
             </div>
 
-            {/* Time selector */}
             {timeKey && prefs[key] && (
               <div className="ml-11">
                 <input
                   type="time"
                   value={prefs[timeKey] as string}
-                  onChange={(e) => update(timeKey, e.target.value)}
+                  onChange={(e) => update(timeKey, e.target.value as NotifPrefs[typeof timeKey])}
                   className="bg-surface-container-low border border-border rounded-lg px-3 py-2 text-xs text-on-surface outline-none focus:border-primary/40 transition-colors"
                 />
               </div>
             )}
 
-            {/* Frequency selector */}
             {freqKey && prefs[key] && (
               <div className="ml-11 flex gap-2">
                 {[
                   { value: "once", label: "Once/day" },
                   { value: "twice", label: "Twice/day" },
                   { value: "thrice", label: "3×/day" },
-                ].map(opt => (
+                ].map((opt) => (
                   <button
                     key={opt.value}
-                    onClick={() => update(freqKey, opt.value)}
+                    onClick={() => update(freqKey, opt.value as NotifPrefs[typeof freqKey])}
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all active:scale-95 ${
                       prefs[freqKey] === opt.value
                         ? "gradient-hero text-on-primary"
