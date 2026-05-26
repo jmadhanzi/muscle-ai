@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -68,6 +69,11 @@ const SubHeading = ({ children }: { children: React.ReactNode }) => (
 
 const PrivacyPage = () => {
   const navigate = useNavigate();
+
+  // Scroll to top
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   return (
     <div className="min-h-screen bg-mesh pb-24">

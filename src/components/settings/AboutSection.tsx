@@ -51,8 +51,8 @@ const AboutSection = () => {
   const linkRows = [
     { icon: <Brain className="w-4 h-4 text-primary" />, label: "How Muscle Score Works", action: () => navigate("/about") },
     { icon: <Stethoscope className="w-4 h-4 text-primary" />, label: "Clinical References", action: () => navigate("/about") },
-    { icon: <Shield className="w-4 h-4 text-primary" />, label: "Privacy Policy", action: () => window.open("#privacy", "_blank") },
-    { icon: <FileText className="w-4 h-4 text-primary" />, label: "Terms of Service", action: () => window.open("#terms", "_blank") },
+    { icon: <Shield className="w-4 h-4 text-primary" />, label: "Privacy Policy", action: () => navigate("/privacy") },
+    { icon: <FileText className="w-4 h-4 text-primary" />, label: "Terms of Service", action: () => navigate("/terms") },
   ];
 
   return (
