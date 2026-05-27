@@ -31,15 +31,19 @@ const PersonalIdentity = () => {
     const loadData = async () => {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("first_name, age, biological_sex")
+        .select("first_name, age, biological_sex, onboarding_completed")
         .eq("user_id", user.id)
         .single();
+      if (profile?.onboarding_completed) {
+        navigate("/dashboard", { replace: true });
+        return;
+      }
       if (profile?.first_name) setFirstName(profile.first_name);
       if (profile?.age) setAge(profile.age);
       if (profile?.biological_sex) setSelectedSex(profile.biological_sex);
     };
     loadData();
-  }, [user]);
+  }, [user, navigate]);
 
   const handleNext = async () => {
     if (!user || !firstName.trim()) return;

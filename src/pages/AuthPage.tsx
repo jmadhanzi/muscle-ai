@@ -31,7 +31,17 @@ const AuthPage = () => {
       if (error) {
         toast.error(error.message);
       } else {
-        navigate("/personal-identity");
+        // Check if user has completed onboarding; if so, go to main app, else start onboarding
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("onboarding_completed")
+            .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+            .single();
+          navigate(profile?.onboarding_completed ? "/dashboard" : "/personal-identity");
+        } catch {
+          navigate("/personal-identity");
+        }
       }
     } else {
       const { error } = await signUp(email, password);
@@ -140,15 +150,36 @@ const AuthPage = () => {
                 password: "devdev123",
                 options: { data: { dev_bypass: true } },
               });
-              if (upErr) {
-                toast.error("Dev bypass failed: " + upErr.message);
-              } else {
-                const { error: retryErr } = await signIn("dev@musclelock.app", "devdev123");
-                if (retryErr) toast.error("Dev bypass failed: " + retryErr.message);
-                else navigate("/personal-identity");
-              }
+                if (upErr) {
+                  toast.error("Dev bypass failed: " + upErr.message);
+                } else {
+                  const { error: retryErr } = await signIn("dev@musclelock.app", "devdev123");
+                  if (retryErr) {
+                    toast.error("Dev bypass failed: " + retryErr.message);
+                  } else {
+                    try {
+                      const { data: profile } = await supabase
+                        .from("profiles")
+                        .select("onboarding_completed")
+                        .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+                        .single();
+                      navigate(profile?.onboarding_completed ? "/dashboard" : "/personal-identity");
+                    } catch {
+                      navigate("/personal-identity");
+                    }
+                  }
+                }
             } else {
-              navigate("/personal-identity");
+              try {
+                const { data: profile } = await supabase
+                  .from("profiles")
+                  .select("onboarding_completed")
+                  .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+                  .single();
+                navigate(profile?.onboarding_completed ? "/dashboard" : "/personal-identity");
+              } catch {
+                navigate("/personal-identity");
+              }
             }
             setLoading(false);
           }}

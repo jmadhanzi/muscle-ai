@@ -168,7 +168,7 @@ const BodySilhouette = () => {
 
 const HookScreen = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, onboardingCompleted } = useAuth();
   const statCount = useCounter(40);
   const socialCount = useSocialCounter(47832);
   const [showStat, setShowStat] = useState(false);
@@ -180,6 +180,13 @@ const HookScreen = () => {
   const ctaInView = useInView(ctaRef, { once: true, amount: 0.3 });
   const trustRef = useRef(null);
   const trustInView = useInView(trustRef, { once: true, amount: 0.3 });
+
+  // If logged in and has completed onboarding, skip marketing and go straight to main app
+  useEffect(() => {
+    if (user && onboardingCompleted === true) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, onboardingCompleted, navigate]);
 
   useEffect(() => {
     const t = setTimeout(() => setShowStat(true), 800);
@@ -324,7 +331,15 @@ const HookScreen = () => {
           className="w-full space-y-4 mb-10"
         >
           <button
-            onClick={() => navigate(user ? "/personal-identity" : "/auth")}
+            onClick={() => {
+              if (!user) {
+                navigate("/auth");
+              } else if (onboardingCompleted) {
+                navigate("/dashboard");
+              } else {
+                navigate("/personal-identity");
+              }
+            }}
             className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-headline font-bold text-lg flex items-center justify-center gap-2 active:scale-[0.97] transition-transform duration-200 shadow-[0_12px_32px_hsla(160,100%,45%,0.25)]"
           >
             Show me how to stop this
