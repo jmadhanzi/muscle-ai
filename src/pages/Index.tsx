@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { STRIPE_CONFIG } from "@/config/stripe";
 import { ChevronDown } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -848,7 +849,23 @@ const HookScreen = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const goToApp = () => navigate(user ? "/personal-identity" : "/auth");
+  const goToApp = async () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    // Check if onboarding is already completed
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarding_completed")
+      .eq("user_id", user.id)
+      .single();
+    if (profile?.onboarding_completed) {
+      navigate("/dashboard");
+    } else {
+      navigate("/personal-identity");
+    }
+  };
 
   const pressRef = useRef(null);
   const pressInView = useInView(pressRef, { once: true, amount: 0.3 });
