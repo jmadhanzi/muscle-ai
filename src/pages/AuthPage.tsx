@@ -22,6 +22,16 @@ const AuthPage = () => {
   // Referral code from sessionStorage (set by /ref/:code route)
   const referralCode = sessionStorage.getItem("referral_code");
 
+  /** After sign-in, route to dashboard if onboarding complete, else start onboarding. */
+  const redirectAfterLogin = async (userId: string) => {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarding_completed")
+      .eq("user_id", userId)
+      .maybeSingle();
+    navigate(profile?.onboarding_completed ? "/dashboard" : "/personal-identity", { replace: true });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -31,24 +41,14 @@ const AuthPage = () => {
       if (error) {
         toast.error(error.message);
       } else {
-        // Check if user has completed onboarding; if so, go to main app, else start onboarding
-        try {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("onboarding_completed")
-            .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
-            .single();
-          navigate(profile?.onboarding_completed ? "/dashboard" : "/personal-identity");
-        } catch {
-          navigate("/personal-identity");
-        }
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) await redirectAfterLogin(user.id);
       }
     } else {
       const { error } = await signUp(email, password);
       if (error) {
         toast.error(error.message);
       } else {
-        // If there's a referral code, store it so it can be processed after email confirmation
         if (referralCode) {
           localStorage.setItem("pending_referral_code", referralCode);
           sessionStorage.removeItem("referral_code");
@@ -99,7 +99,8 @@ const AuthPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full bg-surface-container-lowest border-none rounded-xl px-5 py-4 text-on-surface focus:ring-1 focus:ring-primary/40 placeholder:text-surface-variant transition-all outline-none"
+                autoComplete="email"
+                className="w-full bg-surface-container-lowest border-none rounded-xl px-5 py-4 text-on-surface focus:ring-1 focus:ring-primary/40 placeholder:text-on-surface-variant/40 transition-all outline-none"
                 placeholder="you@example.com"
               />
             </div>
@@ -115,7 +116,8 @@ const AuthPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full bg-surface-container-lowest border-none rounded-xl px-5 py-4 text-on-surface focus:ring-1 focus:ring-primary/40 placeholder:text-surface-variant transition-all outline-none"
+                autoComplete={isLogin ? "current-password" : "new-password"}
+                className="w-full bg-surface-container-lowest border-none rounded-xl px-5 py-4 text-on-surface focus:ring-1 focus:ring-primary/40 placeholder:text-on-surface-variant/40 transition-all outline-none"
                 placeholder="••••••••"
               />
             </div>
@@ -132,6 +134,7 @@ const AuthPage = () => {
           <p className="text-center text-on-surface-variant text-sm mt-6">
             {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
             <button
+              type="button"
               onClick={() => setIsLogin(!isLogin)}
               className="text-primary font-medium hover:underline"
             >

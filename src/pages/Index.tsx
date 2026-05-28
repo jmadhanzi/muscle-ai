@@ -819,7 +819,7 @@ const TESTIMONIALS: TestimonialProps[] = [
 
 const HookScreen = () => {
   const navigate = useNavigate();
-  const { user, onboardingCompleted } = useAuth();
+  const { user } = useAuth();
   const statCount = useCounter(40);
   const socialCount = useSocialCounter(52_419);
   const [showStat, setShowStat] = useState(false);
@@ -848,22 +848,7 @@ const HookScreen = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  // If logged in and has completed onboarding, skip marketing and go straight to main app
-  useEffect(() => {
-    if (user && onboardingCompleted === true) {
-      navigate("/dashboard", { replace: true });
-    }
-  }, [user, onboardingCompleted, navigate]);
-
-  const goToApp = () => {
-    if (!user) {
-      navigate("/auth");
-    } else if (onboardingCompleted) {
-      navigate("/dashboard");
-    } else {
-      navigate("/personal-identity");
-    }
-  }
+  const goToApp = () => navigate(user ? "/personal-identity" : "/auth");
 
   const pressRef = useRef(null);
   const pressInView = useInView(pressRef, { once: true, amount: 0.3 });
@@ -882,14 +867,6 @@ const HookScreen = () => {
     const interval = setInterval(() => setActiveScreen(s => (s + 1) % 3), 3400);
     return () => clearInterval(interval);
   }, [appPreviewInView]);
-
-  // Subtle scroll nudge
-  useEffect(() => {
-    const t = setTimeout(() => {
-      scrollRef.current?.scrollTo({ top: 100, behavior: "smooth" });
-    }, 3200);
-    return () => clearTimeout(t);
-  }, []);
 
   return (
     <div ref={scrollRef} className="min-h-screen bg-mesh overflow-y-auto overflow-x-hidden">

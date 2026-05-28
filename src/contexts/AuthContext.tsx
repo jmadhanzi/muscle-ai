@@ -12,7 +12,6 @@ interface AuthContextType {
   isPro: boolean;
   subscriptionLoading: boolean;
   subscriptionEnd: string | null;
-  onboardingCompleted: boolean | null;
   checkOnboardingStatus: () => Promise<void>;
   checkSubscription: () => Promise<void>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -29,7 +28,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [supabaseIsPro, setSupabaseIsPro] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
-  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
 
   const { isPro: revenueCatIsPro } = useRevenueCat();
 
@@ -55,24 +53,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSubscriptionLoading(false);
     }
   }, []);
-
-  const checkOnboardingStatus = useCallback(async () => {
-    if (!user) {
-      setOnboardingCompleted(null);
-      return;
-    }
-    try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("onboarding_completed")
-        .eq("user_id", user.id)
-        .single();
-      setOnboardingCompleted(!!data?.onboarding_completed);
-    } catch (e) {
-      console.error("Onboarding status check failed:", e);
-      setOnboardingCompleted(false);
-    }
-  }, [user]);
 
   const processReferral = useCallback(async (userId: string) => {
     const code = localStorage.getItem("pending_referral_code");
@@ -124,11 +104,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => clearInterval(interval);
   }, [user, checkSubscription]);
 
-  // Load onboarding status when user changes
-  useEffect(() => {
-    checkOnboardingStatus();
-  }, [checkOnboardingStatus]);
-
   const signUp = async (email: string, password: string) => {
     const { error } = await supabase.auth.signUp({
       email,
@@ -148,7 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, isPro, subscriptionLoading, subscriptionEnd, onboardingCompleted, checkOnboardingStatus, checkSubscription, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, loading, isPro, subscriptionLoading, subscriptionEnd, checkSubscription, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
