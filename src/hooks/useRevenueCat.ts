@@ -96,8 +96,8 @@ export function useRevenueCat() {
     }
   }, [isInitialized]);
 
-  const purchasePackage = useCallback(async (pkg: Package) => {
-    if (!isInitialized) return;
+  const purchasePackage = useCallback(async (pkg: Package): Promise<boolean> => {
+    if (!isInitialized) return false;
 
     setLoading(true);
     try {
@@ -107,7 +107,9 @@ export function useRevenueCat() {
 
       if (hasActiveSubscription) {
         toast.success('Purchase successful!');
+        return true;
       }
+      return false;
     } catch (error: any) {
       console.error('Purchase failed:', error);
       if (error.userCancelled) {
@@ -115,6 +117,7 @@ export function useRevenueCat() {
       } else {
         toast.error('Purchase failed. Please try again.');
       }
+      return false;
     } finally {
       setLoading(false);
     }
