@@ -19,9 +19,6 @@ const AuthPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  // Referral code from sessionStorage (set by /ref/:code route)
-  const referralCode = sessionStorage.getItem("referral_code");
-
   /** After sign-in, route to dashboard if onboarding complete, else start onboarding. */
   const redirectAfterLogin = async (userId: string) => {
     const { data: profile } = await supabase
@@ -36,6 +33,8 @@ const AuthPage = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Read referral code fresh each time (avoids stale reads after navigation)
+    const referralCode = sessionStorage.getItem("referral_code");
     if (isLogin) {
       const { error } = await signIn(email, password);
       if (error) {
@@ -72,7 +71,8 @@ const AuthPage = () => {
           </span>
         </div>
 
-        {referralCode && !isLogin && (
+        {/* Show referral banner only when there's a stored code and user is on signup */}
+        {!isLogin && sessionStorage.getItem("referral_code") && (
           <div className="bg-primary/10 border border-primary/20 rounded-lg px-4 py-3 mb-4 text-center">
             <p className="text-xs font-medium text-primary">
               🎁 You've been referred! Sign up to get <span className="font-bold">7 free days</span> of Pro
