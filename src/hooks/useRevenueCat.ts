@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Purchases, PurchaserInfo, PurchasesOffering } from '@revenuecat/purchases-capacitor';
 import { Capacitor } from '@capacitor/core';
+import { supabase } from '@/integrations/supabase/client';
 import { getRevenueCatApiKey } from '@/config/revenuecat';
 import { toast } from 'sonner';
 
@@ -73,7 +74,33 @@ export function useRevenueCat() {
     try {
       const purchaserInfo = await Purchases.getPurchaserInfo();
       const hasActiveSubscription = purchaserInfo.activeSubscriptions?.length > 0;
-      setIsPro(hasActiveSubscription);
+
+      if (hasActiveSubscription) {
+        setIsPro(true);
+        return;
+      }
+
+      // Fallback: check profiles table for referral rewards or other non-RevenueCat grants
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("subscription_status, subscription_end_date")
+          .eq("user_id", user.id)
+          .single();
+
+        if (
+          profile &&
+          profile.subscription_status === "pro" &&
+          profile.subscription_end_date &&
+          new Date(profile.subscription_end_date) > new Date()
+        ) {
+          setIsPro(true);
+          return;
+        }
+      }
+
+      setIsPro(false);
     } catch (error) {
       console.error('Failed to check subscription status:', error);
     }
@@ -130,9 +157,34 @@ export function useRevenueCat() {
     try {
       const purchaserInfo = await Purchases.restorePurchases();
       const hasActiveSubscription = purchaserInfo.activeSubscriptions?.length > 0;
-      setIsPro(hasActiveSubscription);
 
-      toast.success(hasActiveSubscription ? 'Purchases restored!' : 'No active subscriptions found');
+      if (hasActiveSubscription) {
+        setIsPro(true);
+        toast.success('Purchases restored!');
+      } else {
+        // Fallback: check profiles table for referral rewards
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("subscription_status, subscription_end_date")
+            .eq("user_id", user.id)
+            .single();
+
+          if (
+            profile &&
+            profile.subscription_status === "pro" &&
+            profile.subscription_end_date &&
+            new Date(profile.subscription_end_date) > new Date()
+          ) {
+            setIsPro(true);
+            toast.success('Active subscription found!');
+            return;
+          }
+        }
+        setIsPro(false);
+        toast.info('No active subscriptions found');
+      }
     } catch (error) {
       console.error('Restore failed:', error);
       toast.error('Failed to restore purchases');

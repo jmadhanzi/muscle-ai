@@ -34,32 +34,49 @@ serve(async (req) => {
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 
-    if (customers.data.length === 0) {
-      return new Response(JSON.stringify({ subscribed: false }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
-    const customerId = customers.data[0].id;
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 1,
-    });
-
-    const hasActiveSub = subscriptions.data.length > 0;
+    let subscribed = false;
     let productId = null;
     let subscriptionEnd = null;
 
-    if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      productId = subscription.items.data[0].price.product;
+    if (customers.data.length > 0) {
+      const customerId = customers.data[0].id;
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        status: "active",
+        limit: 1,
+      });
+
+      const hasActiveSub = subscriptions.data.length > 0;
+
+      if (hasActiveSub) {
+        const subscription = subscriptions.data[0];
+        subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+        productId = subscription.items.data[0].price.product;
+        subscribed = true;
+      }
+    }
+
+    // If no active Stripe subscription, check profiles table for referral rewards or other non-Stripe grants
+    if (!subscribed && user.id) {
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("subscription_status, subscription_end_date")
+        .eq("user_id", user.id)
+        .single();
+
+      if (
+        profile &&
+        profile.subscription_status === "pro" &&
+        profile.subscription_end_date &&
+        new Date(profile.subscription_end_date) > new Date()
+      ) {
+        subscribed = true;
+        subscriptionEnd = profile.subscription_end_date;
+      }
     }
 
     return new Response(JSON.stringify({
-      subscribed: hasActiveSub,
+      subscribed,
       product_id: productId,
       subscription_end: subscriptionEnd,
     }), {
