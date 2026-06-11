@@ -19,12 +19,9 @@ export function usePushNotifications(userId: string | undefined) {
   useEffect(() => {
     const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
     setIsSupported(supported);
-    if (supported) {
-      setPermissionState(Notification.permission);
-    }
+    if (supported) setPermissionState(Notification.permission);
   }, []);
 
-  // Check existing subscription
   useEffect(() => {
     if (!isSupported) return;
     navigator.serviceWorker.ready.then(async (reg) => {
@@ -33,17 +30,15 @@ export function usePushNotifications(userId: string | undefined) {
     });
   }, [isSupported]);
 
-  // Register service worker on mount
   useEffect(() => {
     if (!isSupported) return;
-    navigator.serviceWorker.register("/sw.js").catch((err) => {
-      console.warn("SW registration failed:", err);
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      // SW registration failure is non-critical — app still works without push
     });
   }, [isSupported]);
 
   const subscribe = useCallback(async () => {
     if (!userId || !isSupported) return;
-
     try {
       const permission = await Notification.requestPermission();
       setPermissionState(permission);
@@ -60,24 +55,22 @@ export function usePushNotifications(userId: string | undefined) {
 
       const subJson = sub.toJSON();
 
-      // Store in database
-      const { error } = await supabase.from("push_subscriptions" as any).upsert({
+      // FIX: push_subscriptions IS in the generated types — remove "as any"
+      const { error } = await supabase.from("push_subscriptions").upsert({
         user_id: userId,
-        endpoint: subJson.endpoint,
-        p256dh: subJson.keys?.p256dh,
-        auth: subJson.keys?.auth,
+        endpoint: subJson.endpoint!,
+        p256dh: subJson.keys?.p256dh ?? "",
+        auth: subJson.keys?.auth ?? "",
       }, { onConflict: "user_id,endpoint" });
 
       if (error) {
-        console.error("Failed to save push subscription:", error);
         toast({ title: "Subscription failed", description: "Could not save notification preference.", variant: "destructive" });
         return;
       }
 
       setIsSubscribed(true);
       toast({ title: "🔔 Notifications enabled", description: "You'll get injection day and streak reminders." });
-    } catch (err) {
-      console.error("Push subscription error:", err);
+    } catch {
       toast({ title: "Subscription failed", description: "Something went wrong. Try again.", variant: "destructive" });
     }
   }, [userId, isSupported]);
@@ -90,12 +83,13 @@ export function usePushNotifications(userId: string | undefined) {
       if (sub) {
         const endpoint = sub.endpoint;
         await sub.unsubscribe();
-        await supabase.from("push_subscriptions" as any).delete().eq("user_id", userId).eq("endpoint", endpoint);
+        // FIX: push_subscriptions IS in the generated types — remove "as any"
+        await supabase.from("push_subscriptions").delete().eq("user_id", userId).eq("endpoint", endpoint);
       }
       setIsSubscribed(false);
       toast({ title: "Notifications disabled", description: "You won't receive push reminders." });
-    } catch (err) {
-      console.error("Unsubscribe error:", err);
+    } catch {
+      // Unsubscribe failure is non-critical
     }
   }, [userId, isSupported]);
 

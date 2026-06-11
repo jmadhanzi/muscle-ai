@@ -12,7 +12,6 @@ interface AuthContextType {
   isPro: boolean;
   subscriptionLoading: boolean;
   subscriptionEnd: string | null;
-  onboardingCompleted: boolean | null;
   checkOnboardingStatus: () => Promise<void>;
   checkSubscription: () => Promise<void>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -29,7 +28,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [supabaseIsPro, setSupabaseIsPro] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
-  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
 
   const { isPro: revenueCatIsPro } = useRevenueCat();
 
@@ -40,94 +38,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setSubscriptionLoading(true);
       const { data, error } = await supabase.functions.invoke("check-subscription");
-      if (error) {
-        console.error("Subscription check error:", error);
-        return;
-      }
-      if (data) {
-        const isActive = data.subscribed && PRO_PRODUCT_IDS.includes(data.product_id);
-        setSupabaseIsPro(isActive);
-        setSubscriptionEnd(data.subscription_end || null);
-      }
-    } catch (e) {
-      console.error("Subscription check failed:", e);
+      if (error || !data) return;
+      const isActive = data.subscribed && PRO_PRODUCT_IDS.includes(data.product_id);
+      setSupabaseIsPro(isActive);
+      setSubscriptionEnd(data.subscription_end || null);
+    } catch {
+      // Subscription check failure is non-critical — user stays on free tier
     } finally {
       setSubscriptionLoading(false);
     }
   }, []);
-
-  const checkOnboardingStatus = useCallback(async () => {
-    if (!user) {
-      setOnboardingCompleted(null);
-      return;
-    }
-    try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("onboarding_completed")
-        .eq("user_id", user.id)
-        .single();
-      setOnboardingCompleted(!!data?.onboarding_completed);
-    } catch (e) {
-      console.error("Onboarding status check failed:", e);
-      setOnboardingCompleted(false);
-    }
-  }, [user]);
 
   const processReferral = useCallback(async (userId: string) => {
     const code = localStorage.getItem("pending_referral_code");
     if (!code) return;
     localStorage.removeItem("pending_referral_code");
     try {
-      const { data, error } = await supabase.functions.invoke("process-referral", {
+      await supabase.functions.invoke("process-referral", {
         body: { referralCode: code, referredUserId: userId },
       });
-      if (!error && data?.success) {
-        console.log("[REFERRAL] Processed successfully:", data);
-      }
-    } catch (e) {
-      console.error("[REFERRAL] Processing failed:", e);
+    } catch {
+      // Referral processing failure is non-critical
     }
   }, []);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
       setLoading(false);
-      if (session?.user) {
+      if (newSession?.user) {
+        // Defer to avoid Supabase deadlock in auth state change handler
         setTimeout(() => checkSubscription(), 0);
-        // Process pending referral on first sign-in
-        processReferral(session.user.id);
+        processReferral(newSession.user.id);
       } else {
         setSupabaseIsPro(false);
         setSubscriptionEnd(null);
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
       setLoading(false);
-      if (session?.user) {
-        checkSubscription();
-      }
+      if (initialSession?.user) checkSubscription();
     });
 
     return () => subscription.unsubscribe();
   }, [checkSubscription, processReferral]);
 
-  // Auto-refresh subscription every 60s
+  // Auto-refresh subscription status every 60 seconds
   useEffect(() => {
     if (!user) return;
-    const interval = setInterval(checkSubscription, 60000);
+    const interval = setInterval(checkSubscription, 60_000);
     return () => clearInterval(interval);
   }, [user, checkSubscription]);
-
-  // Load onboarding status when user changes
-  useEffect(() => {
-    checkOnboardingStatus();
-  }, [checkOnboardingStatus]);
 
   const signUp = async (email: string, password: string) => {
     const { error } = await supabase.auth.signUp({
@@ -148,7 +113,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, isPro, subscriptionLoading, subscriptionEnd, onboardingCompleted, checkOnboardingStatus, checkSubscription, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{
+      session, user, loading, isPro, subscriptionLoading, subscriptionEnd,
+      checkSubscription, signUp, signIn, signOut,
+    }}>
       {children}
     </AuthContext.Provider>
   );

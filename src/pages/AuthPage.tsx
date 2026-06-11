@@ -19,36 +19,35 @@ const AuthPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  // Referral code from sessionStorage (set by /ref/:code route)
-  const referralCode = sessionStorage.getItem("referral_code");
+  /** After sign-in, route to dashboard if onboarding complete, else start onboarding. */
+  const redirectAfterLogin = async (userId: string) => {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarding_completed")
+      .eq("user_id", userId)
+      .maybeSingle();
+    navigate(profile?.onboarding_completed ? "/dashboard" : "/personal-identity", { replace: true });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
+    // Read referral code fresh each time (avoids stale reads after navigation)
+    const referralCode = sessionStorage.getItem("referral_code");
     if (isLogin) {
       const { error } = await signIn(email, password);
       if (error) {
         toast.error(error.message);
       } else {
-        // Check if user has completed onboarding; if so, go to main app, else start onboarding
-        try {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("onboarding_completed")
-            .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
-            .single();
-          navigate(profile?.onboarding_completed ? "/dashboard" : "/personal-identity");
-        } catch {
-          navigate("/personal-identity");
-        }
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) await redirectAfterLogin(user.id);
       }
     } else {
       const { error } = await signUp(email, password);
       if (error) {
         toast.error(error.message);
       } else {
-        // If there's a referral code, store it so it can be processed after email confirmation
         if (referralCode) {
           localStorage.setItem("pending_referral_code", referralCode);
           sessionStorage.removeItem("referral_code");
@@ -61,12 +60,10 @@ const AuthPage = () => {
 
   return (
     <div className="min-h-screen bg-mesh flex flex-col items-center justify-center px-6">
-      {/* Ambient glow */}
       <div className="fixed top-[20%] right-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full pointer-events-none -z-10" />
       <div className="fixed bottom-[10%] left-[-5%] w-[30%] h-[30%] bg-secondary/5 blur-[100px] rounded-full pointer-events-none -z-10" />
 
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-12">
           <span className="material-symbols-outlined material-filled text-primary text-4xl">lock</span>
           <span className="text-primary font-black italic tracking-tighter font-headline text-3xl uppercase">
@@ -74,9 +71,12 @@ const AuthPage = () => {
           </span>
         </div>
 
-        {referralCode && !isLogin && (
+        {/* Show referral banner only when there's a stored code and user is on signup */}
+        {!isLogin && sessionStorage.getItem("referral_code") && (
           <div className="bg-primary/10 border border-primary/20 rounded-lg px-4 py-3 mb-4 text-center">
-            <p className="text-xs font-medium text-primary">🎁 You've been referred! Sign up to get <span className="font-bold">7 free days</span> of Pro</p>
+            <p className="text-xs font-medium text-primary">
+              🎁 You've been referred! Sign up to get <span className="font-bold">7 free days</span> of Pro
+            </p>
           </div>
         )}
 
@@ -99,7 +99,8 @@ const AuthPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full bg-surface-container-lowest border-none rounded-xl px-5 py-4 text-on-surface focus:ring-1 focus:ring-primary/40 placeholder:text-surface-variant transition-all outline-none"
+                autoComplete="email"
+                className="w-full bg-surface-container-lowest border-none rounded-xl px-5 py-4 text-on-surface focus:ring-1 focus:ring-primary/40 placeholder:text-on-surface-variant/40 transition-all outline-none"
                 placeholder="you@example.com"
               />
             </div>
@@ -115,7 +116,8 @@ const AuthPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full bg-surface-container-lowest border-none rounded-xl px-5 py-4 text-on-surface focus:ring-1 focus:ring-primary/40 placeholder:text-surface-variant transition-all outline-none"
+                autoComplete={isLogin ? "current-password" : "new-password"}
+                className="w-full bg-surface-container-lowest border-none rounded-xl px-5 py-4 text-on-surface focus:ring-1 focus:ring-primary/40 placeholder:text-on-surface-variant/40 transition-all outline-none"
                 placeholder="••••••••"
               />
             </div>
@@ -132,61 +134,14 @@ const AuthPage = () => {
           <p className="text-center text-on-surface-variant text-sm mt-6">
             {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
             <button
+              type="button"
               onClick={() => setIsLogin(!isLogin)}
               className="text-primary font-medium hover:underline"
             >
-            {isLogin ? "Sign up" : "Sign in"}
+              {isLogin ? "Sign up" : "Sign in"}
             </button>
           </p>
         </div>
-
-        <button
-          onClick={async () => {
-            setLoading(true);
-            const { error } = await signIn("dev@musclelock.app", "devdev123");
-            if (error) {
-              const { error: upErr } = await supabase.auth.signUp({
-                email: "dev@musclelock.app",
-                password: "devdev123",
-                options: { data: { dev_bypass: true } },
-              });
-                if (upErr) {
-                  toast.error("Dev bypass failed: " + upErr.message);
-                } else {
-                  const { error: retryErr } = await signIn("dev@musclelock.app", "devdev123");
-                  if (retryErr) {
-                    toast.error("Dev bypass failed: " + retryErr.message);
-                  } else {
-                    try {
-                      const { data: profile } = await supabase
-                        .from("profiles")
-                        .select("onboarding_completed")
-                        .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
-                        .single();
-                      navigate(profile?.onboarding_completed ? "/dashboard" : "/personal-identity");
-                    } catch {
-                      navigate("/personal-identity");
-                    }
-                  }
-                }
-            } else {
-              try {
-                const { data: profile } = await supabase
-                  .from("profiles")
-                  .select("onboarding_completed")
-                  .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
-                  .single();
-                navigate(profile?.onboarding_completed ? "/dashboard" : "/personal-identity");
-              } catch {
-                navigate("/personal-identity");
-              }
-            }
-            setLoading(false);
-          }}
-          className="mt-4 w-full py-3 rounded-lg border border-dashed border-primary/30 text-primary/60 text-xs font-mono hover:bg-primary/5 transition-colors"
-        >
-          🔧 Dev Bypass (skip auth)
-        </button>
       </div>
     </div>
   );

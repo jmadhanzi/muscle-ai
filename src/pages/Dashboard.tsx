@@ -141,7 +141,9 @@ const Dashboard = () => {
   // Simulated weekly streak for Pro — Mon-Sun based on day of week
   const todayDow = new Date().getDay(); // 0=Sun
   const mondayIdx = todayDow === 0 ? 6 : todayDow - 1;
-  const completedDays = Array.from({ length: 7 }, (_, i) => i <= mondayIdx && i < mondayIdx);
+  // FIX: was `i <= mondayIdx && i < mondayIdx` which simplifies to `i < mondayIdx` (dead condition removed)
+  // Shows all days before today as completed (simulated for streak display)
+  const completedDays = Array.from({ length: 7 }, (_, i) => i < mondayIdx);
   // Mark today as completed if any checkedItems exist
   if (checkedItems.size > 0) completedDays[mondayIdx] = true;
   const streakDays = completedDays.filter(Boolean).length;

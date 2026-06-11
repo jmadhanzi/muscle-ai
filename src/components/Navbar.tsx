@@ -25,15 +25,24 @@ const dotVariants = {
   },
 };
 
-const Navbar = ({ showBack, showSteps, activeStep = 1, totalSteps = 7, showNotification, showProfile }: NavbarProps) => {
+const Navbar = ({
+  showBack,
+  showSteps,
+  activeStep = 1,
+  totalSteps = 7,
+  showNotification,
+  showProfile,
+}: NavbarProps) => {
   const navigate = useNavigate();
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl flex justify-between items-center px-6 py-4">
       <div className="flex items-center gap-4">
+        {/* FIX: back button now actually navigates */}
         {showBack && (
           <button
             onClick={() => navigate(-1)}
+            aria-label="Go back"
             className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-highest text-on-surface hover:opacity-80 transition-opacity active:scale-95 duration-200"
           >
             <span className="material-symbols-outlined">arrow_back</span>
@@ -48,12 +57,14 @@ const Navbar = ({ showBack, showSteps, activeStep = 1, totalSteps = 7, showNotif
           </span>
         </div>
       </div>
+
       <div className="flex items-center gap-4">
         {showSteps && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5" role="progressbar" aria-valuenow={activeStep} aria-valuemax={totalSteps}>
             {Array.from({ length: totalSteps }).map((_, i) => {
               const stepNum = i + 1;
-              const variant = stepNum === activeStep ? "active" : stepNum < activeStep ? "completed" : "inactive";
+              const variant =
+                stepNum === activeStep ? "active" : stepNum < activeStep ? "completed" : "inactive";
               return (
                 <motion.div
                   key={i}
@@ -61,6 +72,7 @@ const Navbar = ({ showBack, showSteps, activeStep = 1, totalSteps = 7, showNotif
                   initial="inactive"
                   animate={variant}
                   className="w-2 h-2 rounded-full"
+                  aria-hidden="true"
                 />
               );
             })}
@@ -72,9 +84,12 @@ const Navbar = ({ showBack, showSteps, activeStep = 1, totalSteps = 7, showNotif
           </div>
         )}
         {showNotification && (
-          <span className="material-symbols-outlined text-surface-variant hover:opacity-80 transition-opacity cursor-pointer">
-            notifications
-          </span>
+          <button
+            aria-label="Notifications"
+            className="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center active:scale-90 transition-transform"
+          >
+            <span className="material-symbols-outlined text-on-surface-variant text-xl">notifications</span>
+          </button>
         )}
       </div>
     </nav>

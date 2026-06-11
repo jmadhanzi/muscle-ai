@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { STRIPE_CONFIG } from "@/config/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRevenueCat } from "@/hooks/useRevenueCat";
+import { Capacitor } from "@capacitor/core";
 import { toast } from "sonner";
 
 interface PaywallModalProps {
@@ -114,11 +116,43 @@ const PaywallModal = ({
 }: PaywallModalProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { offerings, purchasePackage, loading: revenueCatLoading, fetchOfferings } = useRevenueCat();
   const [plan, setPlan] = useState<"monthly" | "yearly">("yearly");
   const [loading, setLoading] = useState(false);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
   const [tickerIdx, setTickerIdx] = useState(0);
+  const [hasReferral, setHasReferral] = useState(false);
+  const [offeringsLoaded, setOfferingsLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Load referral status to determine trial days
+  useEffect(() => {
+    if (!user || !open) return;
+    const loadReferral = async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("referred_by")
+        .eq("user_id", user.id)
+        .single();
+      setHasReferral(!!profile?.referred_by);
+    };
+    loadReferral();
+  }, [user, open]);
+
+  // Refresh offerings on native platforms when modal opens
+  useEffect(() => {
+    if (!open) return;
+    if (Capacitor.isNativePlatform()) {
+      fetchOfferings();
+    }
+  }, [open, fetchOfferings]);
+
+  // Track when offerings are loaded
+  useEffect(() => {
+    if (offerings.length > 0) {
+      setOfferingsLoaded(true);
+    }
+  }, [offerings]);
 
   // Rotate testimonials
   useEffect(() => {
@@ -138,6 +172,7 @@ const PaywallModal = ({
   const yearly = STRIPE_CONFIG.yearly;
   const monthly = STRIPE_CONFIG.monthly;
   const savings = (monthly.price * 12 - yearly.price).toFixed(2);
+  const trialDays = hasReferral ? STRIPE_CONFIG.trial.referral_days : STRIPE_CONFIG.trial.default_days;
 
   const handleCheckout = async () => {
     if (!user) {
@@ -145,21 +180,62 @@ const PaywallModal = ({
       navigate("/auth");
       return;
     }
-    setLoading(true);
-    try {
-      const priceId =
-        plan === "yearly" ? yearly.price_id : monthly.price_id;
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId },
-      });
-      if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
-    } catch (e: any) {
-      toast.error(e.message || "Checkout failed");
-    } finally {
-      setLoading(false);
+
+    if (Capacitor.isNativePlatform()) {
+      // RevenueCat purchase flow for native platforms
+      const currentOffering = offerings[0];
+      if (!currentOffering) {
+        toast.error("No offerings available. Please try again.");
+        return;
+      }
+
+      let monthlyPackage;
+      let yearlyPackage;
+      if (hasReferral) {
+        monthlyPackage = currentOffering.availablePackages.find(pkg => pkg.identifier === 'monthly_7d') ||
+                         currentOffering.availablePackages.find(pkg => /7d|7_d|7-day/i.test(pkg.identifier)) ||
+                         currentOffering.availablePackages.find(pkg => pkg.packageType === 'MONTHLY');
+        yearlyPackage = currentOffering.availablePackages.find(pkg => pkg.identifier === 'yearly_7d') ||
+                        currentOffering.availablePackages.find(pkg => /7d|7_d|7-day/i.test(pkg.identifier)) ||
+                        currentOffering.availablePackages.find(pkg => pkg.packageType === 'ANNUAL');
+      } else {
+        monthlyPackage = currentOffering.availablePackages.find(pkg => pkg.identifier === 'monthly' || pkg.identifier === '$rc_monthly') ||
+                         currentOffering.availablePackages.find(pkg => pkg.packageType === 'MONTHLY' && !/7d|7_d/i.test(pkg.identifier));
+        yearlyPackage = currentOffering.availablePackages.find(pkg => pkg.identifier === 'yearly' || pkg.identifier === '$rc_annual') ||
+                        currentOffering.availablePackages.find(pkg => pkg.packageType === 'ANNUAL' && !/7d|7_d/i.test(pkg.identifier));
+      }
+
+      const selectedPackage = plan === "yearly" ? yearlyPackage : monthlyPackage;
+      if (!selectedPackage) {
+        toast.error("Selected plan not available. Please try again.");
+        return;
+      }
+
+      const success = await purchasePackage(selectedPackage);
+      if (success) {
+        onClose();
+      }
+    } else {
+      // Stripe checkout flow for web
+      setLoading(true);
+      try {
+        const priceId =
+          plan === "yearly" ? yearly.price_id : monthly.price_id;
+        const { data, error } = await supabase.functions.invoke("create-checkout", {
+          body: { priceId },
+        });
+        if (error) throw error;
+        if (data?.url) window.open(data.url, "_blank");
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : "Checkout failed");
+      } finally {
+        setLoading(false);
+      }
     }
   };
+
+  // Determine if purchase button should be disabled
+  const isButtonDisabled = loading || (Capacitor.isNativePlatform() && offerings.length === 0);
 
   return (
     <AnimatePresence>
@@ -206,6 +282,24 @@ const PaywallModal = ({
                     {body || "Unlock your full MuscleLock protocol"}
                   </p>
                 </div>
+
+                {/* ── REFERRAL BANNER ── */}
+                {hasReferral && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-primary/10 border border-primary/20 rounded-xl px-5 py-4 flex items-start gap-3"
+                  >
+                    <span className="material-symbols-outlined text-primary text-2xl mt-0.5">card_giftcard</span>
+                    <div>
+                      <p className="font-headline font-bold text-sm text-primary">7-Day Free Trial Activated!</p>
+                      <p className="text-xs text-on-surface-variant mt-1">
+                        Your friend hooked you up. Full workouts, unlimited AI coach, and advanced tracking — free for 7 days.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* ── BEFORE / AFTER ── */}
                 <div className="space-y-3">
@@ -398,19 +492,28 @@ const PaywallModal = ({
 
             {/* ── STICKY BOTTOM CTA ── */}
             <div className="shrink-0 px-5 pb-5 pt-3 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest to-transparent">
+              {Capacitor.isNativePlatform() && offerings.length === 0 && !offeringsLoaded && (
+                <button
+                  onClick={() => fetchOfferings()}
+                  disabled={revenueCatLoading}
+                  className="w-full py-3 mb-2 rounded-full bg-surface-container-high text-on-surface font-headline font-bold text-sm active:scale-[0.97] transition-transform duration-200 disabled:opacity-70"
+                >
+                  {revenueCatLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Refresh Offerings'}
+                </button>
+              )}
               <button
                 onClick={handleCheckout}
-                disabled={loading}
-                className="w-full py-4 rounded-full gradient-hero text-on-primary font-headline font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_hsla(160,100%,45%,0.25)] active:scale-[0.97] transition-transform duration-200 disabled:opacity-60 animate-[ctaGlow_2s_ease-in-out_infinite]"
-                style={{
-                  animation: "ctaGlow 2s ease-in-out infinite",
-                }}
+                disabled={isButtonDisabled}
+                className="w-full py-4 rounded-full gradient-hero text-on-primary font-headline font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_hsla(160,100%,45%,0.25)] active:scale-[0.97] transition-transform duration-200 disabled:opacity-60"
               >
                 {loading ? (
-                  "Opening checkout..."
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Opening checkout...
+                  </>
                 ) : (
                   <>
-                    UNLOCK MUSCLELOCK — START FREE 3 DAYS
+                    UNLOCK MUSCLELOCK — START FREE {hasReferral ? "7" : "3"} DAYS
                     <span className="material-symbols-outlined text-lg">arrow_forward</span>
                   </>
                 )}

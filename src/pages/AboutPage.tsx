@@ -20,7 +20,7 @@ const AboutPage = () => {
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-    // Scroll to top
+  // Scroll to top
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);

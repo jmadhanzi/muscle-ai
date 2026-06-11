@@ -32,8 +32,6 @@ export function DeepLinkHandler() {
         console.log('DeepLinkHandler: Navigating to referral route for stored code:', referralCode);
         hasHandledRef.current = true;
         navigate(`/ref/${referralCode}`, { replace: true });
-        // Clear the code after navigation to prevent repeated handling
-        setTimeout(() => clearReferralCode(), 100);
       }
       return;
     }
@@ -48,8 +46,6 @@ export function DeepLinkHandler() {
       if (Capacitor.isNativePlatform()) {
         hasHandledRef.current = true;
         navigate(`/ref/${referralCode}`, { replace: true });
-        // Clear the code after navigation
-        setTimeout(() => clearReferralCode(), 100);
       }
     };
 
