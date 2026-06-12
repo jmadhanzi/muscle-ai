@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
  * Replace with actual App Store IDs from your app
  */
 const APP_STORE_URLS = {
-  ios: 'https://apps.apple.com/app/muscle-ai/id6470000000', // Replace with actual App Store URL
+  ios: 'https://apps.apple.com/app/muscle-ai/id6761183505',
   android: 'https://play.google.com/store/apps/details?id=com.jmadhanzi.musclelockai',
 };
 
