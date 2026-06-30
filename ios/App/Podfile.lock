@@ -4,6 +4,8 @@ PODS:
   - CapacitorApp (8.1.0):
     - Capacitor
   - CapacitorCordova (8.3.4)
+  - CapacitorPluginAppTrackingTransparency (3.0.0):
+    - Capacitor
   - CapacitorPushNotifications (8.0.3):
     - Capacitor
   - CapacitorSplashScreen (8.0.1):
@@ -21,6 +23,7 @@ DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - CapacitorPluginAppTrackingTransparency (from `../../node_modules/capacitor-plugin-app-tracking-transparency`)
   - "CapacitorPushNotifications (from `../../node_modules/@capacitor/push-notifications`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
@@ -38,6 +41,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/app"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorPluginAppTrackingTransparency:
+    :path: "../../node_modules/capacitor-plugin-app-tracking-transparency"
   CapacitorPushNotifications:
     :path: "../../node_modules/@capacitor/push-notifications"
   CapacitorSplashScreen:
@@ -51,6 +56,7 @@ SPEC CHECKSUMS:
   Capacitor: d13cad5fa09155679672808cc4ca9fbc2997e1b4
   CapacitorApp: 449ffe26375e96f8aaaee625ac6e01e5c57c8650
   CapacitorCordova: c07921bdcfec6f691bae22274446b4d606ebf6a4
+  CapacitorPluginAppTrackingTransparency: f0df8fe65d07d3854de3dad832caf192262bbaa5
   CapacitorPushNotifications: e4437b4ec1b2070685bf032c210f346432214c5f
   CapacitorSplashScreen: 4b46c72298db552b3c57ce021ef028b6dc7f1fa7
   CapacitorStatusBar: 32206abd53b14f339763da26f71286deaa891e16
@@ -58,6 +64,6 @@ SPEC CHECKSUMS:
   RevenueCat: f0d05079b59c33c645293bbc1fa78469ea7fcae7
   RevenuecatPurchasesCapacitor: 3356e6e8b9ae8d9e7386990b53adeedac59aa6e8
 
-PODFILE CHECKSUM: 60f47e7c2cc5091902283bec6211f9cee47f4e73
+PODFILE CHECKSUM: 1dbfe0f02f4f214917c62b2094802f9e39b80d43
 
 COCOAPODS: 1.16.2
