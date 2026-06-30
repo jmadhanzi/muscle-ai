@@ -22,7 +22,7 @@ const config: CapacitorConfig = {
   },
   server: {
     androidScheme: 'https',
-    iosScheme: 'http',
+    iosScheme: 'https',
   },
   ios: {
     contentInset: 'never',

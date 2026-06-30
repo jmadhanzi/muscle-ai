@@ -1,13 +1,36 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
+import { type PluginListenerHandle } from '@capacitor/core';
+import { App } from '@capacitor/app';
 import { useDeepLink } from '@/hooks/useDeepLink';
+
+/**
+ * Extract a referral code from a deep link URL.
+ * Supports formats:
+ *   musclelock://ref/{code}
+ *   https://musclelock.app/ref/{code}
+ */
+function extractReferralCode(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    const match = parsed.pathname.match(/^\/ref\/(.+)$/);
+    if (match) return match[1];
+
+    // Also check query param fallback
+    const refCode = parsed.searchParams.get('ref_code');
+    if (refCode) return refCode;
+  } catch {
+    console.warn('DeepLinkHandler: failed to parse URL', url);
+  }
+  return null;
+}
 
 /**
  * DeepLinkHandler component
  * Handles deep links from both web view and native app
  * - Web: stores referral codes and attempts to open native app
- * - Native: listens for deep link events and navigates to referral route
+ * - Native: listens for Capacitor appUrlOpen events and navigates to referral route
  * This component renders nothing but performs side effects
  */
 export function DeepLinkHandler() {
@@ -36,23 +59,32 @@ export function DeepLinkHandler() {
       return;
     }
 
-    // Listen for deep link events from native app
-    const handleDeepLinkEvent = (event: CustomEvent) => {
-      if (hasHandledRef.current) return;
+    // Subscribe to Capacitor native appUrlOpen events (iOS / Android)
+    let appUrlOpenHandle: PluginListenerHandle | undefined;
 
-      const { referralCode } = event.detail;
-      console.log('DeepLinkHandler: Received deep link event, navigating to:', referralCode);
+    const setupNativeListener = async () => {
+      if (!Capacitor.isNativePlatform()) return;
 
-      if (Capacitor.isNativePlatform()) {
+      appUrlOpenHandle = await App.addListener('appUrlOpen', (data) => {
+        if (hasHandledRef.current) return;
+
+        const code = extractReferralCode(data.url);
+        if (!code) return;
+
+        console.log('DeepLinkHandler: Received native deep link, navigating to:', code);
         hasHandledRef.current = true;
-        navigate(`/ref/${referralCode}`, { replace: true });
-      }
+
+        // Store the referral code and navigate
+        sessionStorage.setItem('referral_code', code);
+        sessionStorage.setItem('referral_timestamp', Date.now().toString());
+        navigate(`/ref/${code}`, { replace: true });
+      });
     };
 
-    window.addEventListener('deepLinkReceived', handleDeepLinkEvent as EventListener);
+    setupNativeListener();
 
     return () => {
-      window.removeEventListener('deepLinkReceived', handleDeepLinkEvent as EventListener);
+      appUrlOpenHandle?.remove();
     };
   }, [getStoredReferralCode, clearReferralCode, navigate, location.pathname]);
 
