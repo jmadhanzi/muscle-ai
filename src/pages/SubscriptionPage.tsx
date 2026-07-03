@@ -32,7 +32,7 @@ const SubscriptionPage = () => {
   const [portalLoading, setPortalLoading] = useState(false);
   const [hasReferral, setHasReferral] = useState(false);
 
-  const price = yearly ? STRIPE_CONFIG.yearly.monthly_equivalent : STRIPE_CONFIG.monthly.price;
+  const price = yearly ? STRIPE_CONFIG.yearly.price : STRIPE_CONFIG.monthly.price;
   const billedAs = yearly ? `$${STRIPE_CONFIG.yearly.price}/year` : `$${STRIPE_CONFIG.monthly.price}/month`;
   const selectedPriceId = yearly ? STRIPE_CONFIG.yearly.price_id : STRIPE_CONFIG.monthly.price_id;
 
@@ -267,7 +267,7 @@ const SubscriptionPage = () => {
                         transition={{ duration: 0.25 }}
                       >
                         <span className="font-headline font-black text-4xl text-on-surface">${price.toFixed(2)}</span>
-                        <span className="text-on-surface-variant text-sm">/mo</span>
+                        <span className="text-on-surface-variant text-sm">/year</span>
                       </motion.div>
                     </AnimatePresence>
                     <p className="text-on-surface-variant text-[10px] font-mono tracking-wide">Billed {billedAs}</p>

@@ -391,11 +391,11 @@ const PaywallModal = ({
                         </span>
                       </div>
                       <div className="text-on-surface font-mono text-lg font-bold mt-0.5">
-                        ${yearly.monthly_equivalent}
-                        <span className="text-on-surface-variant text-sm font-normal">/month</span>
+                        ${yearly.price}
+                        <span className="text-on-surface-variant text-sm font-normal">/year</span>
                       </div>
                       <div className="text-on-surface-variant text-xs mt-1">
-                        Billed ${yearly.price}/year · Save ${savings} vs monthly
+                        Save ${savings} vs monthly
                       </div>
                       <div className="text-primary text-xs font-medium mt-1">
                         = Less than 1 protein shake/mo
